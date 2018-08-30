@@ -1,4 +1,4 @@
-# Scalable Bayesian Optimization
+# Scalable Gaussian Processes for Economic Models
 
 This repository includes the code for my master thesis entitled "Scalable Gaussian Processes for Economic Models".
 
