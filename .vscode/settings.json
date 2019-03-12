@@ -1,0 +1,5 @@
+{
+  "python.pythonPath": "/Users/tmpethick/anaconda3/envs/lions/bin/python",
+  "python.linting.enabled": true,
+  "python.linting.pylintEnabled": true
+}
