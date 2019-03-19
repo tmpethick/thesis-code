@@ -5,8 +5,7 @@ class QuadratureAcquisition(object):
         self.model = model
 
     def __call__(self, X):
-        stats = self.model.get_statistics(X)
-        var = stats[:,1,:, :]
+        mean, var = self.model.get_statistics(X, full_cov=False)
         # aggregate hyperparameters dimension
         var = np.mean(var, axis=0)
         return np.sqrt(var)
