@@ -38,6 +38,73 @@ bq.run()
 
 bq.plot()
 
+#%% GPy linear kernel
+
+def f(x):
+   return np.sinc(x)
+
+bounds = np.array([[0,1]])
+X = random_hypercube_samples(15, bounds)
+Y = f(X)
+
+kernel = GPy.kern.Linear(1) # + GPy.kern.Bias(1)
+model = GPModel(kernel=kernel, noise_prior=0.01, do_optimize=False)
+X_line = np.linspace(bounds[0,0], bounds[0,1], 500)[:, None]
+model.fit(X, Y)
+model.plot(X_line)
+plt.plot(X_line, f(X_line))
+
+mean, covar = model.get_statistics(X_line)
+mean, covar = mean[0], covar[0,:,:,0]
+plt.matshow(model.kernel.K(X_line, X_line))
+plt.matshow(covar)
+plt.show()
+
+#%% Testing LinearGP
+from src.models import GPVanillaLinearModel
+
+def f(x):
+   return np.sinc(x)
+
+bounds = np.array([[0,1]])
+X = random_hypercube_samples(15, bounds)
+Y = f(X)
+d = X.shape[-1]
+model = GPVanillaLinearModel(noise=0.01)
+X_line = np.linspace(bounds[0,0], bounds[0,1], 500)[:, None]
+model.fit(X, Y)
+model.plot(X_line)
+plt.plot(X_line, f(X_line))
+
+plt.matshow(model.kernel(X_line, X_line))
+mean, covar = model.get_statistics(X_line)
+plt.matshow(covar)
+plt.show()
+   
+#%%
+# Testing EfficientLinearGP (uses low rank)
+# (should be equivalent to GPVanillaLinearModel)
+from src.models import EfficientLinearModel
+
+def f(x):
+   return np.sinc(x)
+
+bounds = np.array([[0,1]])
+X = random_hypercube_samples(15, bounds)
+Y = f(X)
+d = X.shape[-1]
+model = EfficientLinearModel(noise=0.01, n_features=d)
+X_line = np.linspace(bounds[0,0], bounds[0,1], 500)[:, None]
+model.fit(X, Y)
+model.plot(X_line)
+plt.plot(X_line, f(X_line))
+
+mean, covar = model.get_statistics(X_line)
+plt.matshow(model.kernel(X_line, X_line))
+plt.matshow(covar)
+plt.show()
+   
+
 #%% GPy
 from src.models import GPVanillaModel
 
@@ -48,7 +115,7 @@ bounds = np.array([[0,1]])
 X = random_hypercube_samples(15, bounds)
 Y = f(X)
 
-model = GPModel(kernel=GPy.kern.RBF(1, variance=np.array([0.2])), noise_prior=0.01, do_optimize=False)
+model = GPModel(kernel=GPy.kern.RBF(1, lengthscale=0.2), noise_prior=0.01, do_optimize=False)
 X_line = np.linspace(bounds[0,0], bounds[0,1], 500)[:, None]
 model.fit(X, Y)
 model.plot(X_line)
@@ -82,74 +149,6 @@ plt.matshow(model.kernel(X_line, X_line))
 plt.matshow(covar)
 plt.show()
 
-#%% GPy linear kernel
-
-def f(x):
-   return np.sinc(x)
-
-bounds = np.array([[0,1]])
-X = random_hypercube_samples(15, bounds)
-Y = f(X)
-
-kernel = GPy.kern.Linear(1) # + GPy.kern.Bias(1)
-model = GPModel(kernel=kernel, noise_prior=0.01, do_optimize=False)
-X_line = np.linspace(bounds[0,0], bounds[0,1], 500)[:, None]
-model.fit(X, Y)
-model.plot(X_line)
-plt.plot(X_line, f(X_line))
-
-mean, covar = model.get_statistics(X_line)
-mean, covar = mean[0], covar[0,:,:,0]
-plt.matshow(model.kernel.K(X_line, X_line))
-plt.matshow(covar)
-plt.show()
-
-
-#%% Testing LinearGP
-from src.models import GPVanillaLinearModel
-
-def f(x):
-   return np.sinc(x)
-
-bounds = np.array([[0,1]])
-X = random_hypercube_samples(15, bounds)
-Y = f(X)
-d = X.shape[-1]
-model = GPVanillaLinearModel(noise=0.01)
-X_line = np.linspace(bounds[0,0], bounds[0,1], 500)[:, None]
-model.fit(X, Y)
-model.plot(X_line)
-plt.plot(X_line, f(X_line))
-
-mean, covar = model.get_statistics(X_line)
-plt.matshow(model.kernel(X_line, X_line))
-plt.matshow(covar)
-plt.show()
-   
-#%%
-# Testing EfficientLinearGP (uses low rank)
-from src.models import EfficientLinearModel
-
-def f(x):
-   return np.sinc(x)
-
-bounds = np.array([[0,1]])
-X = random_hypercube_samples(15, bounds)
-Y = f(X)
-d = X.shape[-1]
-model = EfficientLinearModel(noise=0.01, n_features=d)
-X_line = np.linspace(bounds[0,0], bounds[0,1], 500)[:, None]
-model.fit(X, Y)
-model.plot(X_line)
-plt.plot(X_line, f(X_line))
-
-mean, covar = model.get_statistics(X_line)
-plt.matshow(model.kernel(X_line, X_line))
-plt.matshow(covar)
-plt.show()
-   
-
-
 #%%
 # Testing RFF
 
@@ -167,7 +166,7 @@ for n_features in [1000]:
    plt.plot(X_line, f(X_line))
 
    mean, covar = model.get_statistics(X_line)
-   plt.matshow(model.kernel(X_line, X_line))
+   plt.matshow(model.kernel(X_line))
    plt.matshow(covar)
    plt.show()
 
@@ -237,15 +236,27 @@ model = GPy.models.GPRegression(X, Y, kernel=kernel)
 model.Gaussian_noise.fix(0)
 model.plot()
 
-
-#%% Huuuuge kink (testing kernels)
-
+#%%
 # Test Finance function 
-def f(x,y):
+from mpl_toolkits import mplot3d
+fig = plt.figure()
+ax = plt.axes(projection='3d')
+
+def f(x, y):
    return 1 / (np.abs(0.5 - x ** 4 - y ** 4) + 0.1)
 
+X = np.linspace(0, 1, 100)
+Y = np.linspace(0, 1, 100)
+X, Y = np.meshgrid(X, Y)
+
+ax.contour3D(X,Y,f(X,Y), 50, cmap='binary')
+
+#%% Huuuuge kink (testing kernels)
 def f(x):
    return 1 / (10 ** (-4) + x ** 2)
+
+X = np.linspace(-2, 2, 100)
+plt.plot(X, f(X))
 
 bounds = np.array([[-2,2]])
 X = np.array([[-0.14622061],

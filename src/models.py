@@ -146,7 +146,7 @@ class GPVanillaModel(BaseModel):
         self.K_noisy_inv = None
         self.gamma = gamma
         self.noise = noise
-    
+
     def fit(self, X, Y):
         n, d = X.shape
         kern = self.kernel(X,X) + self.noise * np.identity(n)
@@ -221,9 +221,9 @@ class LowRankGPModel(BaseModel):
         n, d = X.shape 
         Q = self.feature_map(X)
         noise_inv = (1 / self.noise)
-        small_kernel = self.noise * np.identity(self.m) + Q @ Q.T
+        small_kernel = self.noise * np.identity(self.m) + Q.T @ Q
         small_kernel_inv = np.linalg.inv(small_kernel)
-        self.K_noisy_inv = noise_inv * np.identity(n) - noise_inv * (Q.T @ small_kernel_inv @ Q)
+        self.K_noisy_inv = noise_inv * np.identity(n) - noise_inv * (Q @ small_kernel_inv @ Q.T)
         
         self.X = X
         self.Y = Y
@@ -246,8 +246,14 @@ class LowRankGPModel(BaseModel):
 
         raise NotImplementedError
 
-    def kernel(self, X1, X2):
-        return self.feature_map(X1).T @ self.feature_map(X2)
+    def kernel(self, X1, X2=None):
+        if X2 is None:
+            Q1 = self.feature_map(X1)
+            return Q1 @ Q1.T
+        else:
+            Q1 = self.feature_map(X1)
+            Q2 = self.feature_map(X2)
+            return Q1 @ Q2.T
 
     def get_statistics(self, X):
         assert self.K_noisy_inv is not None, "`self.fit` needs to be called first."
@@ -277,13 +283,25 @@ class LowRankGPModel(BaseModel):
 
 
 class RandomFourierFeaturesModel(LowRankGPModel):
+    """Based on analysis in [1] we choose the unbiased variant as it has strictly smaller variance for the Squared Exponential.
+
+    [1]: https://www.cs.cmu.edu/~dsutherl/papers/rff_uai15.pdf
+    """
+
     def __init__(self, gamma=0.1, noise=0.01, n_features=10):
         assert n_features % 2 == 0, "`n_features` has to be even."
         
         super().__init__(gamma=gamma, noise=noise, n_features=n_features)
 
         # TODO: right now only SE is supported.
-        self.spectral_kernel = lambda size: np.random.normal(size=size) * (1 / self.gamma)
+        self.W = None
+
+    def spectral_kernel(self, size):
+        if self.W is not None: 
+            return self.W 
+        else:
+            self.W = np.random.normal(size=size) * (1.0 / self.gamma)
+            return self.W
 
     def feature_map(self, X):
         n, d = X.shape 
@@ -292,12 +310,13 @@ class RandomFourierFeaturesModel(LowRankGPModel):
         W = self.spectral_kernel(size=(self.m // 2, d))
 
         # Compute m x n feature map
-        Q = W @ X.T
-        uniform_weight = np.sqrt(2 / self.m)
-        Q_cos = uniform_weight * np.cos(Q)
-        Q_sin = uniform_weight * np.sin(Q)
-        # plt.matshow(Q)
-        return np.concatenate((Q_cos, Q_sin), axis=0)
+        Z = W @ X.T
+        uniform_weight = np.sqrt(2.0 / self.m)
+        Q_cos = uniform_weight * np.cos(Z)
+        Q_sin = uniform_weight * np.sin(Z)
+
+        # n x m
+        return np.concatenate((Q_cos, Q_sin), axis=0).T
 
 class EfficientLinearModel(LowRankGPModel):
     def __init__(self, gamma=0.1, noise=0.01, n_features=None):
@@ -305,7 +324,7 @@ class EfficientLinearModel(LowRankGPModel):
 
     def feature_map(self, X):
         n, d = X.shape
-        return X.T
+        return X
 
 
 def cartesian_product(*arrays):
@@ -366,7 +385,7 @@ class QuadratureFourierFeaturesModel(LowRankGPModel):
         Q_cos = (weights * np.cos(Q).T).T
         Q_sin = (weights * np.sin(Q).T).T
         Q = np.concatenate((Q_cos, Q_sin), axis=0)
-        return Q
+        return Q.T
 
     def gauss_hermite_1d(self, m_bar):
         W_bar, weights = np.polynomial.hermite.hermgauss(m_bar)
