@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import matplotlib
 import GPy
+import scipy
 
 from src.algorithms import AcquisitionAlgorithm, random_hypercube_samples
 from src.models import GPModel, RandomFourierFeaturesModel 
@@ -66,19 +67,50 @@ kernel = GPy.kern.Matern32(1)
 noise_prior = 0.01
 model = GPModel(kernel=kernel, noise_prior=noise_prior, do_optimize=True, num_mcmc=0)
 
+acq = QuadratureAcquisition
+bq = AcquisitionAlgorithm(f, [model], acq, bounds=bounds, n_init=2, n_iter=100, n_acq_max_starts=2)
+#bq.run(callback=lambda bq: bq.plot())
+bq.run()
+bq.plot()
+
+
+scipy.stats.kstest(bq.models[0].X, 'uniform')
+plt.hist(bq.models[0].X)
+
+#%%
+from src.acquisition_functions import AcquisitionRelative
+from src.algorithms import AcquisitionAlgorithm
+from src.models import GPModel
+
+bounds = np.array([[-2,2]])
+def f(x):
+   return 1 / (10 ** (-4) + x ** 2)
+
+kernel = GPy.kern.Matern32(1)
+noise_prior = 0.01
+model = GPModel(kernel=kernel, noise_prior=noise_prior, do_optimize=True, num_mcmc=0)
+
 exp_kernel = GPy.kern.Exponential(1)
 linear_comparison_model = GPModel(kernel=exp_kernel, noise_prior=0.01)
 
 models = [model, linear_comparison_model]
 
 acq = AcquisitionRelative
-bq = AcquisitionAlgorithm(f, models, acq, bounds=bounds, n_init=5, n_iter=5, n_acq_max_starts=2)
-bq.run(callback=lambda bq: bq.plot())
+bq = AcquisitionAlgorithm(f, models, acq, bounds=bounds, n_init=2, n_iter=100, n_acq_max_starts=2)
+#bq.run(callback=lambda bq: bq.plot())
+bq.run()
+bq.plot()
 
-# Incorporate gradients (in kernel)
+plt.hist(bq.models[0].X)
+
+# I need to measure if it changes exploration... 
+# What we expect: That it explores where
+
 # Model selection comparison (in particular linear)
     # Acquisition function: |mu(x) - L(x)| + beta sigma(x)
     # see sigma regularization ensuring uniform exploration
+# analysis in the noisy setting
+# Incorporate gradients (in kernel)
 
 # See if it works with approximation
 # (Implement hyperparameter opt)

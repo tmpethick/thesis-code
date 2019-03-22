@@ -10,7 +10,7 @@ class AcquisitionRelative(object):
 
     def __call__(self, X):
         mean, var = self.model.get_statistics(X, full_cov=False)
-        mean2, var2 = self.model.get_statistics(X, full_cov=False)
+        mean2, var2 = self.model_compare.get_statistics(X, full_cov=False)
         # aggregate hyperparameters dimension
         mean = np.mean(mean, axis=0)
         mean2 = np.mean(mean2, axis=0)
@@ -23,7 +23,7 @@ class QuadratureAcquisition(object):
         self.model = model
 
     def __call__(self, X):
-        mean, var = model.get_statistics(X, full_cov=False)
+        mean, var = self.model.get_statistics(X, full_cov=False)
         # aggregate hyperparameters dimension
         var = np.mean(var, axis=0)
         return np.sqrt(var)
