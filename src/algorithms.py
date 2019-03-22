@@ -32,7 +32,7 @@ def random_hypercube_samples(n_samples, bounds, rng=None):
 class AcquisitionAlgorithm(object):
     def __init__(self, 
         f, 
-        model, 
+        models, 
         acquisition_function, 
         n_init=20,
         n_iter=100,
@@ -42,10 +42,10 @@ class AcquisitionAlgorithm(object):
         rng=None):
 
         self.f = f
-        self.model = model
+        self.models = models
         # An acq func is defined on a model and define how it uses that model 
         # (be it through sampling or mean/variance).
-        self.acquisition_function = acquisition_function(model)
+        self.acquisition_function = acquisition_function(*models)
 
         self.n_iter = n_iter
         self.n_init = n_init
@@ -68,6 +68,7 @@ class AcquisitionAlgorithm(object):
             X = np.array([x])
             return -self.acquisition_function(X)[0]
 
+        # Sample 5000. Pick 100 max and minimize those.
         for x0 in random_hypercube_samples(self.n_acq_max_starts, self.bounds, rng=self.rng):
             res = minimize(min_obj, x0=x0, bounds=self.bounds, method='L-BFGS-B') 
 
@@ -81,10 +82,12 @@ class AcquisitionAlgorithm(object):
 
         return min_x
 
-    def run(self):
+    def run(self, callback=None):
         X = random_hypercube_samples(self.n_init, self.bounds, rng=self.rng)
         Y = self.f(X)
-        self.model.init(X,Y)
+        
+        for model in self.models:
+            model.init(X,Y)
 
         for i in range(0, self.n_iter):
             print("... starting round", i, "/", self.n_iter)
@@ -95,13 +98,20 @@ class AcquisitionAlgorithm(object):
             X_new = constrain_points(X_new, self.bounds)
             Y_new = self.f(X_new)
 
-            self.model.add_observations(X_new, Y_new)
+            for model in self.models:
+                model.add_observations(X_new, Y_new)
+
+            if callable(callback):
+                callback(self)
 
     def plot(self):
         # (obs, 1)
         X_line = np.linspace(self.bounds[0,0], self.bounds[0,1], 500)[:,None]
 
-        self.model.plot(X_line)
-        plt.plot(X_line, self.f(X_line))
+        for model in self.models:
+            model.plot(X_line)
+        
+        #plt.plot(X_line, self.f(X_line))
         plt.show()
         plt.plot(X_line, self.acquisition_function(X_line))
+        plt.show()
