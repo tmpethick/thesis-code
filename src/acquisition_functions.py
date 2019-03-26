@@ -1,6 +1,9 @@
 import numpy as np
 
-class AcquisitionRelative(object):
+class AcquisitionBase(object):
+    pass
+
+class AcquisitionModelMismatch(AcquisitionBase):
     def __init__(self, *models, beta=2):
         assert len(models) == 2, "It can only compute difference between two models."
 
@@ -18,7 +21,7 @@ class AcquisitionRelative(object):
         return np.abs(mean - mean2) + self.beta * np.sqrt(var)
 
 
-class QuadratureAcquisition(object):
+class QuadratureAcquisition(AcquisitionBase):
     def __init__(self, model):
         self.model = model
 

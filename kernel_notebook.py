@@ -79,3 +79,4 @@ plt.imshow(C, interpolation='nearest')
 plt.title('{} covariance'.format(kernel_name))
 
 #%%
+

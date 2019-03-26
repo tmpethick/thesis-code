@@ -14,9 +14,19 @@ from src.algorithms import AcquisitionAlgorithm, random_hypercube_samples
 from src.models import GPModel, RandomFourierFeaturesModel 
 from src.acquisition_functions import QuadratureAcquisition
 
-# Plotting
 import seaborn as sns
 sns.set_style("darkgrid")
+
+
+def mean_square_error(bq):
+    X_line = np.linspace(bq.bounds[0,0], bq.bounds[0,1], 500)[:,None]
+    Y = f(X_line)
+    Y_hat, covar = bq.models[0].get_statistics(X_line)
+    Y_hat = np.mean(Y_hat, axis=0) # average over hyperparameters
+    mse = np.sqrt(np.sum(np.square(Y - Y_hat)))
+    print("MSE:", mse)
+    return mse 
+
 
 #%% 1D Huuuuge kink (testing kernels)
 def f(x):
@@ -54,8 +64,8 @@ for kernel in [
    model.Gaussian_noise.fix(0)
    model.plot()
 
-#%%
-from src.acquisition_functions import AcquisitionRelative
+#%% Uniform sampling
+from src.acquisition_functions import AcquisitionModelMismatch
 from src.algorithms import AcquisitionAlgorithm
 from src.models import GPModel
 
@@ -73,12 +83,11 @@ bq = AcquisitionAlgorithm(f, [model], acq, bounds=bounds, n_init=2, n_iter=100, 
 bq.run()
 bq.plot()
 
-
-scipy.stats.kstest(bq.models[0].X, 'uniform')
 plt.hist(bq.models[0].X)
+mse_vanilla = mean_square_error(bq)
 
-#%%
-from src.acquisition_functions import AcquisitionRelative
+#%% Model Mismatch sampling approach
+from src.acquisition_functions import AcquisitionModelMismatch
 from src.algorithms import AcquisitionAlgorithm
 from src.models import GPModel
 
@@ -95,29 +104,18 @@ linear_comparison_model = GPModel(kernel=exp_kernel, noise_prior=0.01)
 
 models = [model, linear_comparison_model]
 
-acq = AcquisitionRelative
+acq = AcquisitionModelMismatch(*models, beta=0)
 bq = AcquisitionAlgorithm(f, models, acq, bounds=bounds, n_init=2, n_iter=100, n_acq_max_starts=2)
 #bq.run(callback=lambda bq: bq.plot())
 bq.run()
 bq.plot()
 
-plt.hist(bq.models[0].X)
+mse_model_mismatch = mean_square_error(bq)
 
-# I need to measure if it changes exploration... 
-# What we expect: That it explores where
+#%%
 
-# Model selection comparison (in particular linear)
-    # Acquisition function: |mu(x) - L(x)| + beta sigma(x)
-    # see sigma regularization ensuring uniform exploration
-# analysis in the noisy setting
-# Incorporate gradients (in kernel)
-
-# See if it works with approximation
-# (Implement hyperparameter opt)
-# (Implement evaluation metrics: L2)
-
-# Test on 2D
-# Test on high-dim manifold (see finance github)
+print("MSE model mismatch:", mse_model_mismatch) # 169.9740896452874
+print("MSE vanilla:", mse_vanilla) # 10075.7768671319
 
 #%%
 # Test 2D Finance function 
@@ -125,11 +123,74 @@ from mpl_toolkits import mplot3d
 fig = plt.figure()
 ax = plt.axes(projection='3d')
 
-def f(x, y):
-   return 1 / (np.abs(0.5 - x ** 4 - y ** 4) + 0.1)
+def f(x):
+   return 1 / (np.abs(0.5 - x[...,0] ** 4 - x[...,1] ** 4) + 0.1)
 
-X = np.linspace(0, 1, 100)
-Y = np.linspace(0, 1, 100)
+X = np.linspace(0, 1, 300)
+Y = np.linspace(0, 1, 300)
 X, Y = np.meshgrid(X, Y)
+Z = f(np.stack((X,Y), axis=-1))
 
-ax.contour3D(X,Y,f(X,Y), 50, cmap='binary')
+ax.contour3D(X,Y,Z, 50, cmap='binary')
+
+#%% 2D vanilla strategy (scatter plot)
+from src.acquisition_functions import AcquisitionModelMismatch
+from src.algorithms import AcquisitionAlgorithm
+from src.models import GPModel
+
+bounds = np.array([[0,1],[0,1]])
+def f(x):
+   y = 1 / (np.abs(0.5 - x[...,0] ** 4 - x[...,1] ** 4) + 0.1)
+   return y[...,None]
+
+kernel = GPy.kern.Matern32(2)
+noise_prior = 0.01
+model = GPModel(kernel=kernel, noise_prior=noise_prior, do_optimize=True, num_mcmc=0)
+
+acq = QuadratureAcquisition
+bq = AcquisitionAlgorithm(f, [model], acq, bounds=bounds, n_init=2, n_iter=100, n_acq_max_starts=2)
+#bq.run(callback=lambda bq: bq.plot())
+bq.run()
+
+
+#%%
+bq.plot()
+
+#%% 2D model mismatch strategy (scatter plot)
+# Nb: Points seem to be concentrated around two areas/points.
+from src.acquisition_functions import AcquisitionModelMismatch
+from src.algorithms import AcquisitionAlgorithm
+from src.models import GPModel
+
+bounds = np.array([[0,1],[0,1]])
+def f(x):
+   y = 1 / (np.abs(0.5 - x[...,0] ** 4 - x[...,1] ** 4) + 0.1)
+   return y[...,None]
+
+kernel = GPy.kern.RBF(2)
+noise_prior = 0.01
+model = GPModel(kernel=kernel, noise_prior=noise_prior, do_optimize=True, num_mcmc=0)
+
+exp_kernel = GPy.kern.Exponential(2)
+linear_comparison_model = GPModel(kernel=exp_kernel, noise_prior=0.01)
+
+models = [model, linear_comparison_model]
+
+acq = AcquisitionModelMismatch(*models, beta=0)
+bq = AcquisitionAlgorithm(f, models, acq, bounds=bounds, n_init=2, n_iter=100, n_acq_max_starts=5)
+#bq.run(callback=lambda bq: bq.plot())
+bq.run()
+
+#%%
+bq.plot()
+
+#%%
+import seaborn as sns
+sns.scatterplot(bq.X[...,0], bq.X[...,1])
+
+
+# Sample near kinks
+   # We need to somehow specify that we are bad at kinks. 
+   # Gradients does not capture this. (and wont work for kinks)
+   # Sample at curvature. Will sample at "arupt" changes. This might work.
+   # Try Home backed Acquisition function.

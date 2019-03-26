@@ -124,8 +124,9 @@ class GPModel(BaseModel):
         else:
             return mean, var 
 
-    def plot(self, X_line):
+    def plot(self, X_line, ax=None):
         import matplotlib.pyplot as plt
+        ax = ax if ax is not None else plt
 
         assert X_line.shape[1] is 1, "GPModel can currently only plot on 1-dim domains."
 
@@ -135,9 +136,10 @@ class GPModel(BaseModel):
 
         # Iterate stats under different hyperparameters
         for (mean, var) in ((mean[i], var[i]) for i in range(n_hparams)):
-            plt.fill_between(X_line.reshape(-1), (mean + np.sqrt(var)).reshape(-1), (mean - np.sqrt(var)).reshape(-1), alpha=.2)
-            plt.plot(X_line, mean)
-            plt.scatter(self.X, self.Y)
+            ax.fill_between(X_line.reshape(-1), (mean + np.sqrt(var)).reshape(-1), (mean - np.sqrt(var)).reshape(-1), alpha=.2)
+            ax.plot(X_line, mean)
+            ax.scatter(self.X, self.Y)
+
 
 from scipy.linalg import cho_factor, cho_solve
 
