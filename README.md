@@ -38,8 +38,15 @@
   source $HOME/miniconda/bin/activate
   source activate lions
   conda install -y pytorch torchvision -c pytorch
+  conda install -y gpytorch -c gpytorch
   conda install -y -c conda-forge numpy blas seaborn scipy matplotlib pandas gpy
   pip install pydot-ng
+
+  conda install -y scikit-learn
+
+  git clone https://github.com/jmetzen/gp_extras.git
+  cd gp_extras
+  python setup.py install
   ```
 
 - Notebook requirements:

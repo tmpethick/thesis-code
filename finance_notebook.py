@@ -27,7 +27,6 @@ def mean_square_error(bq):
     print("MSE:", mse)
     return mse 
 
-
 #%% 1D Huuuuge kink (testing kernels)
 def f(x):
    return 1 / (10 ** (-4) + x ** 2)
@@ -104,7 +103,7 @@ linear_comparison_model = GPModel(kernel=exp_kernel, noise_prior=0.01)
 
 models = [model, linear_comparison_model]
 
-acq = AcquisitionModelMismatch(*models, beta=0)
+acq = AcquisitionModelMismatch(*models, beta=1)
 bq = AcquisitionAlgorithm(f, models, acq, bounds=bounds, n_init=2, n_iter=100, n_acq_max_starts=2)
 #bq.run(callback=lambda bq: bq.plot())
 bq.run()
@@ -176,8 +175,8 @@ linear_comparison_model = GPModel(kernel=exp_kernel, noise_prior=0.01)
 
 models = [model, linear_comparison_model]
 
-acq = AcquisitionModelMismatch(*models, beta=0)
-bq = AcquisitionAlgorithm(f, models, acq, bounds=bounds, n_init=2, n_iter=100, n_acq_max_starts=5)
+acq = AcquisitionModelMismatch(*models, beta=1)
+bq = AcquisitionAlgorithm(f, models, acq, bounds=bounds, n_init=2, n_iter=50, n_acq_max_starts=4)
 #bq.run(callback=lambda bq: bq.plot())
 bq.run()
 
@@ -188,9 +187,8 @@ bq.plot()
 import seaborn as sns
 sns.scatterplot(bq.X[...,0], bq.X[...,1])
 
-
 # Sample near kinks
    # We need to somehow specify that we are bad at kinks. 
    # Gradients does not capture this. (and wont work for kinks)
-   # Sample at curvature. Will sample at "arupt" changes. This might work.
+   # Sample at curvature. Will sample at "abrupt" changes. This might work.
    # Try Home backed Acquisition function.

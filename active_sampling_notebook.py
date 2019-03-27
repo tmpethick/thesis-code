@@ -128,3 +128,7 @@ bq = AcquisitionAlgorithm(f, models, acq, bounds=bounds, n_init=2, n_iter=100, n
 bq.run()
 import seaborn as sns
 sns.scatterplot(bq.X[...,0], bq.X[...,1])
+
+# take 1D tværsnit
+# 
+

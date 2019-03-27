@@ -2,10 +2,29 @@ import warnings
 
 import numpy as np
 import matplotlib.pyplot as plt
-from scipy.optimize import minimize
+from scipy import optimize
 import seaborn as sns
 
 from src.acquisition_functions import AcquisitionBase
+from multiprocessing import Pool
+
+
+def construct_2D_grid(bounds):
+    x_bounds = bounds[0]
+    y_bounds = bounds[1]
+    X = np.linspace(x_bounds[0], x_bounds[1], 50)
+    Y = np.linspace(y_bounds[0], y_bounds[1], 50)
+    X, Y = np.meshgrid(X, Y)
+    XY = np.stack((X,Y), axis=-1)
+    
+    return XY, X, Y
+
+def call_function_on_grid(func, XY):
+    original_grid_size = XY.shape[0]
+    XY = XY.reshape((-1, 2)) # remove grid
+    Z = func(XY)
+    Z = Z.reshape((original_grid_size, original_grid_size)) # recreate grid
+    return Z
 
 
 def constrain_points(x, bounds):
@@ -71,28 +90,44 @@ class AcquisitionAlgorithm(object):
             self.rng = np.random.RandomState()
 
     def max_acq(self):
-        min_y = float("inf")
-        min_x = None
-
         def min_obj(x):
             """Lift into array and negate.
             """
             X = np.array([x])
             return -self.acquisition_function(X)[0]
 
-        # Sample 5000. Pick 100 max and minimize those.
-        for x0 in random_hypercube_samples(self.n_acq_max_starts, self.bounds, rng=self.rng):
-            res = minimize(min_obj, x0=x0, bounds=self.bounds, method='L-BFGS-B')
+        if False: 
+            # Code version that can eventually be parallized
+            def minimize(x0):
+                res = optimize.minimize(min_obj, x0=x0, bounds=self.bounds, method='L-BFGS-B')
+                return [res.x, res.fun]
 
-            if res.fun < min_y:
-                min_y = res.fun
-                min_x = res.x 
+            # Sample 5000. Pick 100 max and minimize those.
+            x0_batch = list(random_hypercube_samples(self.n_acq_max_starts, self.bounds, rng=self.rng))
+
+            # p = Pool(4)
+            res = map(minimize, x0_batch)
+            res = np.array(list(res)) # (n_acq_max_starts, 2)
+            ymin_idx = np.argmin(res[:, 1])
+            min_x, min_y = res[ymin_idx]
+
+            return min_x
+        else:
+            min_y = float("inf")
+            min_x = None
+
+            for x0 in random_hypercube_samples(self.n_acq_max_starts, self.bounds, rng=self.rng):
+                res = optimize.minimize(min_obj, x0=x0, bounds=self.bounds, method='L-BFGS-B')
+
+                if res.fun < min_y:
+                    min_y = res.fun
+                    min_x = res.x 
+                
+                # fix if no point is <inf
+                elif min_x is None:
+                    min_x = res.x
             
-            # fix if no point is <inf
-            elif min_x is None:
-                min_x = res.x
-
-        return min_x
+            return min_x
 
     def run(self, callback=None):
         X = random_hypercube_samples(self.n_init, self.bounds, rng=self.rng)
@@ -129,7 +164,7 @@ class AcquisitionAlgorithm(object):
             X_line = np.linspace(self.bounds[0,0], self.bounds[0,1], 500)[:,None]
 
             fig = plt.figure()
-            ax = fig.add_subplot(221)            
+            ax = fig.add_subplot(221)
             ax.set_title('Ground truth')
             ax.plot(X_line, self.f(X_line))
             
@@ -150,21 +185,21 @@ class AcquisitionAlgorithm(object):
             from mpl_toolkits import mplot3d
             fig = plt.figure()
 
-            XY, X, Y = self.construct_2D_grid()
+            XY, X, Y = construct_2D_grid(bounds)
             
             ax = fig.add_subplot(221)
             ax.set_title('Ground truth')
-            Z = self.call_function_on_grid(self.f, XY)
+            Z = call_function_on_grid(self.f, XY)
             ax.contour(X,Y,Z, 50)
 
             ax = fig.add_subplot(222)
             ax.set_title('Acq func')
-            Z = self.call_function_on_grid(self.acquisition_function, XY)
+            Z = call_function_on_grid(self.acquisition_function, XY)
             ax.contour(X,Y,Z, 50)
 
             ax = fig.add_subplot(223)
             ax.set_title('Estimate')
-            Z = self.call_function_on_grid(self.evaluate_f_estimate, XY)
+            Z = call_function_on_grid(self.evaluate_f_estimate, XY)
             ax.contour(X,Y,Z, 50)
 
             ax = fig.add_subplot(224)
@@ -177,20 +212,3 @@ class AcquisitionAlgorithm(object):
     def evaluate_f_estimate(self, X):
         mean, var = self.models[0].get_statistics(X)
         return mean
-
-    def construct_2D_grid(self):
-        x_bounds = self.bounds[0]
-        y_bounds = self.bounds[1]
-        X = np.linspace(x_bounds[0], x_bounds[1], 50)
-        Y = np.linspace(y_bounds[0], y_bounds[1], 50)
-        X, Y = np.meshgrid(X, Y)
-        XY = np.stack((X,Y), axis=-1)
-        
-        return XY, X, Y
-
-    def call_function_on_grid(self, func, XY):
-        original_grid_size = XY.shape[0]
-        XY = XY.reshape((-1, 2)) # remove grid
-        Z = func(XY)
-        Z = Z.reshape((original_grid_size, original_grid_size)) # recreate grid
-        return Z
