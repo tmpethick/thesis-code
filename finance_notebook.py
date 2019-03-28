@@ -11,7 +11,7 @@ import GPy
 import scipy
 
 from src.algorithms import AcquisitionAlgorithm, random_hypercube_samples
-from src.models import GPModel, RandomFourierFeaturesModel 
+from src.models.models import GPModel, RandomFourierFeaturesModel
 from src.acquisition_functions import QuadratureAcquisition
 
 import seaborn as sns
@@ -66,7 +66,7 @@ for kernel in [
 #%% Uniform sampling
 from src.acquisition_functions import AcquisitionModelMismatch
 from src.algorithms import AcquisitionAlgorithm
-from src.models import GPModel
+from src.models.models import GPModel
 
 bounds = np.array([[-2,2]])
 def f(x):
@@ -88,7 +88,7 @@ mse_vanilla = mean_square_error(bq)
 #%% Model Mismatch sampling approach
 from src.acquisition_functions import AcquisitionModelMismatch
 from src.algorithms import AcquisitionAlgorithm
-from src.models import GPModel
+from src.models.models import GPModel
 
 bounds = np.array([[-2,2]])
 def f(x):
@@ -135,7 +135,7 @@ ax.contour3D(X,Y,Z, 50, cmap='binary')
 #%% 2D vanilla strategy (scatter plot)
 from src.acquisition_functions import AcquisitionModelMismatch
 from src.algorithms import AcquisitionAlgorithm
-from src.models import GPModel
+from src.models.models import GPModel
 
 bounds = np.array([[0,1],[0,1]])
 def f(x):
@@ -159,7 +159,7 @@ bq.plot()
 # Nb: Points seem to be concentrated around two areas/points.
 from src.acquisition_functions import AcquisitionModelMismatch
 from src.algorithms import AcquisitionAlgorithm
-from src.models import GPModel
+from src.models.models import GPModel
 
 bounds = np.array([[0,1],[0,1]])
 def f(x):

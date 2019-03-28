@@ -24,7 +24,8 @@ class BaseModel(object):
         self.fit(self.X, self.Y, is_initial=False)
 
     def fit(self, X, Y, is_initial=True): 
-        raise NotImplementedError
+        self.X = X
+        self.Y = Y
 
     def get_statistics(self, X):
         raise NotImplementedError
@@ -81,8 +82,7 @@ class GPModel(BaseModel):
         else:
             self._current_thetas = [self.gpy_model.param_array]
 
-        self.X = X
-        self.Y = Y
+        super(GPModel, self).fit(X, X, is_initial=is_initial)
 
     def get_statistics(self, X, full_cov=True):
         """[summary]
@@ -149,15 +149,14 @@ class GPVanillaModel(BaseModel):
         self.gamma = gamma
         self.noise = noise
 
-    def fit(self, X, Y):
+    def fit(self, X, Y, is_initial=True):
         n, d = X.shape
         kern = self.kernel(X,X) + self.noise * np.identity(n)
         
         self.K_noisy_inv = np.linalg.inv(kern)
         self.cho_decomp = cho_factor(kern)
-        
-        self.X = X
-        self.Y = Y
+
+        super(GPModel, self).fit(X, X, is_initial=is_initial)
 
     def kernel(self, X1, X2):
         # SE kernel
@@ -219,16 +218,15 @@ class LowRankGPModel(BaseModel):
         # GPML p. 131 (pdf)
         pass
 
-    def fit(self, X, Y):
+    def fit(self, X, Y, is_initial=True):
         n, d = X.shape 
         Q = self.feature_map(X)
         noise_inv = (1 / self.noise)
         small_kernel = self.noise * np.identity(self.m) + Q.T @ Q
         small_kernel_inv = np.linalg.inv(small_kernel)
         self.K_noisy_inv = noise_inv * np.identity(n) - noise_inv * (Q @ small_kernel_inv @ Q.T)
-        
-        self.X = X
-        self.Y = Y
+
+        super(LowRankGPModel, self).fit(X, X, is_initial=is_initial)
 
         # compute inverse K_inv of K based on its Cholesky
         # decomposition L and its inverse L_inv
@@ -293,7 +291,7 @@ class RandomFourierFeaturesModel(LowRankGPModel):
     def __init__(self, gamma=0.1, noise=0.01, n_features=10):
         assert n_features % 2 == 0, "`n_features` has to be even."
         
-        super().__init__(gamma=gamma, noise=noise, n_features=n_features)
+        super(RandomFourierFeaturesModel, self).__init__(gamma=gamma, noise=noise, n_features=n_features)
 
         # TODO: right now only SE is supported.
         self.W = None
@@ -322,7 +320,7 @@ class RandomFourierFeaturesModel(LowRankGPModel):
 
 class EfficientLinearModel(LowRankGPModel):
     def __init__(self, gamma=0.1, noise=0.01, n_features=None):
-        super().__init__(gamma=gamma, noise=noise, n_features=n_features)
+        super(EfficientLinearModel, self).__init__(gamma=gamma, noise=noise, n_features=n_features)
 
     def feature_map(self, X):
         n, d = X.shape
@@ -349,7 +347,7 @@ class QuadratureFourierFeaturesModel(LowRankGPModel):
     def __init__(self, gamma=0.1, noise=0.01, n_features=100):
         assert n_features % 2 == 0, "`n_features` has to be even."
 
-        super().__init__(gamma=gamma, noise=noise, n_features=n_features)
+        super(QuadratureFourierFeaturesModel, self).__init__(gamma=gamma, noise=noise, n_features=n_features)
         
         # Not used since the structure is implicit in the particular use of the Gauss-Hermite Scheme.
         self.spectral_kernel_pdf = lambda w: np.exp(- np.square(w).dot(np.square(self.gamma))/ 2)

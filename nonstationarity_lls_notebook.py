@@ -31,7 +31,7 @@ X = np.random.uniform(bounds[0,0], bounds[0,1], (n_samples, 1))
 y = f(X)[:, 0]
 
 #%% -------------------- 2D -----------------------
-from src.algorithms import construct_2D_grid, call_function_on_grid
+from src.plot_utils import construct_2D_grid, call_function_on_grid
 from src.algorithms import random_hypercube_samples
 
 data_dim = 2

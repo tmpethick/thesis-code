@@ -10,7 +10,7 @@ import matplotlib
 import GPy
 
 from src.algorithms import AcquisitionAlgorithm, random_hypercube_samples
-from src.models import GPModel, RandomFourierFeaturesModel 
+from src.models.models import GPModel, RandomFourierFeaturesModel
 from src.acquisition_functions import QuadratureAcquisition
 
 # Plotting

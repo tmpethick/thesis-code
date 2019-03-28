@@ -26,13 +26,13 @@ class AcquisitionCB(AcquisitionBase):
         self.optimizer = optimizer
         super(AcquisitionCB, self).__init__(model, space, optimizer)
         if cost_withGradients is not None:
-            print('The set cost function is ignored! LCB acquisition does not make sense with cost.')  
+            print('The set cost function is ignored! LCB acquisition does not make sense with cost.')
 
     def _compute_acq(self, x):
         """
-        Computes the GP-Lower Confidence Bound 
+        Computes the GP-Lower Confidence Bound
         """
-        m, s = self.model.predict(x)   
+        m, s = self.model.predict(x)
         f_acqu = s
         return f_acqu
 
@@ -40,8 +40,8 @@ class AcquisitionCB(AcquisitionBase):
         """
         Computes the GP-Lower Confidence Bound and its derivative
         """
-        m, s, dmdx, dsdx = self.model.predict_withGradients(x) 
-        f_acqu = s       
+        m, s, dmdx, dsdx = self.model.predict_withGradients(x)
+        f_acqu = s
         df_acqu = dsdx
         return f_acqu, df_acqu
 
@@ -96,7 +96,7 @@ myBopt.plot_acquisition()
 #%% ------------ Home-backed
 from src.acquisition_functions import QuadratureAcquisition
 from src.algorithms import AcquisitionAlgorithm
-from src.models import GPModel
+from src.models.models import GPModel
 
 kernel = GPy.kern.Matern32(2)
 noise_prior = 0.01
@@ -112,7 +112,7 @@ sns.scatterplot(bq.X[...,0], bq.X[...,1])
 #%% ------------ Home-backed Model Mismatch!
 from src.acquisition_functions import AcquisitionModelMismatch
 from src.algorithms import AcquisitionAlgorithm
-from src.models import GPModel
+from src.models.models import GPModel
 
 kernel = GPy.kern.Matern32(2)
 noise_prior = 0.01
@@ -130,5 +130,5 @@ import seaborn as sns
 sns.scatterplot(bq.X[...,0], bq.X[...,1])
 
 # take 1D tværsnit
-# 
+#
 

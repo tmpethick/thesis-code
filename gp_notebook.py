@@ -10,7 +10,7 @@ import matplotlib
 import GPy
 
 from src.algorithms import AcquisitionAlgorithm, random_hypercube_samples
-from src.models import GPModel, RandomFourierFeaturesModel 
+from src.models.models import GPModel, RandomFourierFeaturesModel
 from src.acquisition_functions import QuadratureAcquisition
 
 # Plotting
@@ -61,7 +61,7 @@ plt.matshow(covar)
 plt.show()
 
 #%% Testing LinearGP
-from src.models import GPVanillaLinearModel
+from src.models.models import GPVanillaLinearModel
 
 def f(x):
    return np.sinc(x)
@@ -84,7 +84,7 @@ plt.show()
 #%%
 # Testing EfficientLinearGP (uses low rank)
 # (should be equivalent to GPVanillaLinearModel)
-from src.models import EfficientLinearModel
+from src.models.models import EfficientLinearModel
 
 def f(x):
    return np.sinc(x)
@@ -106,7 +106,7 @@ plt.show()
    
 
 #%% GPy
-from src.models import GPVanillaModel
+from src.models.models import GPVanillaModel
 
 def f(x):
    return np.sinc(x)
@@ -129,7 +129,7 @@ plt.show()
 
 
 #%% Home backed GP
-from src.models import GPVanillaModel
+from src.models.models import GPVanillaModel
 
 def f(x):
    return np.sinc(x)
@@ -172,7 +172,7 @@ for n_features in [1000]:
 
 #%%
 # Testing QFF
-from src.models import QuadratureFourierFeaturesModel
+from src.models.models import QuadratureFourierFeaturesModel
 
 def f(x):
    return np.sinc(x)

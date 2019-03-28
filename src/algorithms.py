@@ -6,25 +6,8 @@ from scipy import optimize
 import seaborn as sns
 
 from src.acquisition_functions import AcquisitionBase
-from multiprocessing import Pool
 
-
-def construct_2D_grid(bounds):
-    x_bounds = bounds[0]
-    y_bounds = bounds[1]
-    X = np.linspace(x_bounds[0], x_bounds[1], 50)
-    Y = np.linspace(y_bounds[0], y_bounds[1], 50)
-    X, Y = np.meshgrid(X, Y)
-    XY = np.stack((X,Y), axis=-1)
-    
-    return XY, X, Y
-
-def call_function_on_grid(func, XY):
-    original_grid_size = XY.shape[0]
-    XY = XY.reshape((-1, 2)) # remove grid
-    Z = func(XY)
-    Z = Z.reshape((original_grid_size, original_grid_size)) # recreate grid
-    return Z
+from src.plot_utils import construct_2D_grid, call_function_on_grid
 
 
 def constrain_points(x, bounds):
@@ -182,10 +165,9 @@ class AcquisitionAlgorithm(object):
             ax.hist(self.X)
 
         elif dims == 2:
-            from mpl_toolkits import mplot3d
             fig = plt.figure()
 
-            XY, X, Y = construct_2D_grid(bounds)
+            XY, X, Y = construct_2D_grid(self.bounds)
             
             ax = fig.add_subplot(221)
             ax.set_title('Ground truth')
@@ -199,7 +181,7 @@ class AcquisitionAlgorithm(object):
 
             ax = fig.add_subplot(223)
             ax.set_title('Estimate')
-            Z = call_function_on_grid(self.evaluate_f_estimate, XY)
+            Z = call_function_on_grid(self.model_estimate, XY)
             ax.contour(X,Y,Z, 50)
 
             ax = fig.add_subplot(224)
@@ -209,6 +191,6 @@ class AcquisitionAlgorithm(object):
         else:
             warnings.warn("Cannot plot above 2D.", Warning)
 
-    def evaluate_f_estimate(self, X):
+    def model_estimate(self, X):
         mean, var = self.models[0].get_statistics(X)
         return mean
