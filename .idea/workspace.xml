@@ -2,15 +2,10 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="c818380e-e4c2-4b56-b288-ea97eb749031" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/active_sampling_notebook.py" beforeDir="false" afterPath="$PROJECT_DIR$/active_sampling_notebook.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/finance_notebook.py" beforeDir="false" afterPath="$PROJECT_DIR$/finance_notebook.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/gp_notebook.py" beforeDir="false" afterPath="$PROJECT_DIR$/gp_notebook.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/kernel_notebook.py" beforeDir="false" afterPath="$PROJECT_DIR$/kernel_notebook.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/nonstationarity_lls_notebook.py" beforeDir="false" afterPath="$PROJECT_DIR$/nonstationarity_lls_notebook.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/nonstationarity_lls_notebook.py" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/nonstationarity_notebook.py" beforeDir="false" afterPath="$PROJECT_DIR$/nonstationarity_notebook.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/algorithms.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/algorithms.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/models.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/models/models.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/test_helpers.py" beforeDir="false" afterPath="$PROJECT_DIR$/tests/test_helpers.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/models/models.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/models/models.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/plot_utils.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/plot_utils.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -28,25 +23,25 @@
       </usages-collector>
       <usages-collector id="statistics.file.extensions.open">
         <counts>
-          <entry key="py" value="8" />
+          <entry key="py" value="9" />
         </counts>
       </usages-collector>
       <usages-collector id="statistics.file.types.open">
         <counts>
-          <entry key="Python" value="8" />
+          <entry key="Python" value="9" />
         </counts>
       </usages-collector>
       <usages-collector id="statistics.file.extensions.edit">
         <counts>
-          <entry key="Python Console" value="133" />
+          <entry key="Python Console" value="145" />
           <entry key="dummy" value="13" />
-          <entry key="py" value="2439" />
+          <entry key="py" value="3724" />
         </counts>
       </usages-collector>
       <usages-collector id="statistics.file.types.edit">
         <counts>
           <entry key="PLAIN_TEXT" value="13" />
-          <entry key="Python" value="2572" />
+          <entry key="Python" value="3869" />
         </counts>
       </usages-collector>
     </session>
@@ -68,8 +63,8 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/models/models.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="547">
-              <caret line="83" selection-start-line="83" selection-end-line="83" />
+            <state relative-caret-position="1290">
+              <caret line="86" column="45" selection-start-line="86" selection-start-column="45" selection-end-line="86" selection-end-column="45" />
               <folding>
                 <element signature="e#0#18#0" expanded="true" />
               </folding>
@@ -105,11 +100,12 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/plot_utils.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="345">
-              <caret line="23" column="33" lean-forward="true" selection-start-line="23" selection-start-column="33" selection-end-line="23" selection-end-column="41" />
+            <state relative-caret-position="472">
+              <caret line="82" lean-forward="true" selection-start-line="82" selection-end-line="82" />
               <folding>
                 <element signature="e#0#18#0" expanded="true" />
-                <marker date="1553766741538" expanded="true" signature="198:736" ph="..." />
+                <marker date="1553770126237" expanded="true" signature="264:1075" ph="..." />
+                <marker date="1553770126237" expanded="true" signature="1096:1634" ph="..." />
               </folding>
             </state>
           </provider>
@@ -118,20 +114,21 @@
       <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/nonstationarity_notebook.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="302">
-              <caret line="34" column="22" lean-forward="true" selection-start-line="34" selection-start-column="22" selection-end-line="34" selection-end-column="22" />
-              <folding>
-                <element signature="e#41#59#0" expanded="true" />
-              </folding>
+            <state relative-caret-position="150">
+              <caret line="10" selection-start-line="10" selection-end-line="10" />
             </state>
           </provider>
         </entry>
       </file>
       <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/nonstationarity_lls_notebook.py">
+        <entry file="file://$PROJECT_DIR$/src/models/lls_gp.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="255">
-              <caret line="29" selection-start-line="29" selection-end-line="31" />
+            <state relative-caret-position="-643">
+              <folding>
+                <element signature="e#0#18#0" expanded="true" />
+                <marker date="1553770158014" expanded="true" signature="472:586" ph="..." />
+                <marker date="1553770158014" expanded="true" signature="2053:2054" ph="..." />
+              </folding>
             </state>
           </provider>
         </entry>
@@ -151,6 +148,14 @@
       <find>evaluate_f_estimate</find>
       <find>gpytorch</find>
       <find>pre</find>
+      <find>get_stat</find>
+      <find>full</find>
+      <find>initial_theta</find>
+      <find>de_optimizer</find>
+      <find>f.bounds</find>
+      <find>get_statistics</find>
+      <find>LocalLengthScaleGPModel</find>
+      <find>mean</find>
     </findStrings>
   </component>
   <component name="Git.Settings">
@@ -160,13 +165,15 @@
     <option name="CHANGED_PATHS">
       <list>
         <option value="$PROJECT_DIR$/active_sampling_notebook.py" />
-        <option value="$PROJECT_DIR$/src/models/models.py" />
         <option value="$PROJECT_DIR$/src/models/manifold_gp.py" />
         <option value="$PROJECT_DIR$/src/algorithms.py" />
         <option value="$PROJECT_DIR$/src/models/dkl_gp.py" />
-        <option value="$PROJECT_DIR$/src/plot_utils.py" />
-        <option value="$PROJECT_DIR$/nonstationarity_notebook.py" />
         <option value="$PROJECT_DIR$/src/environments.py" />
+        <option value="$PROJECT_DIR$/src/models/models.py" />
+        <option value="$PROJECT_DIR$/src/plot_utils.py" />
+        <option value="$PROJECT_DIR$/src/models/lls_gp.py" />
+        <option value="$PROJECT_DIR$/nonstationarity_lls_notebook.py" />
+        <option value="$PROJECT_DIR$/nonstationarity_notebook.py" />
       </list>
     </option>
   </component>
@@ -296,8 +303,8 @@
       <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
       <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
       <window_info anchor="bottom" id="TODO" order="6" />
-      <window_info anchor="right" x="0" y="0" width="370" height="827" id="Documentation" sideWeight="0.5069061" side_tool="true" visible="true" weight="0.32967034" />
-      <window_info active="true" anchor="right" id="SciView" sideWeight="0.4930939" visible="true" weight="0.32967034" />
+      <window_info anchor="right" x="0" y="0" width="370" height="827" id="Documentation" sideWeight="0.5082873" side_tool="true" visible="true" weight="0.36935288" />
+      <window_info active="true" anchor="right" id="SciView" sideWeight="0.49171272" visible="true" weight="0.36935288" />
       <window_info anchor="right" id="Database" />
       <window_info anchor="right" id="Commander" internal_type="SLIDING" order="0" type="SLIDING" weight="0.4" />
       <window_info anchor="right" id="Ant Build" order="1" weight="0.25" />
@@ -341,23 +348,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/models/models.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="547">
-          <caret line="83" selection-start-line="83" selection-end-line="83" />
-          <folding>
-            <element signature="e#0#18#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/nonstationarity_lls_notebook.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="255">
-          <caret line="29" selection-start-line="29" selection-end-line="31" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/src/models/dkl_gp.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="468">
@@ -365,17 +355,6 @@
           <folding>
             <element signature="e#0#12#0" expanded="true" />
             <marker date="1553765163255" expanded="true" signature="1837:1929" ph="..." />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/plot_utils.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="345">
-          <caret line="23" column="33" lean-forward="true" selection-start-line="23" selection-start-column="33" selection-end-line="23" selection-end-column="41" />
-          <folding>
-            <element signature="e#0#18#0" expanded="true" />
-            <marker date="1553766741538" expanded="true" signature="198:736" ph="..." />
           </folding>
         </state>
       </provider>
@@ -390,13 +369,50 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/src/models/models.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="1290">
+          <caret line="86" column="45" selection-start-line="86" selection-start-column="45" selection-end-line="86" selection-end-column="45" />
+          <folding>
+            <element signature="e#0#18#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/plot_utils.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="472">
+          <caret line="82" lean-forward="true" selection-start-line="82" selection-end-line="82" />
+          <folding>
+            <element signature="e#0#18#0" expanded="true" />
+            <marker date="1553770126237" expanded="true" signature="264:1075" ph="..." />
+            <marker date="1553770126237" expanded="true" signature="1096:1634" ph="..." />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/models/lls_gp.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-643">
+          <folding>
+            <element signature="e#0#18#0" expanded="true" />
+            <marker date="1553770158014" expanded="true" signature="472:586" ph="..." />
+            <marker date="1553770158014" expanded="true" signature="2053:2054" ph="..." />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/nonstationarity_lls_notebook.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-971">
+          <caret line="10" column="38" selection-start-line="10" selection-start-column="38" selection-end-line="10" selection-end-column="38" />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/nonstationarity_notebook.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="302">
-          <caret line="34" column="22" lean-forward="true" selection-start-line="34" selection-start-column="22" selection-end-line="34" selection-end-column="22" />
-          <folding>
-            <element signature="e#41#59#0" expanded="true" />
-          </folding>
+        <state relative-caret-position="150">
+          <caret line="10" selection-start-line="10" selection-end-line="10" />
         </state>
       </provider>
     </entry>

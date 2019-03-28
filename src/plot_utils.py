@@ -6,6 +6,35 @@ from src.environments import BaseEnvironment
 from src.models.models import BaseModel
 
 
+def plot_function(f: BaseEnvironment, func, title="Function"):
+    if f.input_dim == 1:
+        X_line = np.linspace(f.bounds[0, 0], f.bounds[0, 1], 100)[:, None]
+        Y_line = f(X_line)[:, 0]
+
+        fig = plt.figure()
+        ax = fig.add_subplot(121)
+        ax.set_title('Ground truth f')
+        ax.plot(X_line, Y_line)
+
+        ax = fig.add_subplot(122)
+        ax.set_title(title)
+        ax.plot(X_line, func(X_line))
+    elif f.input_dim == 2:
+        XY, X, Y = construct_2D_grid(f.bounds)
+        Z = call_function_on_grid(f, XY)
+        Z_hat = call_function_on_grid(func, XY)
+
+        fig = plt.figure()
+        ax = fig.add_subplot(121)
+        ax.set_title('Ground truth f')
+        ax.contour(X, Y, Z, 50)
+
+        ax = fig.add_subplot(122)
+        ax.set_title(title)
+        ax.contour(X, Y, Z_hat, 50)
+    else:
+        raise ValueError("Cannot plot in input dim above 2.")
+
 def plot1D(model, f):
     X_line = np.linspace(f.bounds[0, 0], f.bounds[0, 1], 100)[:, None]
     Y_line = f(X_line)[:, 0]

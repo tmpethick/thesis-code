@@ -4,14 +4,14 @@
 
 #%%
 import numpy as np
-from src.plot_utils import plot2D, plot1D
+from src.plot_utils import plot2D, plot1D, plot_function
 from src.algorithms import random_hypercube_samples
-from src.models.dkl_gp import DKLGPModel
 from src.environments import Kink1D, Kink2D, BaseEnvironment
 from src.models.models import BaseModel
+from sklearn.metrics import mean_squared_error
 
 import matplotlib.pyplot as plt
-plt.interactive(True)
+plt.interactive(False)
 
 import seaborn as sns
 sns.set_style("darkgrid")
@@ -35,21 +35,34 @@ def test_gp_model(f: BaseEnvironment, model: BaseModel, n_samples=15):
       plot2D(model, f)
 
 
-#%% -------------------- 1D ---------------------
+#%%
+from src.models.dkl_gp import DKLGPModel
 
 f = Kink1D()
 model = DKLGPModel(gp_dim=2)
 test_gp_model(f, model)
 
 #%%
-
 f = Kink2D()
 model = DKLGPModel(gp_dim=2)
 test_gp_model(f, model)
 
 
-# Test as GP
-# Test as BO
+#%%
+from src.models.lls_gp import LocalLengthScaleGPModel, LocalLengthScaleGPBaselineModel
 
-# Plot lengthscale change
-# Compare with base-line (standard GP)
+f = Kink1D()
+model = LocalLengthScaleGPModel()
+test_gp_model(f, model, n_samples=50)
+plt.show()
+
+#%%
+f = Kink1D()
+model = LocalLengthScaleGPBaselineModel()
+test_gp_model(f, model)
+plt.show()
+
+#%%
+
+plot_function(f, model.get_lengthscale)
+plt.show()

@@ -23,7 +23,7 @@ class BaseModel(object):
         
         self.fit(self.X, self.Y, is_initial=False)
 
-    def fit(self, X, Y, is_initial=True): 
+    def fit(self, X, Y, is_initial=True):
         self.X = X
         self.Y = Y
 
