@@ -101,8 +101,8 @@ run = notebook_run(config_updates={
 
 #%%
 
-# Fix increasing oscillation (DKL not capturing it)
-# Fix linear interpolation
+# DKL can learn mapping when there is actually an underlying functional 
+# transformation that makes it stationary.
 run = notebook_run(config_updates={
     'obj_func': {
         'name': 'IncreasingOscillation',

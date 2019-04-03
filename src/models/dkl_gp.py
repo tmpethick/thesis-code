@@ -61,6 +61,7 @@ class DKLGPModel(BaseModel):
         self.nn_kwargs = nn_kwargs if nn_kwargs is not None else {}
 
         self.model = None
+        self.feature_extractor = None
         self.likelihood = None
         self.n_iter = n_iter
 
@@ -75,9 +76,9 @@ class DKLGPModel(BaseModel):
         self.X_torch = torch.Tensor(X).contiguous().to(device)
         self.Y_torch = torch.Tensor(Y[:, 0]).contiguous().to(device)
 
-        feature_extractor = LargeFeatureExtractor(d, **self.nn_kwargs).to(device)
+        self.feature_extractor = LargeFeatureExtractor(d, **self.nn_kwargs).to(device)
         self.likelihood = gpytorch.likelihoods.GaussianLikelihood().to(device)
-        self.model = GPRegressionModel(self.X_torch, self.Y_torch, self.likelihood, feature_extractor, **self.gp_kwargs).to(device)
+        self.model = GPRegressionModel(self.X_torch, self.Y_torch, self.likelihood, self.feature_extractor, **self.gp_kwargs).to(device)
 
         # Go into training mode
         self.model.train()
@@ -111,6 +112,14 @@ class DKLGPModel(BaseModel):
         with gpytorch.settings.use_toeplitz(True):
             _train()
 
+    def get_features(self, X):
+        self.feature_extractor.eval()
+        
+        test_x = torch.Tensor(X).contiguous().to(device)
+        Z = self.feature_extractor(test_x)
+        Z = Z.detach().numpy()
+        return Z
+
     def get_statistics(self, X, full_cov=True):
         assert self.model is not None, "Call `self.fit` before predicting."
 
@@ -126,7 +135,6 @@ class DKLGPModel(BaseModel):
         #    cut_tail = -1
         #else:
         cut_tail = None
-
 
         test_x = torch.Tensor(X).contiguous().to(device)
 

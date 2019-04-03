@@ -1,7 +1,7 @@
 import sys
 
 from src.environments import BaseEnvironment
-from src.models import BaseModel, LocalLengthScaleGPModel
+from src.models import BaseModel, LocalLengthScaleGPModel, DKLGPModel
 from src.plot_utils import plot1D, plot2D, plot_function
 
 
@@ -189,6 +189,18 @@ def create_ex():
             if isinstance(model, LocalLengthScaleGPModel):
                 fig = plot_function(f, lambda x: 1 / model.get_lengthscale(x), title="1/Lengthscale", points=X)
                 save_fig(fig, settings.ARTIFACT_LLS_GP_LENGTHSCALE_FILENAME.format(model_idx=i))
+            elif isinstance(model, DKLGPModel):
+                assert X.shape[-1] == 1, "Only supported feature mapping from 1D."
+                
+                X_line = np.linspace(bounds[0, 0], bounds[0, 1], 100)[:,None]
+                fig, ax = plt.subplots()
+                ax.set_title("Features")
+
+                Z = model.get_features(X_line)
+                for j in range(Z.shape[1]):
+                    ax.plot(X_line, Z[:,j])
+
+                save_fig(fig, settings.ARTIFACT_DKLGP_FEATURES_FILENAME.format(model_idx=i))
 
             # Log
             mse = mean_square_error(model, f)

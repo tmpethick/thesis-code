@@ -27,4 +27,3 @@ model2:
       name: GPyExponential
 obj_func:
   name: Kink1D
-seed: 268245656
