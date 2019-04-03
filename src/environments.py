@@ -16,12 +16,37 @@ class BaseEnvironment(object):
     def input_dim(self):
         return self.bounds.shape[0]
 
+    def plot(self):
+        assert self.bounds.shape[0] == 1, "Only support 1D plots."
+
+        import matplotlib.pyplot as plt
+        fig, ax = plt.subplots()
+        X = np.linspace(self.bounds[0,0], self.bounds[0,1], 1000)
+        ax.plot(X, self(X))
+        return fig
+
 
 class Jump1D(BaseEnvironment):
     bounds = np.array([[-1, 1]])
 
     def __call__(self, x):
         return np.sin(5*x) + np.sign(x)
+
+
+class IncreasingOscillation(BaseEnvironment):
+    bounds = np.array([[0, 1]])
+
+    def __call__(self, x):
+        return np.sin(60 * x ** 4)
+
+
+class IncreasingOscillationDecreasingAmplitude(IncreasingOscillation):
+    bounds = np.array([[0, 1]])
+
+    def __call__(self, x):
+        import scipy.stats
+        return super(IncreasingOscillationDecreasingAmplitude, self).__call__(x) \
+             * scipy.stats.norm.pdf(x, 0.5, 0.3)
 
 
 class Kink1D(BaseEnvironment):

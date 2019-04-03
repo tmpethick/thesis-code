@@ -50,7 +50,7 @@
 
   git clone https://github.com/jmetzen/gp_extras.git
   cd gp_extras
-  python setup.py install
+  python setup.py install 
   ```
 
 - Notebook requirements:

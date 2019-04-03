@@ -49,10 +49,24 @@ class BaseModel(object):
         # TODO: MULTIOBJ Plot only first objective for now
 
         # Iterate stats under different hyperparameters
+        ax.scatter(self.X, self.Y)
         for (mean, var) in ((mean[i], var[i]) for i in range(n_hparams)):
-            ax.fill_between(X_line.reshape(-1), (mean + np.sqrt(var)).reshape(-1), (mean - np.sqrt(var)).reshape(-1), alpha=.2)
             ax.plot(X_line, mean)
-            ax.scatter(self.X, self.Y)
+            ax.fill_between(X_line.reshape(-1), 
+                            (mean + np.sqrt(var)).reshape(-1), 
+                            (mean - np.sqrt(var)).reshape(-1), alpha=.2)
+
+
+class LinearInterpolateModel(BaseModel):
+    def _fit(self, X, Y, is_initial=True):
+        pass
+
+    def get_statistics(self, X, full_cov=True):
+        assert X.shape[1] == 1, "LinearInterpolateModel only works in 1D."
+
+        from scipy.interpolate import interp1d
+        f = interp1d(self.X[:,0], self.Y[:,0], bounds_error=False, fill_value="extrapolate")
+        return f(X), np.zeros(f(X).shape)
 
 
 class GPModel(BaseModel):

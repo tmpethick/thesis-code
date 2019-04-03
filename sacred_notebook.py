@@ -5,13 +5,62 @@
 from runner import notebook_run
 
 #%%
+# --------------------- Active sampling -----------------------
+
+from src.environments import IncreasingOscillation
+import matplotlib.pyplot as plt
+
+fig = IncreasingOscillation().plot()
+plt.show()
+
+#%% Model mismatch against linear interpolation
+run = notebook_run(config_updates={
+    'obj_func': {
+        'name': 'IncreasingOscillation',
+    },
+    'model': {
+        'name': 'GPModel',
+        'kwargs': dict(
+            kernel=dict(
+                name='GPyRBF',
+                kwargs={'lengthscale': 1},
+            ),
+            noise_prior=None,
+            do_optimize=True,
+            num_mcmc=0,
+            n_burnin=100,
+            subsample_interval=10,
+            step_size=1e-1,
+            leapfrog_steps=20
+        )
+    },
+    'model2': {
+        'name': 'LinearInterpolateModel',
+        'kwargs': {},
+    },
+    'acquisition_function': {
+        'name': 'AcquisitionModelMismatch',
+        'kwargs': {'beta': 1}
+    },
+    'bo': {
+        'n_init': 5,
+        'n_iter': 50,
+        'n_acq_max_starts': 2,
+    },
+
+}, options={'--force': True})
+
+
+
+#%%
 # ----------------- LocalLengthScaleGPModel -------------------
 
 #%%
 
+# Works very well when the lengthscale indeed has a smooth functional form of x.
 run = notebook_run(config_updates={
     'obj_func': {
-        'name': 'Jump1D',
+        'name': 'IncreasingOscillation',
     },
     'model': {
         'name': 'LocalLengthScaleGPModel',
@@ -52,20 +101,22 @@ run = notebook_run(config_updates={
 
 #%%
 
+# Fix increasing oscillation (DKL not capturing it)
+# Fix linear interpolation
 run = notebook_run(config_updates={
     'obj_func': {
-        'name': 'Jump1D',
+        'name': 'IncreasingOscillation',
     },
     'model': {
         'name': 'DKLGPModel',
         'kwargs': {
-            'n_iter': 50,
+            'n_iter': 500,
             'nn_kwargs': {
                 'layers': (1000, 500, 50, 2),
             }
         }
     },
-    'gp_samples': 50,
+    'gp_samples': 100,
 }, options={'--force': True})
 
 
@@ -244,6 +295,23 @@ notebook_run(config_updates={},
 
 
 # %%
+# --------------- LinearInterpolate -----------------
+
+# Ground truth for Kink2D (sample proportional to value).
+# to compare: kde vs f(x)/int f(x)
+
+run = notebook_run(config_updates={
+    'obj_func': {
+        'name': 'IncreasingOscillation',
+    },
+    'model': {
+        'name': 'LinearInterpolateModel',
+        'kwargs': {}
+    },
+    'gp_samples': 50,
+}, options={'--force': True})
+
+# %%
 # --------------- Utils ----------------
 
 # %% Save configs
@@ -252,4 +320,9 @@ notebook_run('save_config', named_configs=['gpy'], config_updates={'config_filen
 
 # %% Print configs
 
-notebook_run('print_config', options={'--force': True})
+notebook_run('print_config', named_configs=['config/gpy.yaml'], options={'--force': True})
+
+# %% YAML to python dict
+
+run = notebook_run('print_config', named_configs=['configs/gpy.yaml'], options={'--force': True})
+run.config

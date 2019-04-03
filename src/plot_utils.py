@@ -62,9 +62,6 @@ def plot1D(model: BaseModel, f: BaseEnvironment) -> plt.Figure:
     ax.fill_between(X_line.reshape(-1),
                     (mean + 2 * np.sqrt(var)).reshape(-1),
                     (mean - 2 * np.sqrt(var)).reshape(-1), alpha=0.5)
-
-
-
     return fig
 
 
