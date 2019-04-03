@@ -1,0 +1,30 @@
+acquisition_function:
+  kwargs:
+    beta: 2
+  name: AcquisitionModelMismatch
+bo:
+  n_acq_max_starts: 2
+  n_init: 5
+  n_iter: 10
+model:
+  name: GPModel
+  kwargs:
+    do_optimize: false
+    kernel:
+      kwargs:
+        lengthscale: 1
+      name: GPyRBF
+    leapfrog_steps: 20
+    n_burnin: 100
+    noise_prior: null
+    num_mcmc: 0
+    step_size: 0.1
+    subsample_interval: 10
+model2:
+  name: GPModel
+  kwargs:
+    kernel:
+      name: GPyExponential
+obj_func:
+  name: Kink1D
+seed: 268245656

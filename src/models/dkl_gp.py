@@ -10,16 +10,22 @@ else:
 
 
 class LargeFeatureExtractor(torch.nn.Sequential):
-    def __init__(self, data_dim, output_dim):
+    def __init__(self, data_dim, layers=(50, 25, 10, 2)):
         super(LargeFeatureExtractor, self).__init__()
-        self.add_module('linear1', torch.nn.Linear(data_dim, 50))
-        self.add_module('relu1', torch.nn.ReLU())
-        self.add_module('linear2', torch.nn.Linear(50, 25))
-        self.add_module('relu2', torch.nn.ReLU())
-        self.add_module('linear3', torch.nn.Linear(25, 10))
-        self.add_module('relu3', torch.nn.ReLU())
-        self.add_module('linear4', torch.nn.Linear(10, output_dim))
-        self.output_dim = output_dim
+
+        assert len(layers) >= 1, "You need to specify at least and output layer size."
+        layers = (data_dim,) + layers
+
+        i = 0
+        self.add_module('linear{}'.format(i), torch.nn.Linear(layers[i], layers[i + 1]))
+
+        for i in range(1, len(layers) - 1):
+            in_ = layers[i]
+            out = layers[i + 1]
+            self.add_module('relu{}'.format(i - 1), torch.nn.ReLU())
+            self.add_module('linear{}'.format(i), torch.nn.Linear(in_, out))
+
+        self.output_dim = layers[-1]
 
 
 class GPRegressionModel(gpytorch.models.ExactGP):
@@ -28,7 +34,7 @@ class GPRegressionModel(gpytorch.models.ExactGP):
         self.mean_module = gpytorch.means.ConstantMean()
         self.covar_module = gpytorch.kernels.GridInterpolationKernel(
             gpytorch.kernels.ScaleKernel(gpytorch.kernels.RBFKernel(ard_num_dims=feature_extractor.output_dim)),
-            num_dims=feature_extractor.output_dim, grid_size=100
+            num_dims=feature_extractor.output_dim, grid_size=30
         )
         self.feature_extractor = feature_extractor
 
@@ -44,22 +50,26 @@ class GPRegressionModel(gpytorch.models.ExactGP):
 
 
 class DKLGPModel(BaseModel):
-    def __init__(self, gp_dim=2):
-        self.gp_dim = gp_dim
+    def __init__(self, n_iter=50, gp_kwargs=None, nn_kwargs=None):
+        self.gp_kwargs = gp_kwargs if gp_kwargs is not None else {}
+        self.nn_kwargs = nn_kwargs if nn_kwargs is not None else {}
+
         self.model = None
         self.likelihood = None
+        self.n_iter = n_iter
 
-    def fit(self, X, Y, is_initial=True):
-        super(DKLGPModel, self).fit(X, Y, is_initial=is_initial)
-        
+        self.X_torch = None
+        self.Y_torch = None
+
+    def _fit(self, X, Y, is_initial=True):
         n, d = X.shape
 
-        train_x = torch.Tensor(X).contiguous().to(device)
-        train_y = torch.Tensor(Y).contiguous().to(device)
+        self.X_torch = torch.Tensor(X).contiguous().to(device)
+        self.Y_torch = torch.Tensor(Y[:, 0]).contiguous().to(device)
 
-        feature_extractor = LargeFeatureExtractor(d, self.gp_dim).to(device)
+        feature_extractor = LargeFeatureExtractor(d, **self.nn_kwargs).to(device)
         self.likelihood = gpytorch.likelihoods.GaussianLikelihood().to(device)
-        self.model = GPRegressionModel(train_x, train_y, self.likelihood, feature_extractor).to(device)
+        self.model = GPRegressionModel(self.X_torch, self.Y_torch, self.likelihood, feature_extractor, **self.gp_kwargs).to(device)
 
         # Go into training mode
         self.model.train()
@@ -76,18 +86,16 @@ class DKLGPModel(BaseModel):
         # "Loss" for GPs - the marginal log likelihood
         mll = gpytorch.mlls.ExactMarginalLogLikelihood(self.likelihood, self.model)
 
-        training_iterations = 60
-
         def _train():
-            for i in range(training_iterations):
+            for i in range(self.n_iter):
                 # Zero backprop gradients
                 optimizer.zero_grad()
                 # Get output from model
-                output = self.model(train_x)
+                output = self.model(self.X_torch)
                 # Calc loss and backprop derivatives
-                loss = -mll(output, train_y)
+                loss = -mll(output, self.Y_torch)
                 loss.backward()
-                print('Iter %d/%d - Loss: %.3f' % (i + 1, training_iterations, loss.item()))
+                print('Iter %d/%d - Loss: %.3f' % (i + 1, self.n_iter, loss.item()))
                 optimizer.step()
 
         # See dkl_mnist.ipynb for explanation of this flag
@@ -106,19 +114,9 @@ class DKLGPModel(BaseModel):
         with torch.no_grad(), gpytorch.settings.use_toeplitz(False), gpytorch.settings.fast_pred_var():
             multivariate_normal = self.model(test_x)
 
-        mean = multivariate_normal.mean.numpy()
+            mean = multivariate_normal.mean.numpy()[:, None]
 
-        if full_cov:
-            return mean, multivariate_normal.covariance_matrix.numpy()
-        else:
-            return mean, multivariate_normal.variance.numpy()
-
-    def plot(self, ax=None):
-        n, d = self.X.shape
-
-        if d == 1:
-            pass
-        elif d == 2:
-            pass
-        else:
-            raise ValueError("Input dim can be at most 2 but is {}.".format(d))
+            if full_cov:
+                return mean, multivariate_normal.covariance_matrix.numpy()[:, None]
+            else:
+                return mean, multivariate_normal.variance.numpy()[:, None]

@@ -1,0 +1,22 @@
+acquisition_function:
+  name: QuadratureAcquisition
+bo:
+  n_acq_max_starts: 2
+  n_init: 5
+  n_iter: 10
+model:
+  kwargs:
+    do_optimize: false
+    kernel:
+      kwargs:
+        lengthscale: 1
+      name: GPyRBF
+    leapfrog_steps: 20
+    n_burnin: 100
+    noise_prior: null
+    num_mcmc: 10
+    step_size: 0.1
+    subsample_interval: 10
+  name: GPModel
+obj_func:
+  name: Kink1D

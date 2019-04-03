@@ -4,8 +4,6 @@ from scipy.optimize import differential_evolution
 from sklearn.gaussian_process import GaussianProcessRegressor
 from sklearn.gaussian_process.kernels \
     import ConstantKernel as C, Matern
-from sklearn.metrics import mean_squared_error
-from sklearn.model_selection import learning_curve
 
 from gp_extras.kernels import LocalLengthScalesKernel
 
@@ -13,21 +11,21 @@ from src.models.models import BaseModel
 
 
 class LocalLengthScaleGPModel(BaseModel):
-    def __init__(self):
+    def __init__(self, l_samples=5):
         super(LocalLengthScaleGPModel, self).__init__()
         self.model: GaussianProcessRegressor = None
+        self.l_samples = l_samples
+        self.lls_kernel = None
 
-    def fit(self, X, Y, is_initial=True):
-        super(LocalLengthScaleGPModel, self).fit(X, Y, is_initial=is_initial)
-
+    def _fit(self, X, Y, is_initial=True):
         # Define custom optimizer for hyperparameter-tuning of non-stationary kernel
         def de_optimizer(obj_func, initial_theta, bounds):
             res = differential_evolution(lambda x: obj_func(x, eval_gradient=False),
-                                         bounds, maxiter=20, disp=False, polish=False)
+                                         bounds, maxiter=20, disp=True, polish=False)
             return res.x, obj_func(res.x, eval_gradient=False)
 
-        kernel_lls = C(1.0, (1e-10, 1000)) \
-                     * LocalLengthScalesKernel.construct(X, l_L=0.1, l_U=2.0, l_samples=5)
+        self.lls_kernel = LocalLengthScalesKernel.construct(X, l_L=0.1, l_U=2.0, l_samples=self.l_samples)
+        kernel_lls = C(1.0, (1e-10, 1000)) * self.lls_kernel
         gp_lls = GaussianProcessRegressor(kernel=kernel_lls, optimizer=de_optimizer)
 
         # Fit GPs
@@ -43,20 +41,19 @@ class LocalLengthScaleGPModel(BaseModel):
         assert self.model is not None, "Call `self.fit` before predicting."
 
         y_mean_lls, y_std_lls = self.model.predict(X, return_std=True)
-        return y_mean_lls, y_std_lls ** 2
+        return y_mean_lls, (y_std_lls ** 2)[:, None]
 
     def get_lengthscale(self, X):
         kern = self.model.kernel_
         return kern.k2.theta_gp * 10 ** kern.k2.gp_l.predict(X)
+
 
 class LocalLengthScaleGPBaselineModel(BaseModel):
     def __init__(self):
         super(LocalLengthScaleGPBaselineModel, self).__init__()
         self.model = None
 
-    def fit(self, X, Y, is_initial=True):
-        super(LocalLengthScaleGPBaselineModel, self).fit(X, Y, is_initial=True)
-
+    def _fit(self, X, Y, is_initial=True):
         kernel_matern = C(1.0, (1e-10, 1000)) \
             * Matern(length_scale_bounds=(1e-1, 1e3), nu=1.5)
         gp_matern = GaussianProcessRegressor(kernel=kernel_matern)
@@ -72,8 +69,8 @@ class LocalLengthScaleGPBaselineModel(BaseModel):
         assert full_cov is not True, "Full covariance is not supported yet."
         assert self.model is not None, "Call `self.fit` before predicting."
 
-        y_mean_lls, y_std_lls = self.model.predict(X, return_std=True)
-        return y_mean_lls, y_std_lls ** 2
+        y_mean, y_std = self.model.predict(X, return_std=True)
+        return y_mean, (y_std ** 2)[:, None]
 
     def get_lengthscale(self, X):
         # TODO: shouldn't we get a GP (with var) over the length scale?

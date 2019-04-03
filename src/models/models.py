@@ -6,6 +6,9 @@ import GPy
 
 
 class BaseModel(object):
+    def __repr__(self):
+        return "{}".format(type(self).__name__)
+
     def get_incumbent(self):
         i = np.argmax(self.Y)
         return self.X[i], self.Y[i]
@@ -14,21 +17,42 @@ class BaseModel(object):
         self.X = X
         self.Y = Y
         if train:
-            self.fit(self.X, self.Y, is_initial=True)
+            self._fit(self.X, self.Y, is_initial=True)
 
     def add_observations(self, X_new, Y_new):
         # Update data
         self.X = np.concatenate([self.X, X_new])
         self.Y = np.concatenate([self.Y, Y_new])
         
-        self.fit(self.X, self.Y, is_initial=False)
+        self._fit(self.X, self.Y, is_initial=False)
 
-    def fit(self, X, Y, is_initial=True):
-        self.X = X
-        self.Y = Y
-
-    def get_statistics(self, X):
+    def _fit(self, X, Y, is_initial=True):
         raise NotImplementedError
+
+    def get_statistics(self, X, full_cov=True):
+        raise NotImplementedError
+
+    def plot(self, X_line, ax=None):
+        import matplotlib.pyplot as plt
+        ax = ax if ax is not None else plt
+
+        assert X_line.shape[1] is 1, "GPModel can currently only plot on 1-dim domains."
+
+        mean, var = self.get_statistics(X_line, full_cov=False)
+
+        # Add hyperparam dim if not already there.
+        if mean.ndim == 2:
+            mean = mean[None, :]
+            var = var[None, :]
+
+        n_hparams = mean.shape[0]
+        # TODO: MULTIOBJ Plot only first objective for now
+
+        # Iterate stats under different hyperparameters
+        for (mean, var) in ((mean[i], var[i]) for i in range(n_hparams)):
+            ax.fill_between(X_line.reshape(-1), (mean + np.sqrt(var)).reshape(-1), (mean - np.sqrt(var)).reshape(-1), alpha=.2)
+            ax.plot(X_line, mean)
+            ax.scatter(self.X, self.Y)
 
 
 class GPModel(BaseModel):
@@ -55,7 +79,7 @@ class GPModel(BaseModel):
         self.gpy_model = None
         self.has_mcmc_warmup = False 
 
-    def fit(self, X, Y, is_initial=True):
+    def _fit(self, X, Y, is_initial=True):
         if self.gpy_model is None:
             self.gpy_model = GPy.models.GPRegression(X, Y, self.kernel)
             if self.noise_prior:
@@ -81,8 +105,6 @@ class GPModel(BaseModel):
                 self._current_thetas = [self.gpy_model.param_array]
         else:
             self._current_thetas = [self.gpy_model.param_array]
-
-        super(GPModel, self).fit(X, X, is_initial=is_initial)
 
     def get_statistics(self, X, full_cov=True):
         """[summary]
@@ -122,26 +144,11 @@ class GPModel(BaseModel):
         if full_cov:
             return mean, covar
         else:
-            return mean, var 
-
-    def plot(self, X_line, ax=None):
-        import matplotlib.pyplot as plt
-        ax = ax if ax is not None else plt
-
-        assert X_line.shape[1] is 1, "GPModel can currently only plot on 1-dim domains."
-
-        mean, var = self.get_statistics(X_line, full_cov=False)
-        n_hparams = mean.shape[0]
-        # TODO: MULTIOBJ Plot only first objective for now
-
-        # Iterate stats under different hyperparameters
-        for (mean, var) in ((mean[i], var[i]) for i in range(n_hparams)):
-            ax.fill_between(X_line.reshape(-1), (mean + np.sqrt(var)).reshape(-1), (mean - np.sqrt(var)).reshape(-1), alpha=.2)
-            ax.plot(X_line, mean)
-            ax.scatter(self.X, self.Y)
+            return mean, var
 
 
 from scipy.linalg import cho_factor, cho_solve
+
 
 class GPVanillaModel(BaseModel):
     def __init__(self, gamma=0.1, noise=0.01):
@@ -149,14 +156,12 @@ class GPVanillaModel(BaseModel):
         self.gamma = gamma
         self.noise = noise
 
-    def fit(self, X, Y, is_initial=True):
+    def _fit(self, X, Y, is_initial=True):
         n, d = X.shape
         kern = self.kernel(X,X) + self.noise * np.identity(n)
         
         self.K_noisy_inv = np.linalg.inv(kern)
         self.cho_decomp = cho_factor(kern)
-
-        super(GPModel, self).fit(X, X, is_initial=is_initial)
 
     def kernel(self, X1, X2):
         # SE kernel
@@ -164,7 +169,7 @@ class GPVanillaModel(BaseModel):
         K = np.exp(-pairwise_sq_dists / self.gamma ** 2)
         return K
     
-    def get_statistics(self, X):
+    def get_statistics(self, X, full_cov=True):
         assert self.K_noisy_inv is not None, "`self.fit` needs to be called first."
 
         # Compute over multiple rounds
@@ -181,27 +186,16 @@ class GPVanillaModel(BaseModel):
         cov = kern(X,X) + self.noise - k @ self.K_noisy_inv @ k.T
 
         # (stats, obs, obj_dim)
-        return mu, cov
-
-    def plot(self, X_line):
-        import matplotlib.pyplot as plt
-
-        assert X_line.shape[1] is 1, "GPModel can currently only plot on 1-dim domains."
-
-        mean, covar = self.get_statistics(X_line)
-        std = np.sqrt(np.diagonal(covar))
-
-        X_line = X_line[:,0]
-        mean = mean[:,0]
-
-        plt.fill_between(X_line.reshape(-1), (mean + std).reshape(-1), (mean - std).reshape(-1), alpha=.2)
-        plt.plot(X_line, mean)
-        plt.scatter(self.X, self.Y)
+        if full_cov:
+            return mu, cov
+        else:
+            return mu, np.diagonal(cov)[:, None]
 
 
 class GPVanillaLinearModel(GPVanillaModel):
     def kernel(self, X1, X2):
         return X1 @ X2.T
+
 
 class LowRankGPModel(BaseModel):
     def __init__(self, gamma=0.1, noise = 0.01, n_features=10):
@@ -218,15 +212,13 @@ class LowRankGPModel(BaseModel):
         # GPML p. 131 (pdf)
         pass
 
-    def fit(self, X, Y, is_initial=True):
+    def _fit(self, X, Y, is_initial=True):
         n, d = X.shape 
         Q = self.feature_map(X)
         noise_inv = (1 / self.noise)
         small_kernel = self.noise * np.identity(self.m) + Q.T @ Q
         small_kernel_inv = np.linalg.inv(small_kernel)
         self.K_noisy_inv = noise_inv * np.identity(n) - noise_inv * (Q @ small_kernel_inv @ Q.T)
-
-        super(LowRankGPModel, self).fit(X, X, is_initial=is_initial)
 
         # compute inverse K_inv of K based on its Cholesky
         # decomposition L and its inverse L_inv
@@ -255,7 +247,7 @@ class LowRankGPModel(BaseModel):
             Q2 = self.feature_map(X2)
             return Q1 @ Q2.T
 
-    def get_statistics(self, X):
+    def get_statistics(self, X, full_cov=True):
         assert self.K_noisy_inv is not None, "`self.fit` needs to be called first."
 
         kern = self.kernel
@@ -264,22 +256,10 @@ class LowRankGPModel(BaseModel):
         cov = kern(X,X) + self.noise - k @ self.K_noisy_inv @ k.T
 
         # (stats, obs, obj_dim)
-        return mu, cov
-
-    def plot(self, X_line):
-        import matplotlib.pyplot as plt
-
-        assert X_line.shape[1] is 1, "GPModel can currently only plot on 1-dim domains."
-
-        mean, covar = self.get_statistics(X_line)
-        std = np.sqrt(np.diagonal(covar))
-
-        X_line = X_line[:,0]
-        mean = mean[:,0]
-
-        plt.fill_between(X_line.reshape(-1), (mean + std).reshape(-1), (mean - std).reshape(-1), alpha=.2)
-        plt.plot(X_line, mean)
-        plt.scatter(self.X, self.Y)
+        if full_cov:
+            return mu, cov
+        else:
+            return mu, np.diagonal(cov)[:, None]
 
 
 class RandomFourierFeaturesModel(LowRankGPModel):
@@ -318,6 +298,7 @@ class RandomFourierFeaturesModel(LowRankGPModel):
         # n x m
         return np.concatenate((Q_cos, Q_sin), axis=0).T
 
+
 class EfficientLinearModel(LowRankGPModel):
     def __init__(self, gamma=0.1, noise=0.01, n_features=None):
         super(EfficientLinearModel, self).__init__(gamma=gamma, noise=noise, n_features=n_features)
@@ -338,7 +319,7 @@ def cartesian_product(*arrays):
     dtype = np.result_type(*arrays)
     arr = np.empty([len(a) for a in arrays] + [la], dtype=dtype)
     for i, a in enumerate(np.ix_(*arrays)):
-        arr[...,i] = a
+        arr[..., i] = a
     return arr.reshape(-1, la)
 
 

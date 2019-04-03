@@ -34,15 +34,19 @@
 
 - General requirements:
   ```bash
-  conda create -n lions python=3.6
   source $HOME/miniconda/bin/activate
+  conda create -n lions python=3.6
   source activate lions
   conda install -y pytorch torchvision -c pytorch
   conda install -y gpytorch -c gpytorch
   conda install -y -c conda-forge numpy blas seaborn scipy matplotlib pandas gpy
   pip install pydot-ng
+  pip install gpyopt
 
   conda install -y scikit-learn
+  pip install git+https://github.com/IDSIA/sacred.git
+  pip install pyyaml GitPython pymongo
+  pip install incense
 
   git clone https://github.com/jmetzen/gp_extras.git
   cd gp_extras
@@ -51,16 +55,22 @@
 
 - Notebook requirements:
   ```bash
-  conda install -c conda-forge ipympl
-  conda install jupyterlab nodejs
-  jupyter labextension install @jupyter-widgets/jupyterlab-manager
-  pip install -U jupyter
+  conda -y install notebook
+  pip install ipywidgets
+  jupyter nbextension enable --py widgetsnbextension
   ```
 
 - Plotly requirements for jupyterlab:  
   ```bash
   jupyter labextension install @jupyterlab/plotly-extension
   ```
+
+## Omniboard
+
+```
+npm install -g omniboard
+omniboard -m localhost:27017:lions
+```
 
 ## Troubleshoot
 

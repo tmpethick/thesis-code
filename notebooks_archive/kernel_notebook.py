@@ -6,12 +6,7 @@
 
 import matplotlib.pyplot as plt
 import numpy as np
-import matplotlib
 import GPy
-
-from src.algorithms import AcquisitionAlgorithm, random_hypercube_samples
-from src.models.models import GPModel, RandomFourierFeaturesModel
-from src.acquisition_functions import QuadratureAcquisition
 
 # Plotting
 import seaborn as sns
@@ -51,6 +46,7 @@ def get_equation(kern):
 
 # Try plotting sample paths here
 k = GPy.kern.LinearFull(input_dim=1, rank=1, kappa=np.array([1000]), W=1000*np.ones((1, 1)))
+kernel_name = type(k).__name__
 
 X = np.linspace(0.,1.,500) # define X to be 500 points evenly spaced over [0,1]
 X = X[:,None] # reshape X to make it n*p --- we try to use 'design matrices' in GPy 

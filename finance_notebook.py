@@ -1,4 +1,5 @@
 #%%
+from src.utils import mean_square_error
 %load_ext autoreload
 %autoreload 2
 
@@ -6,26 +7,13 @@
 
 import matplotlib.pyplot as plt
 import numpy as np
-import matplotlib
 import GPy
-import scipy
 
-from src.algorithms import AcquisitionAlgorithm, random_hypercube_samples
-from src.models.models import GPModel, RandomFourierFeaturesModel
 from src.acquisition_functions import QuadratureAcquisition
 
 import seaborn as sns
 sns.set_style("darkgrid")
 
-
-def mean_square_error(bq):
-    X_line = np.linspace(bq.bounds[0,0], bq.bounds[0,1], 500)[:,None]
-    Y = f(X_line)
-    Y_hat, covar = bq.models[0].get_statistics(X_line)
-    Y_hat = np.mean(Y_hat, axis=0) # average over hyperparameters
-    mse = np.sqrt(np.sum(np.square(Y - Y_hat)))
-    print("MSE:", mse)
-    return mse 
 
 #%% 1D Huuuuge kink (testing kernels)
 def f(x):
@@ -64,7 +52,6 @@ for kernel in [
    model.plot()
 
 #%% Uniform sampling
-from src.acquisition_functions import AcquisitionModelMismatch
 from src.algorithms import AcquisitionAlgorithm
 from src.models.models import GPModel
 
@@ -83,7 +70,7 @@ bq.run()
 bq.plot()
 
 plt.hist(bq.models[0].X)
-mse_vanilla = mean_square_error(bq)
+mse_vanilla = mean_square_error(bq.models[0], bq.f)
 
 #%% Model Mismatch sampling approach
 from src.acquisition_functions import AcquisitionModelMismatch
@@ -109,7 +96,7 @@ bq = AcquisitionAlgorithm(f, models, acq, bounds=bounds, n_init=2, n_iter=100, n
 bq.run()
 bq.plot()
 
-mse_model_mismatch = mean_square_error(bq)
+mse_model_mismatch = mean_square_error(bq.models[0], bq.f)
 
 #%%
 
@@ -118,7 +105,6 @@ print("MSE vanilla:", mse_vanilla) # 10075.7768671319
 
 #%%
 # Test 2D Finance function 
-from mpl_toolkits import mplot3d
 fig = plt.figure()
 ax = plt.axes(projection='3d')
 
@@ -133,7 +119,6 @@ Z = f(np.stack((X,Y), axis=-1))
 ax.contour3D(X,Y,Z, 50, cmap='binary')
 
 #%% 2D vanilla strategy (scatter plot)
-from src.acquisition_functions import AcquisitionModelMismatch
 from src.algorithms import AcquisitionAlgorithm
 from src.models.models import GPModel
 
@@ -186,9 +171,3 @@ bq.plot()
 #%%
 import seaborn as sns
 sns.scatterplot(bq.X[...,0], bq.X[...,1])
-
-# Sample near kinks
-   # We need to somehow specify that we are bad at kinks. 
-   # Gradients does not capture this. (and wont work for kinks)
-   # Sample at curvature. Will sample at "abrupt" changes. This might work.
-   # Try Home backed Acquisition function.

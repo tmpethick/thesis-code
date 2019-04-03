@@ -6,34 +6,10 @@ from scipy import optimize
 import seaborn as sns
 
 from src.acquisition_functions import AcquisitionBase
+from src.models.models import BaseModel
 
 from src.plot_utils import construct_2D_grid, call_function_on_grid
-
-
-def constrain_points(x, bounds):
-    dim = x.shape[0]
-    minx = np.repeat(bounds[:, 0][None, :], dim, axis=0)
-    maxx = np.repeat(bounds[:, 1][None, :], dim, axis=0)
-    return np.clip(x, a_min=minx, a_max=maxx)
-
-
-def random_hypercube_samples(n_samples, bounds, rng=None):
-    """Random sample from d-dimensional hypercube (d = bounds.shape[0]).
-
-    Returns: (n_samples, dim)
-    """
-    if rng is None:
-        rng = np.random.RandomState()
-
-    dims = bounds.shape[0]
-    a = rng.uniform(0, 1, (dims, n_samples))
-    bounds_repeated = np.repeat(bounds[:, :, None], n_samples, axis=2)
-    samples = a * np.abs(bounds_repeated[:,1] - bounds_repeated[:,0]) + bounds_repeated[:,0]
-    samples = np.swapaxes(samples, 0, 1)
-
-    # This handles the case where the sample is slightly above or below the bounds
-    # due to floating point precision (leading to slightly more samples from the boundary...).
-    return constrain_points(samples, bounds)
+from src.utils import random_hypercube_samples, constrain_points
 
 
 class AcquisitionAlgorithm(object):
@@ -44,23 +20,27 @@ class AcquisitionAlgorithm(object):
         n_init=20,
         n_iter=100,
         n_acq_max_starts=200,
-        f_opt=None, 
-        bounds=np.array([[0,1]]), 
+        f_opt=None,
         rng=None):
 
         self.f = f
-        self.models = models
+
+        if isinstance(models, BaseModel):
+            self.models = [models]
+        else:
+            self.models = models
+
         # An acq func is defined on a model and define how it uses that model 
         # (be it through sampling or mean/variance).
         if isinstance(acquisition_function, AcquisitionBase):
             self.acquisition_function = acquisition_function
         else:
-            self.acquisition_function = acquisition_function(*models)
+            self.acquisition_function = acquisition_function(*self.models)
   
         self.n_iter = n_iter
         self.n_init = n_init
         self.n_acq_max_starts = n_acq_max_starts
-        self.bounds = bounds
+        self.bounds = f.bounds
         self.f_opt = f_opt
 
         # Keep a local reference to X,Y for convinience.
@@ -120,11 +100,9 @@ class AcquisitionAlgorithm(object):
         self.Y = Y
         
         for model in self.models:
-            model.init(X,Y)
+            model.init(X, Y)
 
         for i in range(0, self.n_iter):
-            print("... starting round", i, "/", self.n_iter)
-
             # new datapoint from acq
             x_new = self.max_acq()
             X_new = np.array([x_new])
@@ -137,7 +115,7 @@ class AcquisitionAlgorithm(object):
                 self.Y = np.concatenate([self.Y, Y_new])
 
             if callable(callback):
-                callback(self)
+                callback(self, i)
 
     def plot(self):
         # (obs, 1)
@@ -149,6 +127,7 @@ class AcquisitionAlgorithm(object):
             fig = plt.figure()
             ax = fig.add_subplot(221)
             ax.set_title('Ground truth')
+            ax.scatter(self.X, self.Y)
             ax.plot(X_line, self.f(X_line))
             
             ax = fig.add_subplot(222)
@@ -156,6 +135,7 @@ class AcquisitionAlgorithm(object):
             ax.plot(X_line, self.acquisition_function(X_line))
 
             ax = fig.add_subplot(223)
+            ax.scatter(self.X, self.Y)
             ax.set_title('Estimate')
             for model in self.models:
                   model.plot(X_line, ax=ax)
@@ -173,16 +153,18 @@ class AcquisitionAlgorithm(object):
             ax.set_title('Ground truth')
             Z = call_function_on_grid(self.f, XY)
             ax.contour(X,Y,Z, 50)
+            ax.plot(self.X[:, 0], self.X[:, 1], '.', markersize=10)
 
             ax = fig.add_subplot(222)
             ax.set_title('Acq func')
             Z = call_function_on_grid(self.acquisition_function, XY)
             ax.contour(X,Y,Z, 50)
-
+            ax.plot(self.X[:, 0], self.X[:, 1], '.', markersize=10)
             ax = fig.add_subplot(223)
             ax.set_title('Estimate')
             Z = call_function_on_grid(self.model_estimate, XY)
             ax.contour(X,Y,Z, 50)
+            ax.plot(self.X[:, 0], self.X[:, 1], '.', markersize=10)
 
             ax = fig.add_subplot(224)
             ax.set_title('Sample density')
@@ -190,7 +172,16 @@ class AcquisitionAlgorithm(object):
             sns.scatterplot(self.X[...,0], self.X[...,1], ax=ax)
         else:
             warnings.warn("Cannot plot above 2D.", Warning)
+            fig = None
+        return fig
 
     def model_estimate(self, X):
-        mean, var = self.models[0].get_statistics(X)
+        mean, var = self.models[0].get_statistics(X, full_cov=False)
         return mean
+
+
+def bo_plot_callback(bq: AcquisitionAlgorithm, i: int):
+   # print("Round {} using model {}".format(i, bq.models[0]))
+   if i % 5 == 0 or i == bq.n_iter:
+      bq.plot()
+      plt.show()

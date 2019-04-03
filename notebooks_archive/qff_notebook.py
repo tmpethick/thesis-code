@@ -9,7 +9,8 @@ import numpy as np
 import matplotlib
 import GPy
 
-from src.algorithms import AcquisitionAlgorithm, random_hypercube_samples
+from src.algorithms import AcquisitionAlgorithm
+from src.utils import random_hypercube_samples
 from src.models.models import GPModel, RandomFourierFeaturesModel
 from src.acquisition_functions import QuadratureAcquisition
 
@@ -44,19 +45,19 @@ def f(x):
    return np.sinc(x)
 
 bounds = np.array([[0,1]])
+X = random_hypercube_samples(15, bounds)
 Y = f(X)
 
 kernel = GPy.kern.Linear(1) # + GPy.kern.Bias(1)
 model = GPModel(kernel=kernel, noise_prior=0.01, do_optimize=False)
 X_line = np.linspace(bounds[0,0], bounds[0,1], 500)[:, None]
-model.fit(X, Y)
+model.init(X, Y)
 model.plot(X_line)
 plt.plot(X_line, f(X_line))
 
 mean, covar = model.get_statistics(X_line)
 mean, covar = mean[0], covar[0,:,:,0]
 plt.matshow(model.kernel.K(X_line, X_line))
-X = random_hypercube_samples(15, bounds)
 plt.matshow(covar)
 plt.show()
 
@@ -72,7 +73,7 @@ Y = f(X)
 d = X.shape[-1]
 model = GPVanillaLinearModel(noise=0.01)
 X_line = np.linspace(bounds[0,0], bounds[0,1], 500)[:, None]
-model.fit(X, Y)
+model.init(X, Y)
 model.plot(X_line)
 plt.plot(X_line, f(X_line))
 
@@ -95,7 +96,7 @@ Y = f(X)
 d = X.shape[-1]
 model = EfficientLinearModel(noise=0.01, n_features=d)
 X_line = np.linspace(bounds[0,0], bounds[0,1], 500)[:, None]
-model.fit(X, Y)
+model.init(X, Y)
 model.plot(X_line)
 plt.plot(X_line, f(X_line))
 
@@ -117,7 +118,7 @@ Y = f(X)
 
 model = GPModel(kernel=GPy.kern.RBF(1, lengthscale=0.2), noise_prior=0.01, do_optimize=False)
 X_line = np.linspace(bounds[0,0], bounds[0,1], 500)[:, None]
-model.fit(X, Y)
+model.init(X, Y)
 model.plot(X_line)
 plt.plot(X_line, f(X_line))
 
@@ -140,7 +141,7 @@ Y = f(X)
 
 model = GPVanillaModel(gamma=0.2, noise=0.01)
 X_line = np.linspace(bounds[0,0], bounds[0,1], 500)[:, None]
-model.fit(X, Y)
+model.init(X, Y)
 model.plot(X_line)
 plt.plot(X_line, f(X_line))
 
@@ -161,7 +162,7 @@ Y = f(X)
 for n_features in [1000]:
    model = RandomFourierFeaturesModel(gamma=0.2, n_features=n_features)
    X_line = np.linspace(bounds[0,0], bounds[0,1], 500)[:, None]
-   model.fit(X, Y)
+   model.init(X, Y)
    model.plot(X_line)
    plt.plot(X_line, f(X_line))
 
@@ -183,7 +184,7 @@ Y = f(X)
 for n_features in [300]:
    model = QuadratureFourierFeaturesModel(gamma=0.2, n_features=n_features)
    X_line = np.linspace(bounds[0,0], bounds[0,1], 500)[:, None]
-   model.fit(X, Y)
+   model.init(X, Y)
    model.plot(X_line)
    plt.plot(X_line, f(X_line))
 
@@ -208,6 +209,7 @@ Y = f(X)
 model = GPy.models.GPRegression(X, Y, kernel=kernel)
 model.Gaussian_noise.fix(0)
 model.plot()
+plt.show()
 
 #%% Sample paths from exponential
 X_test = np.linspace(0, 1, 100).reshape(-1, 1)
@@ -218,6 +220,7 @@ plt.plot(X_test, Y_post_test)
 plt.plot(X, Y, 'xk', markersize=4)
 plt.plot(X_test, simY - 3 * simMse ** 0.5, '--g')
 plt.plot(X_test, simY + 3 * simMse ** 0.5, '--g')
+plt.show()
 
 #%% 
 # Test Matern
@@ -235,4 +238,4 @@ Y = f(X)
 model = GPy.models.GPRegression(X, Y, kernel=kernel)
 model.Gaussian_noise.fix(0)
 model.plot()
-
+plt.show()

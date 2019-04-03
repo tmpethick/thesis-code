@@ -4,21 +4,25 @@ from mpl_toolkits import mplot3d
 
 from src.environments import BaseEnvironment
 from src.models.models import BaseModel
+import seaborn as sns
 
 
-def plot_function(f: BaseEnvironment, func, title="Function"):
+def plot_function(f: BaseEnvironment, func, title="Function", points=None):
     if f.input_dim == 1:
         X_line = np.linspace(f.bounds[0, 0], f.bounds[0, 1], 100)[:, None]
         Y_line = f(X_line)[:, 0]
 
         fig = plt.figure()
-        ax = fig.add_subplot(121)
+        ax = fig.add_subplot(211)
         ax.set_title('Ground truth f')
         ax.plot(X_line, Y_line)
 
-        ax = fig.add_subplot(122)
+        ax = fig.add_subplot(212)
         ax.set_title(title)
         ax.plot(X_line, func(X_line))
+        if points is not None:
+            sns.scatterplot(points[:, 0], np.zeros(points.shape[0]), ax=ax)
+
     elif f.input_dim == 2:
         XY, X, Y = construct_2D_grid(f.bounds)
         Z = call_function_on_grid(f, XY)
@@ -32,24 +36,37 @@ def plot_function(f: BaseEnvironment, func, title="Function"):
         ax = fig.add_subplot(122)
         ax.set_title(title)
         ax.contour(X, Y, Z_hat, 50)
+        if points is not None:
+            sns.scatterplot(points[:, 0], points[:, 1], ax=ax)
     else:
         raise ValueError("Cannot plot in input dim above 2.")
 
-def plot1D(model, f):
+    return fig
+
+
+def plot1D(model: BaseModel, f: BaseEnvironment) -> plt.Figure:
     X_line = np.linspace(f.bounds[0, 0], f.bounds[0, 1], 100)[:, None]
     Y_line = f(X_line)[:, 0]
 
     mean, var = model.get_statistics(X_line, full_cov=False)
 
-    plt.scatter(model.X.reshape(-1), model.Y)
+    # aggregate hyperparameters dimension
+    if var.ndim == 3:
+        mean = np.mean(mean, axis=0)
+        var = np.mean(var, axis=0)
+
+    fig, ax = plt.subplots()
+    ax.scatter(model.X.reshape(-1), model.Y)
     # TODO: DKL model was misbehaving throwing out negative variance
     #plt.fill_between(X_line.reshape(-1), (mean + 2 * np.sqrt(var)).reshape(-1), (mean - 2 * np.sqrt(var)))
-    plt.fill_between(X_line.reshape(-1), (mean + var).reshape(-1), (mean - var).reshape(-1))
-    plt.plot(X_line, mean)
-    plt.plot(X_line, Y_line)
+    ax.fill_between(X_line.reshape(-1), (mean + var).reshape(-1), (mean - var).reshape(-1))
+    ax.plot(X_line, mean)
+    ax.plot(X_line, Y_line)
+
+    return fig
 
 
-def plot2D(model: BaseModel, f: BaseEnvironment):
+def plot2D(model: BaseModel, f: BaseEnvironment) -> plt.Figure:
     XY, X, Y = construct_2D_grid(f.bounds)
 
     # remove grid
@@ -58,6 +75,11 @@ def plot2D(model: BaseModel, f: BaseEnvironment):
 
     mean, var = model.get_statistics(XY, full_cov=False)
     ground_truth = f(XY)
+
+    # aggregate hyperparameters dimension
+    if var.ndim == 3:
+        mean = np.mean(mean, axis=0)
+        var = np.mean(var, axis=0)
 
     # recreate grid
     mean = mean.reshape((original_grid_size, original_grid_size))
@@ -68,18 +90,22 @@ def plot2D(model: BaseModel, f: BaseEnvironment):
     ax = fig.add_subplot(221)
     ax.set_title('Ground truth f')
     ax.contour(X, Y, ground_truth, 50)
+    ax.plot(model.X[:, 0], model.X[:, 1], '.', markersize=10)
 
     ax = fig.add_subplot(222)
     ax.set_title('Mean estimate m')
     ax.contour(X, Y, mean, 50)
+    ax.plot(model.X[:, 0], model.X[:, 1], '.', markersize=10)
 
     ax = fig.add_subplot(223)
     ax.set_title('Model Variance')
     ax.contour(X, Y, var, 50)
+    ax.plot(model.X[:, 0], model.X[:, 1], '.', markersize=10)
 
     ax = fig.add_subplot(224, projection='3d')
     ax.set_title('Estimate Error |f-m|')
     ax.contour3D(X, Y, np.abs(mean - ground_truth), 50, cmap='binary')
+    return fig
 
 
 def construct_2D_grid(bounds):
