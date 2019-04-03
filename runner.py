@@ -39,22 +39,6 @@ def create_kernel(name, input_dim, kwargs):
     Class = getattr(kernels_module, name)
     return Class(input_dim, **kwargs)
 
-
-def create_model(name, input_dim, kwargs):
-    if 'kernel' in kwargs:
-        kern_name, kern_args, kern_kwargs = unpack(kwargs.pop('kernel'))
-        kwargs2 = dict(
-            kernel=create_kernel(kern_name, input_dim, kern_kwargs)
-        )
-        kwargs2.update(kwargs)
-    else:
-        kwargs2 = kwargs
-
-    # TODO: construct kernel
-    Class = getattr(models_module, name)
-    return Class(**kwargs2)
-
-
 def hash_subdict(d, keys=None):
     if keys is None:
         keys = []
@@ -72,6 +56,34 @@ def create_ex():
             'plot': True
         }
     })
+
+
+    @ex.capture
+    def dklgpmodel_training_callback(model, i, loss, _log, _run):
+        # TODO: save model
+        # Log
+        _log.info('Iter %d/%d - Loss: %.3f' % (i + 1, model.n_iter, loss))
+
+        # Metrics
+        _run.log_scalar('DKLGPModel.training.loss', loss, i)
+
+
+    def create_model(name, input_dim, kwargs):
+        if 'kernel' in kwargs:
+            kern_name, kern_args, kern_kwargs = unpack(kwargs.pop('kernel'))
+            kwargs2 = dict(
+                kernel=create_kernel(kern_name, input_dim, kern_kwargs)
+            )
+            kwargs2.update(kwargs)
+        else:
+            kwargs2 = kwargs
+
+        if name == 'DKLGPModel':
+            kwargs2['training_callback'] = dklgpmodel_training_callback
+
+        Class = getattr(models_module, name)
+        return Class(**kwargs2)
+
 
     @ex.config_hook
     def add_unique_hashes(config, command_name, logger):
@@ -182,7 +194,7 @@ def create_ex():
 
 
     @ex.main
-    def main(_config):
+    def main(_config, _run):
         ## Model construction
 
         # Create environment
@@ -213,8 +225,16 @@ def create_ex():
 
             bo.run(callback=plot)
         else:
+            bo = None
             test_gp_model(f, models, acquisition_function=acq, n_samples=_config['gp_samples'])
 
+        # Hack to have model available after run in interactive mode.
+        _run.interactive_stash = {
+            'model': models[0],
+            'model2': models[0] if len(models) >= 2 else None,
+            'acq': acq,
+            'bo': bo,
+        }
     return ex
 
 

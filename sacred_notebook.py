@@ -6,7 +6,7 @@ from runner import notebook_run
 
 #%%
 
-notebook_run(config_updates={
+run = notebook_run(config_updates={
     'obj_func': {
         'name': 'Kink2D',
     },
@@ -22,6 +22,17 @@ notebook_run(config_updates={
     'gp_samples': 5,
 }, options={'--force': True})
 
+# Variance starvation DKL
+
+# Active sampling strategies
+    # model mismatch
+    # robustness
+
+#%%
+model, model2, acq, bo = run.interactive_stash['model'], \
+                         run.interactive_stash['model2'], \
+                         run.interactive_stash['acq'], \
+                         run.interactive_stash['bo']
 
 #%%
 # ------------------ Templates --------------------

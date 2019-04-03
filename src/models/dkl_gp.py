@@ -49,8 +49,12 @@ class GPRegressionModel(gpytorch.models.ExactGP):
         return gpytorch.distributions.MultivariateNormal(mean_x, covar_x)
 
 
+def default_training_callback(model, i, loss):
+    print('Iter %d/%d - Loss: %.3f' % (i + 1, model.n_iter, loss))
+
+
 class DKLGPModel(BaseModel):
-    def __init__(self, n_iter=50, gp_kwargs=None, nn_kwargs=None):
+    def __init__(self, n_iter=50, gp_kwargs=None, nn_kwargs=None, training_callback=default_training_callback):
         self.gp_kwargs = gp_kwargs if gp_kwargs is not None else {}
         self.nn_kwargs = nn_kwargs if nn_kwargs is not None else {}
 
@@ -60,6 +64,8 @@ class DKLGPModel(BaseModel):
 
         self.X_torch = None
         self.Y_torch = None
+
+        self.training_callback = training_callback
 
     def _fit(self, X, Y, is_initial=True):
         n, d = X.shape
@@ -95,7 +101,8 @@ class DKLGPModel(BaseModel):
                 # Calc loss and backprop derivatives
                 loss = -mll(output, self.Y_torch)
                 loss.backward()
-                print('Iter %d/%d - Loss: %.3f' % (i + 1, self.n_iter, loss.item()))
+
+                self.training_callback(self, i, loss.item())
                 optimizer.step()
 
         # See dkl_mnist.ipynb for explanation of this flag
