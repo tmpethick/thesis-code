@@ -17,6 +17,13 @@ class BaseEnvironment(object):
         return self.bounds.shape[0]
 
 
+class Jump1D(BaseEnvironment):
+    bounds = np.array([[-1, 1]])
+
+    def __call__(self, x):
+        return np.sin(5*x) + np.sign(x)
+
+
 class Kink1D(BaseEnvironment):
     bounds = np.array([[-2, 2]])
 

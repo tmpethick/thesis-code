@@ -33,10 +33,11 @@ class GPRegressionModel(gpytorch.models.ExactGP):
     def __init__(self, train_x, train_y, likelihood, feature_extractor):
         super(GPRegressionModel, self).__init__(train_x, train_y, likelihood)
         self.mean_module = gpytorch.means.ConstantMean()
-        self.covar_module = gpytorch.kernels.GridInterpolationKernel(
-            gpytorch.kernels.ScaleKernel(gpytorch.kernels.RBFKernel(ard_num_dims=feature_extractor.output_dim)),
-            num_dims=feature_extractor.output_dim, grid_size=30
-        )
+        # self.covar_module = gpytorch.kernels.GridInterpolationKernel(
+        #     gpytorch.kernels.ScaleKernel(gpytorch.kernels.RBFKernel(ard_num_dims=feature_extractor.output_dim)),
+        #     num_dims=feature_extractor.output_dim, grid_size=30
+        # )
+        self.covar_module = gpytorch.kernels.RBFKernel(ard_num_dims=feature_extractor.output_dim)
         self.feature_extractor = feature_extractor
 
     def forward(self, x):
@@ -118,12 +119,13 @@ class DKLGPModel(BaseModel):
         self.likelihood.eval()
 
         # Hack to fix issue with making prediction for single inputs (n=1).
-        if X.shape[0] == 1:
-            fake_X = np.zeros((1, X.shape[1]))
-            X = np.concatenate((X, fake_X), axis=0)
-            cut_tail = -1
-        else:
-            cut_tail = None
+        # Only needed if approximate grid interpolation is used.
+        #if X.shape[0] == 1:
+        #    fake_X = np.zeros((1, X.shape[1]))
+        #    X = np.concatenate((X, fake_X), axis=0)
+        #    cut_tail = -1
+        #else:
+        cut_tail = None
 
 
         test_x = torch.Tensor(X).contiguous().to(device)

@@ -12,3 +12,4 @@ ARTIFACT_OUTPUT_FILENAME = 'artifacts/Y.npy'
 
 ARTIFACT_GP_FILENAME = 'artifacts/gp-{model_idx}.png'
 ARTIFACT_GP_ACQ_FILENAME = 'artifacts/gp-acq-{model_idx}.png'
+ARTIFACT_LLS_GP_LENGTHSCALE_FILENAME = 'artifacts/llsgp-lengthscale-{model_idx}.png'

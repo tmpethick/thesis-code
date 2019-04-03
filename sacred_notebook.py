@@ -5,6 +5,71 @@
 from runner import notebook_run
 
 #%%
+# ----------------- LocalLengthScaleGPModel -------------------
+
+#%%
+
+run = notebook_run(config_updates={
+    'obj_func': {
+        'name': 'Jump1D',
+    },
+    'model': {
+        'name': 'LocalLengthScaleGPModel',
+        'kwargs': {
+            'l_samples': 5,
+            'n_optimizer_iter': 10,
+        }
+    },
+    'gp_samples': 50,
+}, options={'--force': True})
+
+
+#%%
+
+run = notebook_run(config_updates={
+    'obj_func': {
+        'name': 'Kink2D',
+    },
+    'model': {
+        'name': 'LocalLengthScaleGPModel',
+        'kwargs': {
+            'l_samples': 5,
+        }
+    },
+    'acquisition_function': {
+        'name': 'QuadratureAcquisition',
+    },
+    'bo': {
+        'n_init': 5,
+        'n_iter': 50,
+        'n_acq_max_starts': 2,
+    },
+}, options={'--force': True})
+
+
+#%%
+# ----------------- DKLModel -------------------
+
+#%%
+
+run = notebook_run(config_updates={
+    'obj_func': {
+        'name': 'Jump1D',
+    },
+    'model': {
+        'name': 'DKLGPModel',
+        'kwargs': {
+            'n_iter': 50,
+            'nn_kwargs': {
+                'layers': (1000, 500, 50, 2),
+            }
+        }
+    },
+    'gp_samples': 50,
+}, options={'--force': True})
+
+
+#%%
 
 run = notebook_run(config_updates={
     'obj_func': {
@@ -24,7 +89,7 @@ run = notebook_run(config_updates={
     },
     'bo': {
         'n_init': 5,
-        'n_iter': 10,
+        'n_iter': 50,
         'n_acq_max_starts': 2,
     },
 }, options={'--force': True})
@@ -45,7 +110,7 @@ run = notebook_run(config_updates={
             }
         }
     },
-    'gp_samples': 5,
+    'gp_samples': 10,
 }, options={'--force': True})
 
 

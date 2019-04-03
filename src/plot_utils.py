@@ -57,11 +57,13 @@ def plot1D(model: BaseModel, f: BaseEnvironment) -> plt.Figure:
 
     fig, ax = plt.subplots()
     ax.scatter(model.X.reshape(-1), model.Y)
-    # TODO: DKL model was misbehaving throwing out negative variance
-    #plt.fill_between(X_line.reshape(-1), (mean + 2 * np.sqrt(var)).reshape(-1), (mean - 2 * np.sqrt(var)))
-    ax.fill_between(X_line.reshape(-1), (mean + var).reshape(-1), (mean - var).reshape(-1))
-    ax.plot(X_line, mean)
     ax.plot(X_line, Y_line)
+    ax.plot(X_line, mean)
+    ax.fill_between(X_line.reshape(-1),
+                    (mean + 2 * np.sqrt(var)).reshape(-1),
+                    (mean - 2 * np.sqrt(var)).reshape(-1), alpha=0.5)
+
+
 
     return fig
 
@@ -89,22 +91,26 @@ def plot2D(model: BaseModel, f: BaseEnvironment) -> plt.Figure:
     fig = plt.figure()
     ax = fig.add_subplot(221)
     ax.set_title('Ground truth f')
-    ax.contour(X, Y, ground_truth, 50)
+    cont = ax.contourf(X, Y, ground_truth, 50)
+    fig.colorbar(cont)
     ax.plot(model.X[:, 0], model.X[:, 1], '.', markersize=10)
 
     ax = fig.add_subplot(222)
     ax.set_title('Mean estimate m')
-    ax.contour(X, Y, mean, 50)
+    cont = ax.contourf(X, Y, mean, 50)
+    fig.colorbar(cont)
     ax.plot(model.X[:, 0], model.X[:, 1], '.', markersize=10)
 
     ax = fig.add_subplot(223)
-    ax.set_title('Model Variance')
-    ax.contour(X, Y, var, 50)
+    ax.set_title('Model std')
+    cont = ax.contourf(X, Y, np.sqrt(var), 50)
+    fig.colorbar(cont)
     ax.plot(model.X[:, 0], model.X[:, 1], '.', markersize=10)
 
-    ax = fig.add_subplot(224, projection='3d')
+    ax = fig.add_subplot(224)
     ax.set_title('Estimate Error |f-m|')
-    ax.contour3D(X, Y, np.abs(mean - ground_truth), 50, cmap='binary')
+    conf = ax.contourf(X, Y, np.abs(mean - ground_truth), 50)
+    fig.colorbar(cont)
     return fig
 
 

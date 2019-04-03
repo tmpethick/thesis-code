@@ -1,7 +1,7 @@
 import sys
 
 from src.environments import BaseEnvironment
-from src.models import BaseModel
+from src.models import BaseModel, LocalLengthScaleGPModel
 from src.plot_utils import plot1D, plot2D, plot_function
 
 
@@ -184,6 +184,11 @@ def create_ex():
             if acquisition_function is not None:
                 fig = plot_function(f, acquisition_function, title="Acquisition functions", points=X)
                 save_fig(fig, settings.ARTIFACT_GP_ACQ_FILENAME.format(model_idx=i))
+
+            # Length scale
+            if isinstance(model, LocalLengthScaleGPModel):
+                fig = plot_function(f, lambda x: 1 / model.get_lengthscale(x), title="1/Lengthscale", points=X)
+                save_fig(fig, settings.ARTIFACT_LLS_GP_LENGTHSCALE_FILENAME.format(model_idx=i))
 
             # Log
             mse = mean_square_error(model, f)
