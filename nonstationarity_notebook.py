@@ -126,24 +126,16 @@ bq.run(callback=bo_plot_callback)
 # Smoothness
 # Robustness
 
-# TODO:
-# Try on "easier" functions
-# fix dkl + lls variance
-# understand optimization routine for lls
-
-# TODO: (workflow)
-# Reconstruct model (config)
-    # config, uniqueness subset
-    # store: MSE, plot, weights
-# Create variance plot over total variance and MSE. (plot in box plot)
-# Save plots
-# Random seed for reproducability
 
 # TODO: (big picture)
 # Nonstationarity
     # See exisiting models work
     # Try own (model mismatch and kinky)
     # Ensure robust in BO setting (e.g. no mode collapse)
+# Active sampling strategies
+    # model mismatch
+    # robustness
+# Can curvature help with adjusting lengthscale? (i.e. is it any use outside active sampling?)
 # Combine with high-dim
     # Built into DKL
 # Scalability

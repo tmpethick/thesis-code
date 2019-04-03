@@ -15,18 +15,39 @@ run = notebook_run(config_updates={
         'kwargs': {
             'n_iter': 50,
             'nn_kwargs': {
-                'layers': (50, 25, 10, 2),
+                'layers': (1000, 500, 50, 2),
+            }
+        }
+    },
+    'acquisition_function': {
+        'name': 'QuadratureAcquisition',
+    },
+    'bo': {
+        'n_init': 5,
+        'n_iter': 10,
+        'n_acq_max_starts': 2,
+    },
+}, options={'--force': True})
+
+
+#%%
+
+run = notebook_run(config_updates={
+    'obj_func': {
+        'name': 'Kink2D',
+    },
+    'model': {
+        'name': 'DKLGPModel',
+        'kwargs': {
+            'n_iter': 50,
+            'nn_kwargs': {
+                'layers': (1000, 500, 50, 2),
             }
         }
     },
     'gp_samples': 5,
 }, options={'--force': True})
 
-# Variance starvation DKL
-
-# Active sampling strategies
-    # model mismatch
-    # robustness
 
 #%%
 model, model2, acq, bo = run.interactive_stash['model'], \

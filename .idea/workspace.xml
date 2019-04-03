@@ -3,9 +3,7 @@
   <component name="ChangeListManager">
     <list default="true" id="c818380e-e4c2-4b56-b288-ea97eb749031" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.ipynb_checkpoints/explorer_notebook-checkpoint.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/.ipynb_checkpoints/explorer_notebook-checkpoint.ipynb" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/explorer_notebook.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/explorer_notebook.ipynb" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/runner.py" beforeDir="false" afterPath="$PROJECT_DIR$/runner.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/nonstationarity_notebook.py" beforeDir="false" afterPath="$PROJECT_DIR$/nonstationarity_notebook.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/sacred_notebook.py" beforeDir="false" afterPath="$PROJECT_DIR$/sacred_notebook.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/models/dkl_gp.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/models/dkl_gp.py" afterDir="false" />
     </list>
@@ -52,10 +50,10 @@
       </usages-collector>
       <usages-collector id="statistics.file.extensions.edit">
         <counts>
-          <entry key="Python Console" value="920" />
+          <entry key="Python Console" value="945" />
           <entry key="dummy" value="28" />
           <entry key="md" value="54" />
-          <entry key="py" value="23053" />
+          <entry key="py" value="23562" />
           <entry key="yaml" value="17" />
         </counts>
       </usages-collector>
@@ -63,7 +61,7 @@
         <counts>
           <entry key="Markdown" value="54" />
           <entry key="PLAIN_TEXT" value="28" />
-          <entry key="Python" value="23973" />
+          <entry key="Python" value="24507" />
           <entry key="YAML" value="17" />
         </counts>
       </usages-collector>
@@ -86,29 +84,32 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/nonstationarity_notebook.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="-1502">
-              <caret line="6" column="44" selection-start-line="6" selection-start-column="44" selection-end-line="6" selection-end-column="44" />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/sacred_notebook.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="405">
-              <caret line="28" column="16" selection-start-line="28" selection-start-column="16" selection-end-line="28" selection-end-column="16" />
+            <state relative-caret-position="518">
+              <caret line="138" selection-start-line="138" selection-end-line="138" />
+              <folding>
+                <element signature="e#44#62#0" expanded="true" />
+              </folding>
             </state>
           </provider>
         </entry>
       </file>
       <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/sacred_notebook.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="405">
+              <caret line="27" column="29" selection-start-line="27" selection-start-column="29" selection-end-line="27" selection-end-column="29" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/src/models/dkl_gp.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="390">
-              <caret line="67" column="50" lean-forward="true" selection-start-line="67" selection-start-column="50" selection-end-line="67" selection-end-column="50" />
+            <state relative-caret-position="281">
+              <caret line="119" column="74" selection-start-line="119" selection-start-column="74" selection-end-line="119" selection-end-column="74" />
               <folding>
-                <element signature="e#0#12#0" expanded="true" />
-                <marker date="1554280713091" expanded="true" signature="1910:1980" ph="..." />
+                <element signature="e#0#18#0" expanded="true" />
+                <marker date="1554283381340" expanded="true" signature="1929:1999" ph="..." />
               </folding>
             </state>
           </provider>
@@ -117,8 +118,8 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/acquisition_functions.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="134">
-              <caret line="19" column="8" selection-start-line="19" selection-start-column="8" selection-end-line="19" selection-end-column="45" />
+            <state relative-caret-position="292">
+              <caret line="35" column="41" selection-start-line="35" selection-start-column="41" selection-end-line="35" selection-end-column="41" />
               <folding>
                 <element signature="e#0#18#0" expanded="true" />
               </folding>
@@ -213,17 +214,17 @@
         <option value="$PROJECT_DIR$/explorer_notebook.ipynb" />
         <option value="$PROJECT_DIR$/sacred.py" />
         <option value="$PROJECT_DIR$/src/models/stableopt.py" />
-        <option value="$PROJECT_DIR$/nonstationarity_notebook.py" />
         <option value="$PROJECT_DIR$/src/settings.py" />
         <option value="$PROJECT_DIR$/src/plot_utils.py" />
         <option value="$PROJECT_DIR$/src/runner.py" />
         <option value="$PROJECT_DIR$/src/algorithms.py" />
         <option value="$PROJECT_DIR$/configs/gpy.yaml" />
         <option value="$PROJECT_DIR$/configs/default.yaml" />
-        <option value="$PROJECT_DIR$/src/models/dkl_gp.py" />
         <option value="$PROJECT_DIR$/src/acquisition_functions.py" />
         <option value="$PROJECT_DIR$/runner.py" />
+        <option value="$PROJECT_DIR$/nonstationarity_notebook.py" />
         <option value="$PROJECT_DIR$/sacred_notebook.py" />
+        <option value="$PROJECT_DIR$/src/models/dkl_gp.py" />
       </list>
     </option>
   </component>
@@ -413,7 +414,7 @@
       <window_info anchor="bottom" id="Terminal" order="1" sideWeight="0.497558" weight="0.32941177" />
       <window_info anchor="bottom" id="Event Log" order="2" sideWeight="0.51331204" side_tool="true" visible="true" weight="0.30569947" />
       <window_info anchor="bottom" id="Version Control" order="3" />
-      <window_info anchor="bottom" id="Python Console" order="4" sideWeight="0.48668796" visible="true" weight="0.30569947" />
+      <window_info active="true" anchor="bottom" id="Python Console" order="4" sideWeight="0.48668796" visible="true" weight="0.30569947" />
       <window_info anchor="bottom" id="Docker" order="5" show_stripe_button="false" />
       <window_info anchor="bottom" id="Message" order="6" />
       <window_info anchor="bottom" id="Find" order="7" sideWeight="0.4993895" weight="0.32941177" />
@@ -422,7 +423,7 @@
       <window_info anchor="bottom" id="Cvs" order="10" weight="0.25" />
       <window_info anchor="bottom" id="Inspection" order="11" weight="0.4" />
       <window_info anchor="bottom" id="TODO" order="12" sideWeight="0.4993895" weight="0.32941177" />
-      <window_info active="true" anchor="right" id="SciView" order="0" sideWeight="0.7447761" visible="true" weight="0.3881789" />
+      <window_info anchor="right" id="SciView" order="0" sideWeight="0.7447761" visible="true" weight="0.3881789" />
       <window_info anchor="right" id="Database" order="1" />
       <window_info anchor="right" x="0" y="0" width="370" height="827" id="Documentation" order="2" sideWeight="0.25522387" side_tool="true" visible="true" weight="0.3881789" />
       <window_info anchor="right" id="Commander" internal_type="SLIDING" order="3" type="SLIDING" weight="0.4" />
@@ -819,38 +820,10 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/nonstationarity_notebook.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-1502">
-          <caret line="6" column="44" selection-start-line="6" selection-start-column="44" selection-end-line="6" selection-end-column="44" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/models/dkl_gp.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="390">
-          <caret line="67" column="50" lean-forward="true" selection-start-line="67" selection-start-column="50" selection-end-line="67" selection-end-column="50" />
-          <folding>
-            <element signature="e#0#12#0" expanded="true" />
-            <marker date="1554280713091" expanded="true" signature="1910:1980" ph="..." />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$USER_HOME$/Library/Caches/PyCharm2018.2/python_stubs/511367464/builtins.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="215">
           <caret line="3618" column="8" selection-start-line="3618" selection-start-column="8" selection-end-line="3618" selection-end-column="8" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/acquisition_functions.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="134">
-          <caret line="19" column="8" selection-start-line="19" selection-start-column="8" selection-end-line="19" selection-end-column="45" />
-          <folding>
-            <element signature="e#0#18#0" expanded="true" />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -867,10 +840,41 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/nonstationarity_notebook.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="518">
+          <caret line="138" selection-start-line="138" selection-end-line="138" />
+          <folding>
+            <element signature="e#44#62#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/sacred_notebook.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="405">
-          <caret line="28" column="16" selection-start-line="28" selection-start-column="16" selection-end-line="28" selection-end-column="16" />
+          <caret line="27" column="29" selection-start-line="27" selection-start-column="29" selection-end-line="27" selection-end-column="29" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/acquisition_functions.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="292">
+          <caret line="35" column="41" selection-start-line="35" selection-start-column="41" selection-end-line="35" selection-end-column="41" />
+          <folding>
+            <element signature="e#0#18#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/models/dkl_gp.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="281">
+          <caret line="119" column="74" selection-start-line="119" selection-start-column="74" selection-end-line="119" selection-end-column="74" />
+          <folding>
+            <element signature="e#0#18#0" expanded="true" />
+            <marker date="1554283381340" expanded="true" signature="1929:1999" ph="..." />
+          </folding>
         </state>
       </provider>
     </entry>

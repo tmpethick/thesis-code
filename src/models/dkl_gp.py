@@ -1,3 +1,4 @@
+import numpy as np
 import torch
 import gpytorch
 
@@ -116,14 +117,23 @@ class DKLGPModel(BaseModel):
         self.model.eval()
         self.likelihood.eval()
 
+        # Hack to fix issue with making prediction for single inputs (n=1).
+        if X.shape[0] == 1:
+            fake_X = np.zeros((1, X.shape[1]))
+            X = np.concatenate((X, fake_X), axis=0)
+            cut_tail = -1
+        else:
+            cut_tail = None
+
+
         test_x = torch.Tensor(X).contiguous().to(device)
 
         with torch.no_grad(), gpytorch.settings.use_toeplitz(False), gpytorch.settings.fast_pred_var():
             multivariate_normal = self.model(test_x)
 
-            mean = multivariate_normal.mean.numpy()[:, None]
+            mean = multivariate_normal.mean.numpy()[:cut_tail, None]
 
             if full_cov:
-                return mean, multivariate_normal.covariance_matrix.numpy()[:, None]
+                return mean, multivariate_normal.covariance_matrix.numpy()[:cut_tail, None]
             else:
-                return mean, multivariate_normal.variance.numpy()[:, None]
+                return mean, multivariate_normal.variance.numpy()[:cut_tail, None]
