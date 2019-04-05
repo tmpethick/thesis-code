@@ -53,25 +53,24 @@ run = notebook_run(config_updates={
 
 
 #%%
-# ----------------- LocalLengthScaleGPModel -------------------
+# ----------------- LocalLengthScaleGPModel (LLS) -------------------
 
 #%%
 
 # Works very well when the lengthscale indeed has a smooth functional form of x.
 run = notebook_run(config_updates={
     'obj_func': {
-        'name': 'IncreasingOscillation',
+        'name': 'Kink2D',
     },
     'model': {
         'name': 'LocalLengthScaleGPModel',
         'kwargs': {
-            'l_samples': 5,
+            'l_samples': 200,
             'n_optimizer_iter': 10,
         }
     },
     'gp_samples': 50,
 }, options={'--force': True})
-
 
 #%%
 
@@ -96,6 +95,20 @@ run = notebook_run(config_updates={
 }, options={'--force': True})
 
 
+#%% AS
+from src.utils import random_hypercube_samples
+from src.environments import ActiveSubspaceTest
+from src.models import ActiveSubspace
+
+f = ActiveSubspaceTest()
+X = random_hypercube_samples(100, f.bounds)
+G = f.derivative(X)
+model = ActiveSubspace()
+model.fit(X, G)
+model.plot()
+plt.show()
+
+
 #%%
 # ----------------- DKLModel -------------------
 
@@ -106,6 +119,23 @@ run = notebook_run(config_updates={
 run = notebook_run(config_updates={
     'obj_func': {
         'name': 'IncreasingOscillation',
+    },
+    'model': {
+        'name': 'DKLGPModel',
+        'kwargs': {
+            'n_iter': 500,
+            'nn_kwargs': {
+                'layers': (1000, 500, 50, 2),
+            }
+        }
+    },
+    'gp_samples': 100,
+}, options={'--force': True})
+
+#%%
+run = notebook_run(config_updates={
+    'obj_func': {
+        'name': 'ActiveSubspaceTest',
     },
     'model': {
         'name': 'DKLGPModel',

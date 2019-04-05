@@ -5,6 +5,50 @@ import matplotlib.pyplot as plt
 import GPy 
 
 
+class ActiveSubspace(object):
+    def __init__(self):
+        # By default choose all dimensions.
+        self.d = -1
+        self.vals = None
+        self.W = None
+
+    def fit(self, X, G):
+        """[summary]
+
+        Arguments:
+            X {[type]} -- input
+            G {[type]} -- function gradient
+        """
+
+        N = X.shape[0]
+        CN = (G.T @ G) / N
+
+        # find active subspace
+        vals, vecs = np.linalg.eigh(CN)
+        self.vals = vals
+        self.W = vecs[:, self.d]
+
+    def transform(self, X):
+        # (W.T @ X.T).T
+        return X @ W
+
+    def plot(self):
+        fig, ax = plt.subplots(1, 2, figsize=(9, 5))
+        x = np.arange(1, 11)
+        ax[0].plot(x, self.vals, ".", ms=15)
+        ax[0].set_xlabel("Eigenvalues")
+        ax[0].set_xticks(x)
+        ax[0].set_ylabel("$\lambda$")
+
+        ax[1].plot(x, self.W, ".", ms=15)
+        ax[1].set_xlabel("Input dimension")
+        ax[1].set_xticks(x)
+        ax[1].set_ylabel("Magnitude of W")
+
+        fig.tight_layout()
+        return fig
+
+
 class BaseModel(object):
     def __repr__(self):
         return "{}".format(type(self).__name__)

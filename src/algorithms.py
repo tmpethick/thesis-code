@@ -151,21 +151,21 @@ class AcquisitionAlgorithm(object):
             
             ax = fig.add_subplot(221)
             ax.set_title('Ground truth')
-            Z = call_function_on_grid(self.f, XY)
+            Z = call_function_on_grid(self.f, XY)[...,0]
             cont = ax.contourf(X,Y,Z, 50)
             fig.colorbar(cont)
             ax.plot(self.X[:, 0], self.X[:, 1], '.', markersize=10)
 
             ax = fig.add_subplot(222)
             ax.set_title('Estimate')
-            Z = call_function_on_grid(self.model_estimate, XY)
+            Z = call_function_on_grid(self.model_estimate, XY)[...,0]
             cont = ax.contourf(X,Y,Z, 50)
             fig.colorbar(cont)
             ax.plot(self.X[:, 0], self.X[:, 1], '.', markersize=10)
 
             ax = fig.add_subplot(223)
             ax.set_title('Acq func')
-            Z = call_function_on_grid(self.acquisition_function, XY)
+            Z = call_function_on_grid(self.acquisition_function, XY)[...,0]
             cont = ax.contourf(X,Y,Z, 50)
             fig.colorbar(cont)
             ax.plot(self.X[:, 0], self.X[:, 1], '.', markersize=10)

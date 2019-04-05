@@ -12,7 +12,9 @@ def mean_square_error(model: BaseModel, f: BaseEnvironment):
         XY, X, Y = construct_2D_grid(f.bounds)
         X_line = XY.reshape((-1, 2))
     else:
-        raise ValueError("Does not support dim above 2.")
+        # TODO: put down grid instead.
+        X_line = random_hypercube_samples(100000, f.bounds)
+        #raise ValueError("Does not support dim above 2.")
 
     Y = f(X_line)
     Y_hat, var = model.get_statistics(X_line, full_cov=False)

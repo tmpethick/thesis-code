@@ -2,7 +2,7 @@ import sys
 
 from src.environments import BaseEnvironment
 from src.models import BaseModel, LocalLengthScaleGPModel, DKLGPModel
-from src.plot_utils import plot1D, plot2D, plot_function
+from src.plot_utils import plot1D, plot2D, plot_function, construct_2D_grid, call_function_on_grid
 
 
 # For some reason it breaks without TkAgg when running from CLI.
@@ -11,6 +11,7 @@ from src.plot_utils import plot1D, plot2D, plot_function
 
 import hashlib
 import json
+import itertools
 
 import numpy as np
 from sacred import Experiment
@@ -110,11 +111,6 @@ def create_ex():
 
 
     @ex.capture
-    def update_ex_result(result, _run):
-        _run.result = result
-
-
-    @ex.capture
     def save_fig(fig, filename, _run, verbosity):
         fig.savefig(filename)
         if verbosity['plot']:
@@ -153,14 +149,15 @@ def create_ex():
             _run.add_artifact(Y_filename)
 
 
-    def test_gp_model(f: BaseEnvironment, models: [BaseModel], acquisition_function=None, n_samples=15):
+    @ex.capture
+    def test_gp_model(f: BaseEnvironment, models: [BaseModel], _run, acquisition_function=None, n_samples=15):
         bounds = f.bounds
         input_dim = f.input_dim
 
         if input_dim == 1:
             X = np.random.uniform(bounds[0, 0], bounds[0, 1], (n_samples, 1))
         else:
-            X = random_hypercube_samples(n_samples ** input_dim, bounds)
+            X = random_hypercube_samples(n_samples, bounds)
 
         Y = f(X)
 
@@ -187,31 +184,45 @@ def create_ex():
 
             # Length scale
             if isinstance(model, LocalLengthScaleGPModel):
-                fig = plot_function(f, lambda x: 1 / model.get_lengthscale(x), title="1/Lengthscale", points=X)
+                fig = plot_function(f, lambda x: 1 / model.get_lengthscale(x)[:,None], title="1/Lengthscale", points=X)
                 save_fig(fig, settings.ARTIFACT_LLS_GP_LENGTHSCALE_FILENAME.format(model_idx=i))
+            
             elif isinstance(model, DKLGPModel):
-                assert X.shape[-1] == 1, "Only supported feature mapping from 1D."
-                
-                X_line = np.linspace(bounds[0, 0], bounds[0, 1], 100)[:,None]
-                fig, ax = plt.subplots()
-                ax.set_title("Features")
+                if X.shape[-1] == 1:
+                    X_line = np.linspace(bounds[0, 0], bounds[0, 1], 100)[:,None]
+                    fig, ax = plt.subplots()
+                    ax.set_title("Features")
 
-                Z = model.get_features(X_line)
-                for j in range(Z.shape[1]):
-                    ax.plot(X_line, Z[:,j])
+                    Z = model.get_features(X_line)
+                    for j in range(Z.shape[1]):
+                        ax.plot(X_line, Z[:,j])
 
-                save_fig(fig, settings.ARTIFACT_DKLGP_FEATURES_FILENAME.format(model_idx=i))
+                    save_fig(fig, settings.ARTIFACT_DKLGP_FEATURES_FILENAME.format(model_idx=i))
+                elif X.shape[-1] == 2:
+                    XY, X, Y = construct_2D_grid(f.bounds)
+                    Z = call_function_on_grid(model.get_features, XY)
+
+                    fig = plt.figure()
+                    ax = fig.add_subplot(111, projection='3d')
+                    ax.set_title('Features')
+
+                    #palette = itertools.cycle(sns.color_palette(as_cmap=True))
+                    for j in range(Z.shape[-1]):
+                        ax.contourf(X, Y, Z[...,j], 50) #, cmap=next(palette))
+
+                    save_fig(fig, settings.ARTIFACT_DKLGP_FEATURES_FILENAME.format(model_idx=i))
 
             # Log
             mse = mean_square_error(model, f)
             log_info('MSE for {} with idx {}: {}'.format(model, i, mse))
             all_mse[i] = mse
 
-        update_ex_result(all_mse)
+        # Only store result for `model` (not `model2`) as it is rarely used on its own.
+        _run.result = all_mse[0]
 
 
     @ex.main
-    def main(_config, _run):
+    def main(_config, _run, _log):
         ## Model construction
 
         # Create environment
@@ -240,18 +251,26 @@ def create_ex():
             bo_kwargs = _config['bo']
             bo = AcquisitionAlgorithm(f, models, acq, **bo_kwargs)
 
+            # Updates _run.result
             bo.run(callback=plot)
         else:
             bo = None
+
+            # Throw exceptions as warning so interactive mode can still play with the objects.
+            # Updates _run.result
             test_gp_model(f, models, acquisition_function=acq, n_samples=_config['gp_samples'])
 
         # Hack to have model available after run in interactive mode.
-        _run.interactive_stash = {
-            'model': models[0],
-            'model2': models[0] if len(models) >= 2 else None,
-            'acq': acq,
-            'bo': bo,
-        }
+        # _run.interactive_stash = {
+        #     'f': f,
+        #     'model': models[0],
+        #     'model2': models[0] if len(models) >= 2 else None,
+        #     'acq': acq,
+        #     'bo': bo,
+        # }
+        mse = _run.result
+        return mse
+        
     return ex
 
 

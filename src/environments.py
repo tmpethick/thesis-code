@@ -64,6 +64,20 @@ class Kink2D(BaseEnvironment):
         return y[..., None]
 
 
+class ActiveSubspaceTest(BaseEnvironment):
+    bounds = np.array([[-1,1]] * 10)
+
+    def __call__(self, X):
+        y = np.exp(0.01*X[...,0] + 0.7*X[...,1] + 0.02*X[...,2] + 0.03*X[...,3] + 0.04*X[...,4] + 
+                    0.05*X[...,5] + 0.06*X[...,6] + 0.08*X[...,7] + 0.09*X[...,8] + 0.1*X[...,9])
+        return y[...,None]
+
+    def derivative(self, X):
+        Y = self(X)
+        coefs = np.array([0.01, 0.7, 0.02, 0.03, 0.04, 0.05, 0.06, 0.08, 0.09, 0.1])
+        return Y * coefs[None, :]
+
+
 from GPyOpt.objective_examples import experiments2d
 
 

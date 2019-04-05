@@ -25,17 +25,17 @@ def plot_function(f: BaseEnvironment, func, title="Function", points=None):
 
     elif f.input_dim == 2:
         XY, X, Y = construct_2D_grid(f.bounds)
-        Z = call_function_on_grid(f, XY)
-        Z_hat = call_function_on_grid(func, XY)
+        Z = call_function_on_grid(f, XY)[...,0]
+        Z_hat = call_function_on_grid(func, XY)[...,0]
 
         fig = plt.figure()
         ax = fig.add_subplot(121)
         ax.set_title('Ground truth f')
-        ax.contour(X, Y, Z, 50)
+        ax.contourf(X, Y, Z, 50)
 
         ax = fig.add_subplot(122)
         ax.set_title(title)
-        ax.contour(X, Y, Z_hat, 50)
+        ax.contourf(X, Y, Z_hat, 50)
         if points is not None:
             sns.scatterplot(points[:, 0], points[:, 1], ax=ax)
     else:
@@ -130,5 +130,5 @@ def call_function_on_grid(func, XY):
     Z = func(XY)
 
     # recreate grid
-    Z = Z.reshape((original_grid_size, original_grid_size))
+    Z = Z.reshape((original_grid_size, original_grid_size) + Z.shape[1:])
     return Z
