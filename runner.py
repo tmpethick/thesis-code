@@ -2,8 +2,7 @@ import sys
 
 from src.environments import BaseEnvironment
 from src.models import BaseModel, LocalLengthScaleGPModel, DKLGPModel
-from src.plot_utils import plot1D, plot2D, plot_function, construct_2D_grid, call_function_on_grid
-
+from src.plot_utils import plot1D, plot2D, plot_function
 
 # For some reason it breaks without TkAgg when running from CLI.
 # import matplotlib
@@ -26,7 +25,7 @@ from src import acquisition_functions as acquisition_functions_module
 from src import environments as environments_module
 from src import kernels as kernels_module
 from src.algorithms import AcquisitionAlgorithm
-from src.utils import mean_square_error, random_hypercube_samples
+from src.utils import mean_square_error, random_hypercube_samples, construct_2D_grid, call_function_on_grid
 from src import settings
 
 
@@ -54,7 +53,8 @@ def create_ex():
 
     ex.add_config({
         'verbosity': {
-            'plot': True
+            'plot': True,
+            'bo_show_iter': 30,
         }
     })
 

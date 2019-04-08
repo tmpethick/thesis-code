@@ -1,4 +1,5 @@
 import numpy as np
+from src.utils import construct_2D_grid, call_function_on_grid
 
 
 class BaseEnvironment(object):
@@ -16,14 +17,34 @@ class BaseEnvironment(object):
     def input_dim(self):
         return self.bounds.shape[0]
 
-    def plot(self):
-        assert self.bounds.shape[0] == 1, "Only support 1D plots."
+    def derivative(self, x):
+        raise NotImplementedError
 
-        import matplotlib.pyplot as plt
-        fig, ax = plt.subplots()
-        X = np.linspace(self.bounds[0,0], self.bounds[0,1], 1000)
-        ax.plot(X, self(X))
-        return fig
+    def plot(self):
+        return self._plot(self)
+
+    def plot_derivative(self):
+        return self._plot(self.derivative)
+
+    def _plot(self, func):
+        assert self.bounds.shape[0] in [1,2], "Only support 1D/2D plots."
+
+        if self.bounds.shape[0] == 1:
+            import matplotlib.pyplot as plt
+            fig, ax = plt.subplots()
+            X = np.linspace(self.bounds[0,0], self.bounds[0,1], 1000)
+            ax.plot(X, func(X))
+            return fig
+
+        elif self.bounds.shape[0] == 2:
+            import matplotlib.pyplot as plt
+            XY, X, Y = construct_2D_grid(self.bounds)
+            Z = call_function_on_grid(func, XY)[...,0]
+
+            fig = plt.figure()
+            ax = fig.add_subplot(111)
+            ax.contourf(X, Y, Z, 50)
+            return fig
 
 
 class Jump1D(BaseEnvironment):
@@ -55,6 +76,20 @@ class Kink1D(BaseEnvironment):
     def __call__(self, x):
        return 1 / (10 ** (-4) + x ** 2)
 
+    def derivative(self, x):
+        return (2 * x) / ((x ** 2 + 1 / 10000) ** 2)
+
+
+class Sinc(BaseEnvironment):
+    bounds = np.array([[-10, 10]])
+
+    def __call__(self, x):
+       return np.sinc(x)
+
+    def derivative(self, x):
+        # TODO: fix devision by zero if it becomes a problem.
+        return (np.cos(x) - np.sinc(x)) / x
+
 
 class Kink2D(BaseEnvironment):
     bounds = np.array([[0, 1], [0, 1]])
@@ -62,6 +97,15 @@ class Kink2D(BaseEnvironment):
     def __call__(self, x):
         y = 1 / (np.abs(0.5 - x[..., 0] ** 4 - x[..., 1] ** 4) + 0.1)
         return y[..., None]
+
+    def derivative(self, X):
+        # TODO: fix devision by zero if it becomes a problem.
+        x = X[...,0]
+        y = X[...,1]
+        dx = -(4 * x ** 3 * (-0.5 + x ** 4 + y ** 4)) / (np.abs((0.5 - x ** 4 - y ** 4)) * (np.abs(0.5 - x ** 4 - y ** 4) + 0.1) ** 2)
+        dy = -(4 * y ** 3 * (-0.5 + x ** 4 + y ** 4)) / (np.abs((0.5 - x ** 4 - y ** 4)) * (np.abs(0.5 - x ** 4 - y ** 4) + 0.1) ** 2)
+        dd = np.stack((dx, dy), axis=-1)
+        return dd
 
 
 class ActiveSubspaceTest(BaseEnvironment):

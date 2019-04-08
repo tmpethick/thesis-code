@@ -6,11 +6,35 @@ import GPy
 
 
 class ActiveSubspace(object):
-    def __init__(self):
-        # By default choose all dimensions.
-        self.d = -1
+    """
+    Requires feeding `M = α k log(m)` samples to `self.fit` 
+    where α=5..10, m is actually dim, and k<m.
+    """
+
+    def __init__(self, k=10):
+        # How many eigenvalues are considered. We do not consider all 
+        # eigenvalues (i.e. k=m) as the samples required increases in k.
+        self.k = k
+
+        # Used to decide when a big change occurs (eig[i] > thresholds_factor * eig[i+1])
+        self.threshold_factor = 10
+        
         self.vals = None
         self.W = None
+
+    def _get_active_subspace_index(self, vals):
+        """ Given list of eigenvectors sorted in ascented order (e.g. `vals = [1,2,30,40,50]`) return the index `i` being the first occurrence of a big change in value (in the example `i=2`).
+        """
+
+        # Only consider k largest
+        vals = vals[-self.k:]
+
+        for i in reversed(range(len(vals))):
+            big = vals[i]
+            small = vals[i - 1]
+            if (big / self.threshold_factor > small):
+                return i
+        return 0
 
     def fit(self, X, G):
         """[summary]
@@ -26,11 +50,14 @@ class ActiveSubspace(object):
         # find active subspace
         vals, vecs = np.linalg.eigh(CN)
         self.vals = vals
-        self.W = vecs[:, self.d]
+
+        i = self._get_active_subspace_index(vals)
+
+        self.W = vecs[:, i:]
 
     def transform(self, X):
         # (W.T @ X.T).T
-        return X @ W
+        return X @ self.W
 
     def plot(self):
         fig, ax = plt.subplots(1, 2, figsize=(9, 5))
@@ -138,6 +165,8 @@ class GPModel(BaseModel):
         self.has_mcmc_warmup = False 
 
     def _fit(self, X, Y, is_initial=True):
+        assert X.shape[0] == Y.shape[0], \
+            "X and Y has to match size. It was {} and {} respectively".format(X.shape[0], Y.shape[0])
         if self.gpy_model is None:
             self.gpy_model = GPy.models.GPRegression(X, Y, self.kernel)
             if self.noise_prior:

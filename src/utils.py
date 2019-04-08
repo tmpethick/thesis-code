@@ -1,11 +1,10 @@
 import numpy as np
 
-from src.environments import BaseEnvironment
+# from src.environments import BaseEnvironment
 from src.models.models import BaseModel
-from src.plot_utils import construct_2D_grid
 
 
-def mean_square_error(model: BaseModel, f: BaseEnvironment):
+def mean_square_error(model: BaseModel, f):
     if f.input_dim == 1:
         X_line = np.linspace(f.bounds[0, 0], f.bounds[0, 1], 500)[:, None]
     elif f.input_dim == 2:
@@ -52,3 +51,26 @@ def constrain_points(x, bounds):
     minx = np.repeat(bounds[:, 0][None, :], dim, axis=0)
     maxx = np.repeat(bounds[:, 1][None, :], dim, axis=0)
     return np.clip(x, a_min=minx, a_max=maxx)
+
+
+def construct_2D_grid(bounds):
+    x_bounds = bounds[0]
+    y_bounds = bounds[1]
+    X = np.linspace(x_bounds[0], x_bounds[1], 50)
+    Y = np.linspace(y_bounds[0], y_bounds[1], 50)
+    X, Y = np.meshgrid(X, Y)
+    XY = np.stack((X,Y), axis=-1)
+
+    return XY, X, Y
+
+
+def call_function_on_grid(func, XY):
+    # remove grid
+    original_grid_size = XY.shape[0]
+    XY = XY.reshape((-1, 2))
+
+    Z = func(XY)
+
+    # recreate grid
+    Z = Z.reshape((original_grid_size, original_grid_size) + Z.shape[1:])
+    return Z

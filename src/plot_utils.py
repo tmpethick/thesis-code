@@ -1,10 +1,11 @@
 import numpy as np
 from matplotlib import pyplot as plt
-from mpl_toolkits import mplot3d
 
 from src.environments import BaseEnvironment
 from src.models.models import BaseModel
 import seaborn as sns
+
+from src.utils import construct_2D_grid, call_function_on_grid
 
 
 def plot_function(f: BaseEnvironment, func, title="Function", points=None):
@@ -25,8 +26,8 @@ def plot_function(f: BaseEnvironment, func, title="Function", points=None):
 
     elif f.input_dim == 2:
         XY, X, Y = construct_2D_grid(f.bounds)
-        Z = call_function_on_grid(f, XY)[...,0]
-        Z_hat = call_function_on_grid(func, XY)[...,0]
+        Z = call_function_on_grid(f, XY)[..., 0]
+        Z_hat = call_function_on_grid(func, XY)[..., 0]
 
         fig = plt.figure()
         ax = fig.add_subplot(121)
@@ -111,24 +112,3 @@ def plot2D(model: BaseModel, f: BaseEnvironment) -> plt.Figure:
     return fig
 
 
-def construct_2D_grid(bounds):
-    x_bounds = bounds[0]
-    y_bounds = bounds[1]
-    X = np.linspace(x_bounds[0], x_bounds[1], 50)
-    Y = np.linspace(y_bounds[0], y_bounds[1], 50)
-    X, Y = np.meshgrid(X, Y)
-    XY = np.stack((X,Y), axis=-1)
-
-    return XY, X, Y
-
-
-def call_function_on_grid(func, XY):
-    # remove grid
-    original_grid_size = XY.shape[0]
-    XY = XY.reshape((-1, 2))
-
-    Z = func(XY)
-
-    # recreate grid
-    Z = Z.reshape((original_grid_size, original_grid_size) + Z.shape[1:])
-    return Z

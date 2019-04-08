@@ -50,6 +50,101 @@ run = notebook_run(config_updates={
 
 }, options={'--force': True})
 
+#%%
+# -------------------------- Derivative Exploitation ------------------------
+
+# 1D
+from src.environments import Sinc
+import numpy as np
+f = Sinc()
+#f.plot()
+f.plot_derivative()
+f._plot(lambda x: np.abs(f.derivative(x)))
+
+#%% 2D
+from src.environments import Kink2D
+f = Kink2D()
+f.plot_derivative()
+
+#%% Sinc
+run = notebook_run(config_updates={
+    'obj_func': {
+        'name': 'Sinc',
+    },
+    'model': {
+        'name': 'GPModel',
+        'kwargs': dict(
+            kernel=dict(
+                name='GPyRBF',
+                kwargs={'lengthscale': 1},
+            ),
+            noise_prior=None,
+            do_optimize=True,
+            num_mcmc=0,
+        )
+    },
+    'model2': {
+        'name': 'GPModel',
+        'kwargs': dict(
+            kernel=dict(
+                name='GPyRBF',
+                kwargs={'lengthscale': 1},
+            ),
+            noise_prior=None,
+            do_optimize=True,
+            num_mcmc=0,
+        ),
+    },
+    'acquisition_function': {
+        'name': 'DerivativeAcquisition',
+    },
+    'bo': {
+        'uses_only_derivatives': (1,),
+        'n_init': 5,
+        'n_iter': 50,
+        'n_acq_max_starts': 2,
+    },
+}, options={'--force': True})
+
+#%% 
+run = notebook_run(config_updates={
+    'obj_func': {
+        'name': 'Kink1D',
+    },
+    'model': {
+        'name': 'GPModel',
+        'kwargs': dict(
+            kernel=dict(
+                name='GPyRBF',
+                kwargs={'lengthscale': 1},
+            ),
+            noise_prior=None,
+            do_optimize=True,
+            num_mcmc=0,
+        )
+    },
+    'model2': {
+        'name': 'GPModel',
+        'kwargs': dict(
+            kernel=dict(
+                name='GPyRBF',
+                kwargs={'lengthscale': 1},
+            ),
+            noise_prior=None,
+            do_optimize=True,
+            num_mcmc=0,
+        ),
+    },
+    'acquisition_function': {
+        'name': 'DerivativeAcquisition',
+    },
+    'bo': {
+        'uses_only_derivatives': (1,),
+        'n_init': 5,
+        'n_iter': 50,
+        'n_acq_max_starts': 2,
+    },
+}, options={'--force': True})
 
 
 #%%
@@ -196,10 +291,10 @@ run = notebook_run(config_updates={
 
 
 #%%
-model, model2, acq, bo = run.interactive_stash['model'], \
-                         run.interactive_stash['model2'], \
-                         run.interactive_stash['acq'], \
-                         run.interactive_stash['bo']
+# model, model2, acq, bo = run.interactive_stash['model'], \
+#                          run.interactive_stash['model2'], \
+#                          run.interactive_stash['acq'], \
+#                          run.interactive_stash['bo']
 
 #%%
 # ------------------ Templates --------------------
@@ -229,7 +324,6 @@ notebook_run(config_updates={
     },
     'gp_samples': 5,
 }, options={'--force': True})
-
 
 # %% Fully specified GP with acq
 notebook_run(config_updates={

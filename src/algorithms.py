@@ -8,8 +8,7 @@ import seaborn as sns
 from src.acquisition_functions import AcquisitionBase
 from src.models.models import BaseModel
 
-from src.plot_utils import construct_2D_grid, call_function_on_grid
-from src.utils import random_hypercube_samples, constrain_points
+from src.utils import random_hypercube_samples, constrain_points, construct_2D_grid, call_function_on_grid
 
 
 class AcquisitionAlgorithm(object):
@@ -21,9 +20,13 @@ class AcquisitionAlgorithm(object):
         n_iter=100,
         n_acq_max_starts=200,
         f_opt=None,
+        uses_only_derivatives=(),
         rng=None):
 
         self.f = f
+
+        # List of models indexes that should get passed gradients as well.
+        self.uses_only_derivatives = uses_only_derivatives
 
         if isinstance(models, BaseModel):
             self.models = [models]
@@ -43,9 +46,10 @@ class AcquisitionAlgorithm(object):
         self.bounds = f.bounds
         self.f_opt = f_opt
 
-        # Keep a local reference to X,Y for convinience.
+        # Keep a local reference to X,Y for convenience.
         self.X = None
         self.Y = None
+        self.Y_dir = None
 
         if rng is not None:
             self.rng = rng
@@ -60,7 +64,7 @@ class AcquisitionAlgorithm(object):
             return -self.acquisition_function(X)[0]
 
         if False: 
-            # Code version that can eventually be parallized
+            # Code version that can eventually be parallelized
             def minimize(x0):
                 res = optimize.minimize(min_obj, x0=x0, bounds=self.bounds, method='L-BFGS-B')
                 return [res.x, res.fun]
@@ -92,27 +96,57 @@ class AcquisitionAlgorithm(object):
             
             return min_x
 
-    def run(self, callback=None):
+    def _init_run(self):
         X = random_hypercube_samples(self.n_init, self.bounds, rng=self.rng)
         Y = self.f(X)
+
+        if self.uses_only_derivatives:
+            Y_dir = self.f.derivative(X)
+            self.Y_dir = Y_dir
 
         self.X = X
         self.Y = Y
         
+        for i, model in enumerate(self.models):
+            if i in self.uses_only_derivatives:
+                model.init(X, Y_dir)
+            else:
+                model.init(X, Y)
+
+    def _next_x(self):
+        x_new = self.max_acq()
+        return _new 
+
+    def _add_observations(self, x_new):
+        X_new = np.array([x_new])
+        X_new = constrain_points(X_new, self.bounds)
+
+        # Evaluate objective function
+        Y_new = self.f(X_new)
+
+        # Calc derivative if needed
+        if self.uses_only_derivatives:
+            Y_dir_new = self.f.derivative(X_new)
+            self.Y_dir = np.concatenate([self.Y_dir, Y_dir_new])
+
+        # Update the local vars
+        self.X = np.concatenate([self.X, X_new])
+        self.Y = np.concatenate([self.Y, Y_new])
+
+        # Refit the model (possibly on derivative info)
         for model in self.models:
-            model.init(X, Y)
+            if i in self.uses_only_derivatives:
+                model.add_observations(X_new, Y_dir_new)
+            else:
+                model.add_observations(X_new, Y_new)
+
+    def run(self, callback=None):
+        self._init_run()
 
         for i in range(0, self.n_iter):
             # new datapoint from acq
-            x_new = self.max_acq()
-            X_new = np.array([x_new])
-            X_new = constrain_points(X_new, self.bounds)
-            Y_new = self.f(X_new)
-
-            for model in self.models:
-                model.add_observations(X_new, Y_new)
-                self.X = np.concatenate([self.X, X_new])
-                self.Y = np.concatenate([self.Y, Y_new])
+            X_new = self._next_x()
+            self._add_observations(X_new)
 
             if callable(callback):
                 callback(self, i)
@@ -183,6 +217,40 @@ class AcquisitionAlgorithm(object):
     def model_estimate(self, X):
         mean, var = self.models[0].get_statistics(X, full_cov=False)
         return mean
+
+
+class StableOpt(AcquisitionAlgorithm):
+    """Use `StableOptAcq` in conjunction with this BO algorithm.
+    """
+
+    def _min_perturbation(self):
+        pass
+
+    def run(self, callback=None):
+        self._init_run()
+
+        for i in range(0, self.n_iter):
+            # new datapoint from acq
+
+            # when searching for x instead evaluate min x+delta (x with potential to be best x even after perturbation)
+                # given x: min_delta ucb(x + delta)
+            # then when sampling, sample where it could have worst consequences (pessimistic).
+                # min_delta lcb(x+delta)
+
+            # We can't talk about pessimistic and optimistic when we're looking at a difference (not max)...
+            
+            # Find x where delta could lead to biggest difference (by being optimistic).
+            # what is optimistic in face of uncertainty in this case?
+                # we want to maximize the difference. lcb vs ucb is not obvious... (becomes conditional on the sign of the mean difference)
+            # Then pessimistic (smallest difference)
+                # 
+
+            x_new = self._next_x()
+            perturbed = self._min_perturbation(x_new)
+            self._add_observations(x_new + perturbed)
+
+            if callable(callback):
+                callback(self, i)
 
 
 def bo_plot_callback(bq: AcquisitionAlgorithm, i: int):

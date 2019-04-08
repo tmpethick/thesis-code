@@ -42,6 +42,74 @@ class QuadratureAcquisition(AcquisitionBase):
         return np.sqrt(var)
 
 
+# class StableOptAcq(AcquisitionBase):
+#     """The derivative approach can be seen as the first taylor approximation of this 
+#     (or as the limiting case when delta -> 0).
+
+#     So useful when derivatives are not present or when correlation is across bigger distances.
+#     """
+
+#     def __init__(self, *models, beta=2):
+#         self.model = models[0]
+#         self.beta = beta
+
+#     def __call__(self, X):
+#         # TODO: maximize perturbation
+
+#         mean, var = self.model.get_statistics(X, full_cov=False)
+
+#         # aggregate hyperparameters dimension
+#         if var.ndim == 3:
+#             mean = np.mean(mean, axis=0)
+#             var = np.mean(var, axis=0)
+
+#         # Notice that we are interested in |∇f(x)|.
+#         return np.abs(mean) + self.beta * np.sqrt(var)
+
+
+class DerivativeAcquisition(AcquisitionBase):
+    """Redundant but helpful for structure.
+    Should be extracted into a multi-object GP.
+
+    Usually we are optimizing R^D -> R.
+    Now R^D -> R^D...
+    
+    First consider low dim:
+        - How do we weight the D partial gradients? 
+            Using max we will explore peaks in any direction.
+            Assume we used mean. If all "the action" was along one dimension this might not be explored.
+        
+        - Alternatively we could do the aggregation BEFORE fitting a GP thus avoiding multi-objectivity...
+
+        - What does exploration/exploitation mean in this setting?
+            Exploration will now learn an accurately representation of the gradient.
+            Seems like we will cover the whole domain well in the long run (i.e. not get stuck exploiting).
+
+    Now consider high-dim:
+        (Note: This approach becomes infeasible if dimensionality is not reduced (multi-objective GP is expensive I think!).
+        For Manifold learning we need gradients to flow through the function transformation.)
+
+    Conclusion:
+        Let's try with multi-objective GP on derivatives and max{mu + beta * var}.
+        First: 1D.
+    """
+
+    def __init__(self, *models, beta=2):
+        self.model = models[0]
+        self.derivative_model = models[1]
+        self.beta = beta
+
+    def __call__(self, X):
+        mean, var = self.model.get_statistics(X, full_cov=False)
+
+        # aggregate hyperparameters dimension
+        if var.ndim == 3:
+            mean = np.mean(mean, axis=0)
+            var = np.mean(var, axis=0)
+
+        # Notice that we are interested in |∇f(x)|.
+        return np.abs(mean) + self.beta * np.sqrt(var)
+
 # ------------------ GPyOpt --------------------
 
 
