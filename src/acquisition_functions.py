@@ -100,7 +100,7 @@ class DerivativeAcquisition(AcquisitionBase):
         self.beta = beta
 
     def __call__(self, X):
-        mean, var = self.model.get_statistics(X, full_cov=False)
+        mean, var = self.derivative_model.get_statistics(X, full_cov=False)
 
         # aggregate hyperparameters dimension
         if var.ndim == 3:

@@ -18,7 +18,7 @@ class LocalLengthScaleGPModel(BaseModel):
         self.lls_kernel = None
         self.n_optimizer_iter = n_optimizer_iter
 
-    def _fit(self, X, Y, is_initial=True):
+    def _fit(self, X, Y, Y_dir=None, is_initial=True):
         # Define custom optimizer for hyperparameter-tuning of non-stationary kernel
         # This is required here because the log-marginal-likelihood for the LocalLengthScalesKernel is highly
         # multi-modal, which is problematic for gradient-based methods like L-BFGS.
@@ -57,7 +57,7 @@ class LocalLengthScaleGPBaselineModel(BaseModel):
         super(LocalLengthScaleGPBaselineModel, self).__init__()
         self.model = None
 
-    def _fit(self, X, Y, is_initial=True):
+    def _fit(self, X, Y, Y_dir=None, is_initial=True):
         kernel_matern = C(1.0, (1e-10, 1000)) \
             * Matern(length_scale_bounds=(1e-1, 1e3), nu=1.5)
         gp_matern = GaussianProcessRegressor(kernel=kernel_matern)

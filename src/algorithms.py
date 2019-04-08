@@ -20,13 +20,13 @@ class AcquisitionAlgorithm(object):
         n_iter=100,
         n_acq_max_starts=200,
         f_opt=None,
-        uses_only_derivatives=(),
+        uses_derivatives=(),
         rng=None):
 
         self.f = f
 
         # List of models indexes that should get passed gradients as well.
-        self.uses_only_derivatives = uses_only_derivatives
+        self.uses_derivatives = uses_derivatives
 
         if isinstance(models, BaseModel):
             self.models = [models]
@@ -100,7 +100,7 @@ class AcquisitionAlgorithm(object):
         X = random_hypercube_samples(self.n_init, self.bounds, rng=self.rng)
         Y = self.f(X)
 
-        if self.uses_only_derivatives:
+        if self.uses_derivatives:
             Y_dir = self.f.derivative(X)
             self.Y_dir = Y_dir
 
@@ -108,14 +108,14 @@ class AcquisitionAlgorithm(object):
         self.Y = Y
         
         for i, model in enumerate(self.models):
-            if i in self.uses_only_derivatives:
-                model.init(X, Y_dir)
+            if i in self.uses_derivatives:
+                model.init(X, Y, Y_dir=Y_dir)
             else:
                 model.init(X, Y)
 
     def _next_x(self):
         x_new = self.max_acq()
-        return _new 
+        return x_new 
 
     def _add_observations(self, x_new):
         X_new = np.array([x_new])
@@ -125,7 +125,7 @@ class AcquisitionAlgorithm(object):
         Y_new = self.f(X_new)
 
         # Calc derivative if needed
-        if self.uses_only_derivatives:
+        if self.uses_derivatives:
             Y_dir_new = self.f.derivative(X_new)
             self.Y_dir = np.concatenate([self.Y_dir, Y_dir_new])
 
@@ -134,9 +134,9 @@ class AcquisitionAlgorithm(object):
         self.Y = np.concatenate([self.Y, Y_new])
 
         # Refit the model (possibly on derivative info)
-        for model in self.models:
-            if i in self.uses_only_derivatives:
-                model.add_observations(X_new, Y_dir_new)
+        for i, model in enumerate(self.models):
+            if i in self.uses_derivatives:
+                model.add_observations(X_new, Y_new, Y_dir_new=Y_dir_new)
             else:
                 model.add_observations(X_new, Y_new)
 
@@ -145,8 +145,8 @@ class AcquisitionAlgorithm(object):
 
         for i in range(0, self.n_iter):
             # new datapoint from acq
-            X_new = self._next_x()
-            self._add_observations(X_new)
+            x_new = self._next_x()
+            self._add_observations(x_new)
 
             if callable(callback):
                 callback(self, i)

@@ -35,7 +35,7 @@ def unpack(config_obj):
            config_obj.get('kwargs', {})
 
 
-def create_kernel(name, input_dim, kwargs):
+def create_kernel(name, kwargs, input_dim):
     Class = getattr(kernels_module, name)
     return Class(input_dim, **kwargs)
 
@@ -69,18 +69,32 @@ def create_ex():
         _run.log_scalar('DKLGPModel.training.loss', loss, i)
 
 
-    def create_model(name, input_dim, kwargs):
-        if 'kernel' in kwargs:
-            kern_name, kern_args, kern_kwargs = unpack(kwargs.pop('kernel'))
-            kwargs2 = dict(
-                kernel=create_kernel(kern_name, input_dim, kern_kwargs)
-            )
-            kwargs2.update(kwargs)
+    def create_model(name, kwargs, input_dim=None):
+        # TODO: avoid this ad-hoc case...
+        if name == 'TransformerModel':
+            transformer = kwargs['transformer']
+            prob_model = kwargs['prob_model']
+            transformer = create_model(transformer['name'], transformer['kwargs'])
+            # Currently only transformers with fixed output is supported.
+            kwargs2 = {
+                'transformer': transformer,
+                'prob_model': create_model(prob_model['name'], 
+                                           prob_model['kwargs'],
+                                           input_dim=transformer.output_dim),
+            }
         else:
-            kwargs2 = kwargs
+            if 'kernel' in kwargs:
+                assert input_dim is not None, "input_dim is required if a kernel is specified."
+                kern_name, kern_args, kern_kwargs = unpack(kwargs.pop('kernel'))
+                kwargs2 = dict(
+                    kernel=create_kernel(kern_name, kern_kwargs, input_dim)
+                )
+                kwargs2.update(kwargs)
+            else:
+                kwargs2 = kwargs
 
-        if name == 'DKLGPModel':
-            kwargs2['training_callback'] = dklgpmodel_training_callback
+            if name == 'DKLGPModel':
+                kwargs2['training_callback'] = dklgpmodel_training_callback
 
         Class = getattr(models_module, name)
         return Class(**kwargs2)
@@ -150,7 +164,7 @@ def create_ex():
 
 
     @ex.capture
-    def test_gp_model(f: BaseEnvironment, models: [BaseModel], _run, acquisition_function=None, n_samples=15):
+    def test_gp_model(f: BaseEnvironment, models: [BaseModel], _run, acquisition_function=None, n_samples=15, use_derivatives=False):
         bounds = f.bounds
         input_dim = f.input_dim
 
@@ -161,8 +175,14 @@ def create_ex():
 
         Y = f(X)
 
-        for model in models:
-            model.init(X, Y)
+        if use_derivatives:
+            Y_dir = f.derivative(X)
+            for model in models:
+                model.init(X, Y, Y_dir=Y_dir)
+        else:
+            for model in models:
+                model.init(X, Y)
+
 
         all_mse = np.zeros(len(models))
 
@@ -234,7 +254,7 @@ def create_ex():
         if 'model2' in _config:
             models.append(_config['model2'])
 
-        models = [create_model(model['name'], f.input_dim, model['kwargs'])
+        models = [create_model(model['name'], model['kwargs'], input_dim=f.input_dim)
                   for model in models]
 
         # Create acq func
@@ -258,7 +278,10 @@ def create_ex():
 
             # Throw exceptions as warning so interactive mode can still play with the objects.
             # Updates _run.result
-            test_gp_model(f, models, acquisition_function=acq, n_samples=_config['gp_samples'])
+            test_gp_model(f, models, 
+                acquisition_function=acq, 
+                n_samples=_config['gp_samples'],
+                use_derivatives=_config['gp_use_derivatives'])
 
         # Hack to have model available after run in interactive mode.
         # _run.interactive_stash = {

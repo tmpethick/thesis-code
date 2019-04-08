@@ -70,7 +70,7 @@ class DKLGPModel(BaseModel):
 
         self.training_callback = training_callback
 
-    def _fit(self, X, Y, is_initial=True):
+    def _fit(self, X, Y, Y_dir=None, is_initial=True):
         n, d = X.shape
 
         self.X_torch = torch.Tensor(X).contiguous().to(device)

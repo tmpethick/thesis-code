@@ -1,20 +1,36 @@
 import numpy as np
-from scipy.spatial.distance import cdist, squareform
 import matplotlib.pyplot as plt
 
-import GPy 
+import GPy
+from scipy.spatial.distance import cdist, squareform
+from scipy.linalg import cho_factor, cho_solve
 
 
-class ActiveSubspace(object):
+class Transformer(object):
+    @property
+    def output_dim(self):
+        raise NotImplementedError
+
+    def fit(self, X, Y, Y_dir=None):
+        raise NotImplementedError
+
+    def transform(self, X):
+        raise NotImplementedError
+
+
+class ActiveSubspace(Transformer):
     """
     Requires feeding `M = α k log(m)` samples to `self.fit` 
     where α=5..10, m is actually dim, and k<m.
     """
 
-    def __init__(self, k=10):
+    def __init__(self, k=10, output_dim=None):
         # How many eigenvalues are considered. We do not consider all 
         # eigenvalues (i.e. k=m) as the samples required increases in k.
         self.k = k
+
+        # Uses a fixed output dim if not zero
+        self._output_dim = output_dim
 
         # Used to decide when a big change occurs (eig[i] > thresholds_factor * eig[i+1])
         self.threshold_factor = 10
@@ -22,9 +38,18 @@ class ActiveSubspace(object):
         self.vals = None
         self.W = None
 
+    @property
+    def output_dim(self):
+        if self._output_dim is not None:
+            return self._output_dim
+        else:
+            raise Exception("No promises can be made about `output_dim` since it is dynamically determind.")
+
     def _get_active_subspace_index(self, vals):
         """ Given list of eigenvectors sorted in ascented order (e.g. `vals = [1,2,30,40,50]`) return the index `i` being the first occurrence of a big change in value (in the example `i=2`).
         """
+        if self._output_dim is not None:
+            return -self._output_dim
 
         # Only consider k largest
         vals = vals[-self.k:]
@@ -36,16 +61,17 @@ class ActiveSubspace(object):
                 return i
         return 0
 
-    def fit(self, X, G):
+    def fit(self, X, Y, Y_dir):
         """[summary]
 
         Arguments:
             X {[type]} -- input
-            G {[type]} -- function gradient
+            Y {[type]} -- (unused) function evaluation
+            Y_dir {[type]} -- function gradient
         """
 
         N = X.shape[0]
-        CN = (G.T @ G) / N
+        CN = (Y_dir.T @ Y_dir) / N
 
         # find active subspace
         vals, vecs = np.linalg.eigh(CN)
@@ -56,6 +82,7 @@ class ActiveSubspace(object):
         self.W = vecs[:, i:]
 
     def transform(self, X):
+        assert self.W is not None, "Call `self.fit` first"
         # (W.T @ X.T).T
         return X @ self.W
 
@@ -84,20 +111,24 @@ class BaseModel(object):
         i = np.argmax(self.Y)
         return self.X[i], self.Y[i]
 
-    def init(self, X, Y, train=True):
+    def init(self, X, Y, Y_dir=None, train=True):
         self.X = X
         self.Y = Y
+        self.Y_dir = Y_dir
         if train:
-            self._fit(self.X, self.Y, is_initial=True)
+            self._fit(self.X, self.Y, Y_dir=self.Y_dir, is_initial=True)
 
-    def add_observations(self, X_new, Y_new):
+    def add_observations(self, X_new, Y_new, Y_dir_new=None):
         # Update data
         self.X = np.concatenate([self.X, X_new])
         self.Y = np.concatenate([self.Y, Y_new])
-        
-        self._fit(self.X, self.Y, is_initial=False)
 
-    def _fit(self, X, Y, is_initial=True):
+        if self.Y_dir is not None:
+            self.Y_dir = np.concatenate([self.Y_dir, Y_dir_new])
+        
+        self._fit(self.X, self.Y, Y_dir=self.Y_dir, is_initial=False)
+
+    def _fit(self, X, Y, Y_dir=None, is_initial=True):
         raise NotImplementedError
 
     def get_statistics(self, X, full_cov=True):
@@ -128,8 +159,13 @@ class BaseModel(object):
                             (mean - np.sqrt(var)).reshape(-1), alpha=.2)
 
 
-class LinearInterpolateModel(BaseModel):
-    def _fit(self, X, Y, is_initial=True):
+class ProbModel(BaseModel):
+    def get_statistics(self, X, full_cov=True):
+        raise NotImplementedError
+
+
+class LinearInterpolateModel(ProbModel):
+    def _fit(self, X, Y, Y_dir=None, is_initial=True):
         pass
 
     def get_statistics(self, X, full_cov=True):
@@ -140,7 +176,7 @@ class LinearInterpolateModel(BaseModel):
         return f(X), np.zeros(f(X).shape)
 
 
-class GPModel(BaseModel):
+class GPModel(ProbModel):
     def  __init__(self, 
             kernel, 
             noise_prior=None,
@@ -163,10 +199,14 @@ class GPModel(BaseModel):
 
         self.gpy_model = None
         self.has_mcmc_warmup = False 
+        self.output_dim = None
 
-    def _fit(self, X, Y, is_initial=True):
+    def _fit(self, X, Y, Y_dir=None, is_initial=True):
         assert X.shape[0] == Y.shape[0], \
             "X and Y has to match size. It was {} and {} respectively".format(X.shape[0], Y.shape[0])
+
+        self.output_dim = Y.shape[-1]
+
         if self.gpy_model is None:
             self.gpy_model = GPy.models.GPRegression(X, Y, self.kernel)
             if self.noise_prior:
@@ -204,7 +244,7 @@ class GPModel(BaseModel):
         """
 
         num_X = X.shape[0]
-        num_obj = self.Y.shape[1]
+        num_obj = self.output_dim
         mean = np.zeros((len(self._current_thetas), num_X, num_obj))
         covar = None
         var = None
@@ -234,16 +274,49 @@ class GPModel(BaseModel):
             return mean, var
 
 
-from scipy.linalg import cho_factor, cho_solve
+class DerivativeGPModel(GPModel):
+    """Fits a GP to the derivative of a function.
+    OBS: only support 1D. 
+    Exists only to easy integration into the current configuration setup.
+    """
+
+    def _fit(self, X, Y, Y_dir=None, is_initial=True):
+        return super(DerivativeGPModel, self)._fit(X, Y_dir, Y_dir=None, is_initial=is_initial)
 
 
-class GPVanillaModel(BaseModel):
+class TransformerModel(ProbModel):
+    """Proxy a ProbModel through a Transformer first.
+    """
+
+
+    def __init__(self, *, transformer: Transformer, prob_model: ProbModel):
+        self.transformer = transformer
+        self.prob_model = prob_model
+
+    def __repr__(self):
+        return "{}<{},{}>".format(type(self).__name__, 
+                                  type(self.transformer).__name__, 
+                                  type(self.prob_model).__name__)
+
+    # TODO: self.kernel
+
+    def _fit(self, X, Y, Y_dir=None, is_initial=True):
+        self.transformer.fit(X, Y, Y_dir=Y_dir)
+        X = self.transformer.transform(X)
+        return self.prob_model._fit(X, Y, Y_dir=Y_dir, is_initial=is_initial)
+
+    def get_statistics(self, X, full_cov=True):
+        X = self.transformer.transform(X)
+        return self.prob_model.get_statistics(X, full_cov=full_cov)
+
+
+class GPVanillaModel(ProbModel):
     def __init__(self, gamma=0.1, noise=0.01):
         self.K_noisy_inv = None
         self.gamma = gamma
         self.noise = noise
 
-    def _fit(self, X, Y, is_initial=True):
+    def _fit(self, X, Y, Y_dir=None, is_initial=True):
         n, d = X.shape
         kern = self.kernel(X,X) + self.noise * np.identity(n)
         
@@ -284,7 +357,7 @@ class GPVanillaLinearModel(GPVanillaModel):
         return X1 @ X2.T
 
 
-class LowRankGPModel(BaseModel):
+class LowRankGPModel(ProbModel):
     def __init__(self, gamma=0.1, noise = 0.01, n_features=10):
         self.noise = noise
         self.gamma = gamma
@@ -299,7 +372,7 @@ class LowRankGPModel(BaseModel):
         # GPML p. 131 (pdf)
         pass
 
-    def _fit(self, X, Y, is_initial=True):
+    def _fit(self, X, Y, Y_dir=None, is_initial=True):
         n, d = X.shape 
         Q = self.feature_map(X)
         noise_inv = (1 / self.noise)

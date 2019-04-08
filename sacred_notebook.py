@@ -84,7 +84,7 @@ run = notebook_run(config_updates={
         )
     },
     'model2': {
-        'name': 'GPModel',
+        'name': 'DerivativeGPModel',
         'kwargs': dict(
             kernel=dict(
                 name='GPyRBF',
@@ -99,7 +99,7 @@ run = notebook_run(config_updates={
         'name': 'DerivativeAcquisition',
     },
     'bo': {
-        'uses_only_derivatives': (1,),
+        'uses_derivatives': (1,),
         'n_init': 5,
         'n_iter': 50,
         'n_acq_max_starts': 2,
@@ -139,7 +139,7 @@ run = notebook_run(config_updates={
         'name': 'DerivativeAcquisition',
     },
     'bo': {
-        'uses_only_derivatives': (1,),
+        'uses_derivatives': (1,),
         'n_init': 5,
         'n_iter': 50,
         'n_acq_max_starts': 2,
@@ -149,6 +149,32 @@ run = notebook_run(config_updates={
 
 #%%
 # ----------------- LocalLengthScaleGPModel (LLS) -------------------
+
+run = notebook_run(config_updates={
+    'obj_func': {
+        'name': 'ActiveSubspaceTest',
+    },
+    'model': {
+        'name': 'TransformerModel',
+        'kwargs': {
+            'transformer': {
+                'name': 'ActiveSubspace',
+                'kwargs': {
+                    'output_dim': 1
+                }
+            },
+            'prob_model': {
+                'name': 'LocalLengthScaleGPModel',
+                'kwargs': {
+                    'l_samples': 200,
+                    'n_optimizer_iter': 10,
+                },
+            },
+        },
+    },
+    'gp_use_derivatives': True,
+    'gp_samples': 50,
+}, options={'--force': True})
 
 #%%
 
@@ -202,6 +228,8 @@ model = ActiveSubspace()
 model.fit(X, G)
 model.plot()
 plt.show()
+X_test = random_hypercube_samples(1, f.bounds)
+model.transform(X_test)
 
 
 #%%
