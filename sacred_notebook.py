@@ -43,9 +43,12 @@ run = notebook_run(config_updates={
         'kwargs': {'beta': 1}
     },
     'bo': {
-        'n_init': 5,
-        'n_iter': 50,
-        'n_acq_max_starts': 2,
+        'name': 'AcquisitionAlgorithm',
+        'kwargs': {
+            'n_init': 5,
+            'n_iter': 50,
+            'n_acq_max_starts': 2,            
+        }
     },
 
 }, options={'--force': True})
@@ -99,14 +102,17 @@ run = notebook_run(config_updates={
         'name': 'DerivativeAcquisition',
     },
     'bo': {
-        'uses_derivatives': (1,),
-        'n_init': 5,
-        'n_iter': 50,
-        'n_acq_max_starts': 2,
+        'name': 'AcquisitionAlgorithm',
+        'kwargs': {
+            'uses_derivatives': (1,),
+            'n_init': 5,
+            'n_iter': 50,
+            'n_acq_max_starts': 2,            
+        }
     },
 }, options={'--force': True})
 
-#%% 
+#%%
 run = notebook_run(config_updates={
     'obj_func': {
         'name': 'Kink1D',
@@ -137,14 +143,20 @@ run = notebook_run(config_updates={
     },
     'acquisition_function': {
         'name': 'DerivativeAcquisition',
+        'kwargs': {'beta': 0},
     },
     'bo': {
-        'uses_derivatives': (1,),
-        'n_init': 5,
-        'n_iter': 50,
-        'n_acq_max_starts': 2,
+        'name': 'AcquisitionAlgorithm',
+        'kwargs': {
+            'uses_derivatives': (1,),
+            'n_init': 5,
+            'n_iter': 50,
+            'n_acq_max_starts': 2,            
+        }
     },
 }, options={'--force': True})
+
+
 
 
 #%%
@@ -209,9 +221,12 @@ run = notebook_run(config_updates={
         'name': 'QuadratureAcquisition',
     },
     'bo': {
-        'n_init': 5,
-        'n_iter': 50,
-        'n_acq_max_starts': 2,
+        'name': 'AcquisitionAlgorithm',
+        'kwargs': {
+            'n_init': 5,
+            'n_iter': 50,
+            'n_acq_max_starts': 2,            
+        }
     },
 }, options={'--force': True})
 
@@ -292,9 +307,12 @@ run = notebook_run(config_updates={
         'name': 'QuadratureAcquisition',
     },
     'bo': {
-        'n_init': 5,
-        'n_iter': 50,
-        'n_acq_max_starts': 2,
+        'name': 'AcquisitionAlgorithm',
+        'kwargs': {
+            'n_init': 5,
+            'n_iter': 50,
+            'n_acq_max_starts': 2,            
+        }
     },
 }, options={'--force': True})
 
@@ -410,9 +428,12 @@ notebook_run(config_updates={
         'name': 'QuadratureAcquisition',
     },
     'bo': {
-        'n_init': 5,
-        'n_iter': 10,
-        'n_acq_max_starts': 10,
+        'name': 'AcquisitionAlgorithm',
+        'kwargs': {
+            'n_init': 5,
+            'n_iter': 10,
+            'n_acq_max_starts': 10,            
+        }
     },
 }, options={'--force': True})
 
@@ -432,9 +453,12 @@ notebook_run(config_updates={
         'name': 'QuadratureAcquisition',
     },
     'bo': {
-        'n_init': 5,
-        'n_iter': 10,
-        'n_acq_max_starts': 10,
+        'name': 'AcquisitionAlgorithm',
+        'kwargs': {
+            'n_init': 5,
+            'n_iter': 10,
+            'n_acq_max_starts': 10,            
+        }
     },
 }, options={'--force': True})
 

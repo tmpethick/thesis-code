@@ -24,6 +24,7 @@ from src import models as models_module
 from src import acquisition_functions as acquisition_functions_module
 from src import environments as environments_module
 from src import kernels as kernels_module
+from src import algorithms as algorithm_module
 from src.algorithms import AcquisitionAlgorithm
 from src.utils import mean_square_error, random_hypercube_samples, construct_2D_grid, call_function_on_grid
 from src import settings
@@ -268,8 +269,9 @@ def create_ex():
         if _config.get('bo'):
             assert acq is not None, "Acquisition function required for BO"
             # Create BO
-            bo_kwargs = _config['bo']
-            bo = AcquisitionAlgorithm(f, models, acq, **bo_kwargs)
+            Algorithm = getattr(algorithm_module, _config['bo']['name'])
+            bo_kwargs = _config['bo']['kwargs']
+            bo = Algorithm(f, models, acq, **bo_kwargs)
 
             # Updates _run.result
             bo.run(callback=plot)
@@ -283,14 +285,14 @@ def create_ex():
                 n_samples=_config['gp_samples'],
                 use_derivatives=_config['gp_use_derivatives'])
 
-        # Hack to have model available after run in interactive mode.
-        # _run.interactive_stash = {
-        #     'f': f,
-        #     'model': models[0],
-        #     'model2': models[0] if len(models) >= 2 else None,
-        #     'acq': acq,
-        #     'bo': bo,
-        # }
+        #Hack to have model available after run in interactive mode.
+        _run.interactive_stash = {
+            'f': f,
+            'model': models[0],
+            'model2': models[0] if len(models) >= 2 else None,
+            'acq': acq,
+            'bo': bo,
+        }
         mse = _run.result
         return mse
         

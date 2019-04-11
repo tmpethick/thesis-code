@@ -2,19 +2,15 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="c818380e-e4c2-4b56-b288-ea97eb749031" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.ipynb_checkpoints/explorer_notebook-checkpoint.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/.ipynb_checkpoints/explorer_notebook-checkpoint.ipynb" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/explorer_notebook.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/explorer_notebook.ipynb" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/mine1.yaml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/mine2.yaml" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/runner.py" beforeDir="false" afterPath="$PROJECT_DIR$/runner.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/sacred_notebook.py" beforeDir="false" afterPath="$PROJECT_DIR$/sacred_notebook.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/acquisition_functions.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/acquisition_functions.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/algorithms.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/algorithms.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/environments.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/environments.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/models/models.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/models/models.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/plot_utils.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/plot_utils.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/utils.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/utils.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -24,6 +20,7 @@
   </component>
   <component name="CoverageDataManager">
     <SUITE FILE_PATH="coverage/thesis_code$thesis_code.coverage" NAME="thesis-code Coverage Results" MODIFIED="1554130096837" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="" />
+    <SUITE FILE_PATH="coverage/thesis_code$Debug_Notebook.coverage" NAME="Debug Notebook Coverage Results" MODIFIED="1554983947115" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/thesis_code$Unnamed.coverage" NAME="Unnamed Coverage Results" MODIFIED="1554123995224" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
   </component>
   <component name="FUSProjectUsageTrigger">
@@ -42,7 +39,7 @@
           <entry key="ipynb" value="3" />
           <entry key="json" value="2" />
           <entry key="md" value="4" />
-          <entry key="py" value="137" />
+          <entry key="py" value="161" />
           <entry key="pyi" value="1" />
           <entry key="yaml" value="14" />
         </counts>
@@ -53,7 +50,7 @@
           <entry key="JSON" value="2" />
           <entry key="Markdown" value="4" />
           <entry key="PLAIN_TEXT" value="1" />
-          <entry key="Python" value="137" />
+          <entry key="Python" value="161" />
           <entry key="PythonStub" value="1" />
           <entry key="YAML" value="14" />
         </counts>
@@ -63,7 +60,7 @@
           <entry key="Python Console" value="945" />
           <entry key="dummy" value="33" />
           <entry key="md" value="54" />
-          <entry key="py" value="25560" />
+          <entry key="py" value="29468" />
           <entry key="yaml" value="17" />
         </counts>
       </usages-collector>
@@ -71,7 +68,7 @@
         <counts>
           <entry key="Markdown" value="54" />
           <entry key="PLAIN_TEXT" value="33" />
-          <entry key="Python" value="26505" />
+          <entry key="Python" value="30413" />
           <entry key="YAML" value="17" />
         </counts>
       </usages-collector>
@@ -80,12 +77,12 @@
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
       <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/nonstationarity_notebook.py">
+        <entry file="file://$PROJECT_DIR$/src/algorithms.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="532">
-              <caret line="138" selection-start-line="138" selection-end-line="138" />
+            <state relative-caret-position="98">
+              <caret line="231" column="21" selection-start-line="231" selection-start-column="21" selection-end-line="231" selection-end-column="21" />
               <folding>
-                <element signature="e#44#62#0" expanded="true" />
+                <element signature="e#0#15#0" expanded="true" />
               </folding>
             </state>
           </provider>
@@ -94,8 +91,20 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/sacred_notebook.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="593">
-              <caret line="140" column="11" selection-start-line="140" selection-start-column="11" selection-end-line="140" selection-end-column="11" />
+            <state>
+              <caret selection-end-line="5" />
+              <folding>
+                <element signature="e#40#71#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/hessian_notebook.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="374">
+              <caret line="142" column="39" lean-forward="true" selection-start-line="142" selection-start-column="39" selection-end-line="142" selection-end-column="39" />
               <folding>
                 <element signature="e#40#71#0" expanded="true" />
               </folding>
@@ -104,51 +113,47 @@
         </entry>
       </file>
       <file pinned="false" current-in-tab="false">
-        <entry file="file://$USER_HOME$/anaconda3/envs/lions/lib/python3.6/site-packages/IPython/core/interactiveshell.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="215">
-              <caret line="3295" selection-start-line="3295" selection-end-line="3295" />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$USER_HOME$/anaconda3/envs/lions/lib/python3.6/site-packages/GPy/util/linalg.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="215">
-              <caret line="124" selection-start-line="124" selection-end-line="124" />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/src/environments.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="373">
-              <caret line="82" column="10" selection-start-line="82" selection-start-column="6" selection-end-line="82" selection-end-column="10" />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/models/lls_gp.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="392">
-              <caret line="29" column="53" selection-start-line="29" selection-start-column="53" selection-end-line="29" selection-end-column="53" />
+            <state relative-caret-position="257">
+              <caret line="35" column="13" selection-start-line="35" selection-start-column="8" selection-end-line="35" selection-end-column="13" />
               <folding>
-                <element signature="e#0#18#0" expanded="true" />
-                <marker date="1554293047361" expanded="true" signature="408:637" ph="..." />
-                <marker date="1554293047361" expanded="true" signature="2354:2355" ph="..." />
+                <marker date="1554986589892" expanded="true" signature="3086:3178" ph="..." />
+                <marker date="1554986589892" expanded="true" signature="3217:3219" ph="..." />
               </folding>
             </state>
           </provider>
         </entry>
       </file>
       <file pinned="false" current-in-tab="false">
-        <entry file="file://$USER_HOME$/anaconda3/envs/lions/lib/python3.6/site-packages/gp_extras/kernels/kernels_non_stationary.py">
+        <entry file="file://$PROJECT_DIR$/src/acquisition_functions.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="305">
-              <caret line="289" selection-start-line="289" selection-end-line="289" selection-end-column="34" />
+            <state relative-caret-position="45">
+              <caret line="3" lean-forward="true" selection-start-line="3" selection-end-line="3" />
+              <folding>
+                <element signature="e#0#18#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/models/models.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="191">
+              <caret line="249" column="66" selection-start-line="249" selection-start-column="52" selection-end-line="249" selection-end-column="66" />
+              <folding>
+                <element signature="e#0#18#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$USER_HOME$/anaconda3/envs/lions/lib/python3.6/site-packages/numpy/testing/_private/utils.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="222">
+              <caret line="895" selection-start-line="895" selection-end-line="895" />
             </state>
           </provider>
         </entry>
@@ -156,22 +161,10 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/runner.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="299">
-              <caret line="257" selection-start-line="257" selection-end-line="257" />
+            <state relative-caret-position="395">
+              <caret line="288" column="30" selection-start-line="288" selection-start-column="13" selection-end-line="288" selection-end-column="30" />
               <folding>
-                <marker date="1554711000310" expanded="true" signature="9032:9091" ph="..." />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/plot_utils.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="1660">
-              <caret line="114" selection-start-line="114" selection-end-line="114" />
-              <folding>
-                <element signature="e#0#18#0" expanded="true" />
+                <marker date="1554978459598" expanded="true" signature="10208:10267" ph="..." />
               </folding>
             </state>
           </provider>
@@ -181,7 +174,7 @@
         <entry file="file://$PROJECT_DIR$/src/utils.py">
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="383">
-              <caret line="65" selection-start-line="65" selection-end-line="65" />
+              <caret line="66" column="4" selection-start-line="66" selection-start-column="4" selection-end-line="66" selection-end-column="4" />
               <folding>
                 <element signature="e#0#18#0" expanded="true" />
               </folding>
@@ -201,23 +194,6 @@
   </component>
   <component name="FindInProjectRecents">
     <findStrings>
-      <find>plot_function</find>
-      <find>fig</find>
-      <find>lot_function</find>
-      <find>fig_</find>
-      <find>save_f</find>
-      <find>plot.sh</find>
-      <find>ex</find>
-      <find>GPRegressionModel</find>
-      <find>len(</find>
-      <find>save_fig</find>
-      <find>gp_</find>
-      <find>n_samples</find>
-      <find>print</find>
-      <find>metric</find>
-      <find>loss</find>
-      <find>training</find>
-      <find>result</find>
       <find>update_ex_result</find>
       <find>30</find>
       <find>pl</find>
@@ -231,6 +207,23 @@
       <find>plot</find>
       <find>sns</find>
       <find>l_samples</find>
+      <find>predictive_gradients</find>
+      <find>predict_jacobian</find>
+      <find>dL_dK</find>
+      <find>mcmc</find>
+      <find>wood</find>
+      <find>raw_pre</find>
+      <find>gradients_X</find>
+      <find>dK_Xx</find>
+      <find>QuadratureAcquisition</find>
+      <find>hess_norm</find>
+      <find>stimate</find>
+      <find>AcquisitionAlgorithm</find>
+      <find>hist</find>
+      <find>DKLGPModel</find>
+      <find>DKLGP</find>
+      <find>sample</find>
+      <find>plt.show()</find>
     </findStrings>
     <replaceStrings>
       <replace />
@@ -245,7 +238,6 @@
         <option value="$PROJECT_DIR$/src/models/manifold_gp.py" />
         <option value="$PROJECT_DIR$/nonstationarity_lls_notebook.py" />
         <option value="$PROJECT_DIR$/kernel_notebook.py" />
-        <option value="$PROJECT_DIR$/src/models/models.py" />
         <option value="$PROJECT_DIR$/gp_notebook.py" />
         <option value="$PROJECT_DIR$/active_sampling_notebook.py" />
         <option value="$PROJECT_DIR$/notebooks_archive/gpyopt_notebook.py" />
@@ -265,17 +257,20 @@
         <option value="$PROJECT_DIR$/src/runner.py" />
         <option value="$PROJECT_DIR$/configs/gpy.yaml" />
         <option value="$PROJECT_DIR$/configs/default.yaml" />
-        <option value="$PROJECT_DIR$/src/acquisition_functions.py" />
         <option value="$PROJECT_DIR$/nonstationarity_notebook.py" />
         <option value="$PROJECT_DIR$/src/models/dkl_gp.py" />
         <option value="$PROJECT_DIR$/src/settings.py" />
-        <option value="$PROJECT_DIR$/runner.py" />
         <option value="$PROJECT_DIR$/src/models/lls_gp.py" />
-        <option value="$PROJECT_DIR$/src/algorithms.py" />
         <option value="$USER_HOME$/anaconda3/envs/lions/lib/python3.6/site-packages/gp_extras/kernels/kernels_non_stationary.py" />
-        <option value="$PROJECT_DIR$/sacred_notebook.py" />
         <option value="$PROJECT_DIR$/src/plot_utils.py" />
+        <option value="$PROJECT_DIR$/debug_notebook.py" />
+        <option value="$PROJECT_DIR$/src/acquisition_functions.py" />
+        <option value="$PROJECT_DIR$/src/models/models.py" />
+        <option value="$PROJECT_DIR$/runner.py" />
+        <option value="$PROJECT_DIR$/src/algorithms.py" />
         <option value="$PROJECT_DIR$/src/environments.py" />
+        <option value="$PROJECT_DIR$/sacred_notebook.py" />
+        <option value="$PROJECT_DIR$/hessian_notebook.py" />
       </list>
     </option>
   </component>
@@ -285,10 +280,11 @@
     <detection-done>true</detection-done>
     <sorting>DEFINITION_ORDER</sorting>
   </component>
-  <component name="ProjectFrameBounds">
-    <option name="y" value="23" />
-    <option name="width" value="1920" />
-    <option name="height" value="1057" />
+  <component name="ProjectFrameBounds" extendedState="6">
+    <option name="x" value="100" />
+    <option name="y" value="1058" />
+    <option name="width" value="1680" />
+    <option name="height" value="1027" />
   </component>
   <component name="ProjectLevelVcsManager" settingsEditedManually="true">
     <ConfirmationsSetting value="1" id="Add" />
@@ -362,7 +358,7 @@
       </list>
     </option>
   </component>
-  <component name="RunManager" selected="Python.runner">
+  <component name="RunManager" selected="Python.Debug Notebook">
     <configuration name="thesis-code" type="JupiterNotebook" factoryName="Jupyter Notebook">
       <module name="thesis-code" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -379,6 +375,25 @@
       <option name="additionalOptions" value="" />
       <option name="ipnbHost" value="127.0.0.1" />
       <option name="ipnbPort" value="8888" />
+      <method v="2" />
+    </configuration>
+    <configuration name="Debug Notebook" type="PythonConfigurationType" factoryName="Python">
+      <module name="thesis-code" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <option name="SDK_HOME" value="$USER_HOME$/anaconda3/envs/lions/bin/python" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="false" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/debug_notebook.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="true" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
     <configuration default="true" type="PythonConfigurationType" factoryName="Python">
@@ -428,6 +443,7 @@
     <list>
       <item itemvalue="Jupyter Notebook.thesis-code" />
       <item itemvalue="Python.runner" />
+      <item itemvalue="Python.Debug Notebook" />
     </list>
   </component>
   <component name="SvnConfiguration">
@@ -453,28 +469,28 @@
     </todo-panel>
   </component>
   <component name="ToolWindowManager">
-    <frame x="0" y="23" width="1920" height="1057" extended-state="6" />
+    <frame x="100" y="1103" width="1680" height="1027" extended-state="6" />
     <editor active="true" />
     <layout>
       <window_info id="Favorites" order="0" side_tool="true" />
-      <window_info active="true" content_ui="combo" id="Project" order="1" sideWeight="0.49552238" visible="true" weight="0.15761448" />
-      <window_info id="Structure" order="2" sideWeight="0.5044776" side_tool="true" visible="true" weight="0.15761448" />
+      <window_info content_ui="combo" id="Project" order="1" sideWeight="0.4953125" visible="true" weight="0.18070818" />
+      <window_info id="Structure" order="2" sideWeight="0.5046875" side_tool="true" visible="true" weight="0.18070818" />
       <window_info anchor="bottom" id="Database Changes" order="0" show_stripe_button="false" />
       <window_info anchor="bottom" id="Terminal" order="1" sideWeight="0.497558" weight="0.32941177" />
-      <window_info anchor="bottom" id="Event Log" order="2" sideWeight="0.5170394" side_tool="true" visible="true" weight="0.30569947" />
+      <window_info anchor="bottom" id="Event Log" order="2" sideWeight="0.525641" side_tool="true" visible="true" weight="0.315508" />
       <window_info anchor="bottom" id="Version Control" order="3" />
-      <window_info anchor="bottom" id="Python Console" order="4" sideWeight="0.48296058" visible="true" weight="0.30569947" />
+      <window_info anchor="bottom" id="Python Console" order="4" sideWeight="0.47435898" visible="true" weight="0.315508" />
       <window_info anchor="bottom" id="Docker" order="5" show_stripe_button="false" />
       <window_info anchor="bottom" id="Message" order="6" />
       <window_info anchor="bottom" id="Find" order="7" sideWeight="0.4993895" weight="0.32941177" />
       <window_info anchor="bottom" id="Run" order="8" sideWeight="0.498779" weight="0.32941177" />
-      <window_info anchor="bottom" id="Debug" order="9" sideWeight="0.496337" weight="0.28342247" />
+      <window_info anchor="bottom" id="Debug" order="9" sideWeight="0.4908425" weight="0.28235295" />
       <window_info anchor="bottom" id="Cvs" order="10" weight="0.25" />
       <window_info anchor="bottom" id="Inspection" order="11" weight="0.4" />
-      <window_info anchor="bottom" id="TODO" order="12" sideWeight="0.4993895" weight="0.32941177" />
-      <window_info anchor="right" id="SciView" order="0" sideWeight="0.74328357" visible="true" weight="0.3881789" />
+      <window_info anchor="bottom" id="TODO" order="12" sideWeight="0.49893504" weight="0.3284974" />
+      <window_info active="true" anchor="right" id="SciView" order="0" sideWeight="0.7421875" visible="true" weight="0.44505495" />
       <window_info anchor="right" id="Database" order="1" />
-      <window_info anchor="right" x="0" y="0" width="370" height="827" id="Documentation" order="2" sideWeight="0.25671643" side_tool="true" visible="true" weight="0.3881789" />
+      <window_info anchor="right" x="0" y="0" width="370" height="827" id="Documentation" order="2" sideWeight="0.2578125" side_tool="true" visible="true" weight="0.44505495" />
       <window_info anchor="right" id="Commander" internal_type="SLIDING" order="3" type="SLIDING" weight="0.4" />
       <window_info anchor="right" id="Ant Build" order="4" weight="0.25" />
       <window_info anchor="right" content_ui="combo" id="Hierarchy" order="5" weight="0.25" />
@@ -486,122 +502,119 @@
   <component name="VcsContentAnnotationSettings">
     <option name="myLimit" value="2678400000" />
   </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <default-breakpoints>
+        <breakpoint type="python-exception">
+          <properties notifyOnTerminate="true" exception="BaseException">
+            <option name="notifyOnTerminate" value="true" />
+          </properties>
+        </breakpoint>
+      </default-breakpoints>
+    </breakpoint-manager>
+  </component>
   <component name="debuggerHistoryManager">
     <expressions id="evaluateCodeFragment">
       <expression>
-        <expression-string>self.acquisition_function</expression-string>
+        <expression-string>np.linalg.norm(hessian_mean[0], ord='fro')</expression-string>
         <language-id>Python</language-id>
         <evaluation-mode>CODE_FRAGMENT</evaluation-mode>
       </expression>
       <expression>
-        <expression-string>-self.acquisition_function(X)[0]</expression-string>
+        <expression-string>(Lambda_inv @ prod_rule)</expression-string>
         <language-id>Python</language-id>
         <evaluation-mode>CODE_FRAGMENT</evaluation-mode>
       </expression>
       <expression>
-        <expression-string>res = optimize.minimize(min_obj, x0=random_hypercube_samples(self.n_acq_max_starts, self.bounds, rng=self.rng)[0], bounds=self.bounds, method='L-BFGS-B')</expression-string>
+        <expression-string>np.einsum(&quot;jik,jik-&gt;ik&quot;, X_tilde, dK_Xx)</expression-string>
         <language-id>Python</language-id>
         <evaluation-mode>CODE_FRAGMENT</evaluation-mode>
       </expression>
       <expression>
-        <expression-string>random_hypercube_samples(self.n_acq_max_starts, self.bounds, rng=self.rng)</expression-string>
+        <expression-string>np.einsum(&quot;ijkl,ji-&gt;ikl&quot;, Ones, k_Xx * alpha)</expression-string>
+        <language-id>Python</language-id>
+        <evaluation-mode>CODE_FRAGMENT</evaluation-mode>
+      </expression>
+      <expression>
+        <expression-string>k_Xx</expression-string>
+        <language-id>Python</language-id>
+        <evaluation-mode>CODE_FRAGMENT</evaluation-mode>
+      </expression>
+      <expression>
+        <expression-string>Ones = np.ones((N_new, N, D, D))</expression-string>
+        <language-id>Python</language-id>
+        <evaluation-mode>CODE_FRAGMENT</evaluation-mode>
+      </expression>
+      <expression>
+        <expression-string>hessian_mean.shape</expression-string>
+        <language-id>Python</language-id>
+        <evaluation-mode>CODE_FRAGMENT</evaluation-mode>
+      </expression>
+      <expression>
+        <expression-string>np.einsum(&quot;ijkl,ijk-&gt;ikl&quot;, Ones, Ones[...,0])</expression-string>
+        <language-id>Python</language-id>
+        <evaluation-mode>CODE_FRAGMENT</evaluation-mode>
+      </expression>
+      <expression>
+        <expression-string>np.einsum(&quot;ijkl,ijkl-&gt;ikl&quot;, Ones, Ones[...,0])</expression-string>
         <language-id>Python</language-id>
         <evaluation-mode>CODE_FRAGMENT</evaluation-mode>
       </expression>
     </expressions>
     <expressions id="evaluateExpression">
       <expression>
-        <expression-string>self.f(X)</expression-string>
+        <expression-string>Ones.shape</expression-string>
         <language-id>Python</language-id>
         <evaluation-mode>EXPRESSION</evaluation-mode>
       </expression>
       <expression>
-        <expression-string>self.f</expression-string>
+        <expression-string>np.einsum(&quot;ijkl,ijk-&gt;ikl&quot;, Ones, k_Xx * alpha) - np.einsum(&quot;jik,jik-&gt;ik&quot;, X_tilde, dK_Xx)</expression-string>
         <language-id>Python</language-id>
         <evaluation-mode>EXPRESSION</evaluation-mode>
       </expression>
       <expression>
-        <expression-string>f = Kink2D()</expression-string>
+        <expression-string>Ones = np.ones((N_new, N, D, D))</expression-string>
         <language-id>Python</language-id>
         <evaluation-mode>EXPRESSION</evaluation-mode>
       </expression>
       <expression>
-        <expression-string>self.acquisition_function.model</expression-string>
+        <expression-string>np.einsum(&quot;ijkl,ijk-&gt;ikl&quot;, Ones, k_Xx * alpha) \             - np.einsum(&quot;jik,jik-&gt;ik&quot;, X_tilde, dK_Xx)</expression-string>
         <language-id>Python</language-id>
         <evaluation-mode>EXPRESSION</evaluation-mode>
       </expression>
       <expression>
-        <expression-string>self.acquisition_function.model.get_statistics(X, full_cov=False)</expression-string>
+        <expression-string>np.einsum(&quot;ji,jik-&gt;jik&quot;, (k_Xx * alpha), (X_hat @ Lambda_inv))</expression-string>
         <language-id>Python</language-id>
         <evaluation-mode>EXPRESSION</evaluation-mode>
       </expression>
       <expression>
-        <expression-string>res = optimize.minimize(min_obj, x0=x0, bounds=self.bounds, method='L-BFGS-B')</expression-string>
+        <expression-string>(k_Xx * alpha) * (X_hat @ Lambda_inv)</expression-string>
+        <language-id>Python</language-id>
+        <evaluation-mode>EXPRESSION</evaluation-mode>
+      </expression>
+      <expression>
+        <expression-string>X_hat @ Lambda_inv</expression-string>
+        <language-id>Python</language-id>
+        <evaluation-mode>EXPRESSION</evaluation-mode>
+      </expression>
+      <expression>
+        <expression-string>k_Xx * alpha</expression-string>
+        <language-id>Python</language-id>
+        <evaluation-mode>EXPRESSION</evaluation-mode>
+      </expression>
+      <expression>
+        <expression-string>dK_Xx</expression-string>
+        <language-id>Python</language-id>
+        <evaluation-mode>EXPRESSION</evaluation-mode>
+      </expression>
+      <expression>
+        <expression-string>B</expression-string>
         <language-id>Python</language-id>
         <evaluation-mode>EXPRESSION</evaluation-mode>
       </expression>
     </expressions>
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$APPLICATION_HOME_DIR$/helpers/typeshed/stdlib/3/functools.pyi">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="145">
-          <caret line="42" column="23" selection-start-line="42" selection-start-column="23" selection-end-line="42" selection-end-column="23" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$USER_HOME$/anaconda3/envs/lions/lib/python3.6/site-packages/sacred/ingredient.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="198">
-          <caret line="30" column="12" selection-start-line="30" selection-start-column="4" selection-end-line="30" selection-end-column="12" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/sacred_test_notebook.py" />
-    <entry file="file://$PROJECT_DIR$/config_scratchpad.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="225">
-          <caret line="15" column="38" selection-start-line="15" selection-start-column="38" selection-end-line="15" selection-end-column="38" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/mine.json" />
-    <entry file="file://$PROJECT_DIR$/mine.yaml" />
-    <entry file="file://$USER_HOME$/anaconda3/envs/lions/lib/python3.6/tokenize.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="217">
-          <caret line="451" selection-start-line="451" selection-end-line="451" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$USER_HOME$/anaconda3/envs/lions/lib/python3.6/site-packages/sacred/commandline_options.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="224">
-          <caret line="92" column="14" selection-start-line="92" selection-start-column="4" selection-end-line="92" selection-end-column="14" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/config.json" />
-    <entry file="file://$USER_HOME$/anaconda3/envs/lions/lib/python3.6/site-packages/pymongo/read_concern.py">
-      <provider selected="true" editor-type-id="text-editor" />
-    </entry>
-    <entry file="file://$PROJECT_DIR$/artifacts/.gitignore">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="60">
-          <caret line="4" lean-forward="true" selection-start-line="4" selection-end-line="4" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/README.md">
-      <provider selected="true" editor-type-id="split-provider[text-editor;markdown-preview-editor]">
-        <state split_layout="FIRST">
-          <first_editor relative-caret-position="148">
-            <caret line="35" column="2" selection-start-line="35" selection-start-column="2" selection-end-line="35" selection-end-column="2" />
-          </first_editor>
-          <second_editor />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$USER_HOME$/anaconda3/envs/lions/lib/python3.6/site-packages/numpy/lib/npyio.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="205">
@@ -774,36 +787,6 @@
     <entry file="file://$PROJECT_DIR$/src/models/__init__.py">
       <provider selected="true" editor-type-id="text-editor" />
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/models/models.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="174">
-          <caret line="60" column="12" lean-forward="true" selection-start-line="60" selection-start-column="12" selection-end-line="66" selection-end-column="29" />
-          <folding>
-            <element signature="e#0#18#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/algorithms.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="2475">
-          <caret line="176" column="30" selection-start-line="176" selection-start-column="30" selection-end-line="176" selection-end-column="30" />
-          <folding>
-            <element signature="e#0#15#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/acquisition_functions.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="90">
-          <caret line="7" column="30" selection-start-line="7" selection-start-column="6" selection-end-line="7" selection-end-column="30" />
-          <folding>
-            <element signature="e#0#18#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/configs/gpy.yaml">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="195">
@@ -824,8 +807,7 @@
           <caret line="29" column="53" selection-start-line="29" selection-start-column="53" selection-end-line="29" selection-end-column="53" />
           <folding>
             <element signature="e#0#18#0" expanded="true" />
-            <marker date="1554293047361" expanded="true" signature="408:637" ph="..." />
-            <marker date="1554293047361" expanded="true" signature="2354:2355" ph="..." />
+            <marker date="1554731601314" expanded="true" signature="408:637" ph="..." />
           </folding>
         </state>
       </provider>
@@ -854,26 +836,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/runner.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="299">
-          <caret line="257" selection-start-line="257" selection-end-line="257" />
-          <folding>
-            <marker date="1554711000310" expanded="true" signature="9032:9091" ph="..." />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/sacred_notebook.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="593">
-          <caret line="140" column="11" selection-start-line="140" selection-start-column="11" selection-end-line="140" selection-end-column="11" />
-          <folding>
-            <element signature="e#40#71#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/src/plot_utils.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="1660">
@@ -884,20 +846,161 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/utils.py">
+    <entry file="file://$USER_HOME$/anaconda3/envs/lions/lib/python3.6/site-packages/GPy/kern/src/kern.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="383">
-          <caret line="65" selection-start-line="65" selection-end-line="65" />
+        <state relative-caret-position="234">
+          <caret line="165" column="31" selection-start-line="165" selection-start-column="26" selection-end-line="165" selection-end-column="31" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$USER_HOME$/anaconda3/envs/lions/lib/python3.6/site-packages/emcee/sampler.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="102">
+          <caret line="131" column="26" lean-forward="true" selection-start-line="131" selection-start-column="26" selection-end-line="131" selection-end-column="26" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$USER_HOME$/anaconda3/envs/lions/lib/python3.6/site-packages/emcee/ensemble.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="327">
+          <caret line="285" column="33" lean-forward="true" selection-start-line="285" selection-start-column="33" selection-end-line="285" selection-end-column="33" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$USER_HOME$/anaconda3/envs/lions/lib/python3.6/site-packages/GPy/inference/latent_function_inference/posterior.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="2940">
+          <caret line="198" column="8" selection-start-line="198" selection-start-column="8" selection-end-line="198" selection-end-column="8" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$USER_HOME$/anaconda3/envs/lions/lib/python3.6/tokenize.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="301">
+          <caret line="457" column="9" selection-start-line="457" selection-start-column="9" selection-end-line="457" selection-end-column="9" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$USER_HOME$/anaconda3/envs/lions/lib/python3.6/site-packages/GPy/core/gp.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="360">
+          <caret line="198" column="28" selection-start-line="198" selection-start-column="8" selection-end-line="198" selection-end-column="28" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$USER_HOME$/anaconda3/envs/lions/lib/python3.6/site-packages/GPy/models/gp_regression.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="75">
+          <caret line="8" column="20" selection-start-line="8" selection-start-column="20" selection-end-line="8" selection-end-column="20" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$USER_HOME$/anaconda3/envs/lions/lib/python3.6/site-packages/GPy/kern/src/stationary.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="260">
+          <caret line="341" column="31" selection-start-line="341" selection-start-column="31" selection-end-line="341" selection-end-column="31" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$USER_HOME$/anaconda3/envs/lions/lib/python3.6/site-packages/numpy/testing/_private/utils.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="222">
+          <caret line="895" selection-start-line="895" selection-end-line="895" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/models/models.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="191">
+          <caret line="249" column="66" selection-start-line="249" selection-start-column="52" selection-end-line="249" selection-end-column="66" />
           <folding>
             <element signature="e#0#18#0" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/src/utils.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="383">
+          <caret line="66" column="4" selection-start-line="66" selection-start-column="4" selection-end-line="66" selection-end-column="4" />
+          <folding>
+            <element signature="e#0#18#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$USER_HOME$/anaconda3/envs/lions/lib/python3.6/site-packages/numpy/linalg/linalg.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="343">
+          <caret line="2318" column="56" lean-forward="true" selection-start-line="2318" selection-start-column="56" selection-end-line="2318" selection-end-column="56" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/runner.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="395">
+          <caret line="288" column="30" selection-start-line="288" selection-start-column="13" selection-end-line="288" selection-end-column="30" />
+          <folding>
+            <marker date="1554978459598" expanded="true" signature="10208:10267" ph="..." />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/debug_notebook.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="105">
+          <caret line="7" column="24" selection-start-line="7" selection-start-column="24" selection-end-line="7" selection-end-column="24" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/acquisition_functions.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="45">
+          <caret line="3" lean-forward="true" selection-start-line="3" selection-end-line="3" />
+          <folding>
+            <element signature="e#0#18#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/algorithms.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="98">
+          <caret line="231" column="21" selection-start-line="231" selection-start-column="21" selection-end-line="231" selection-end-column="21" />
+          <folding>
+            <element signature="e#0#15#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/sacred_notebook.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state>
+          <caret selection-end-line="5" />
+          <folding>
+            <element signature="e#40#71#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/src/environments.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="373">
-          <caret line="82" column="10" selection-start-line="82" selection-start-column="6" selection-end-line="82" selection-end-column="10" />
+        <state relative-caret-position="257">
+          <caret line="35" column="13" selection-start-line="35" selection-start-column="8" selection-end-line="35" selection-end-column="13" />
+          <folding>
+            <marker date="1554986589892" expanded="true" signature="3086:3178" ph="..." />
+            <marker date="1554986589892" expanded="true" signature="3217:3219" ph="..." />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/hessian_notebook.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="374">
+          <caret line="142" column="39" lean-forward="true" selection-start-line="142" selection-start-column="39" selection-end-line="142" selection-end-column="39" />
+          <folding>
+            <element signature="e#40#71#0" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>

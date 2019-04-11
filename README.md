@@ -42,6 +42,7 @@
   conda install -y -c conda-forge numpy blas seaborn scipy matplotlib pandas gpy
   pip install pydot-ng
   pip install gpyopt
+  pip install emcee
 
   conda install -y scikit-learn
   pip install git+https://github.com/IDSIA/sacred.git

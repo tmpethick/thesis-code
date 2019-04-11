@@ -5,6 +5,8 @@ import GPy
 from scipy.spatial.distance import cdist, squareform
 from scipy.linalg import cho_factor, cho_solve
 
+from src.kernels import GPyRBF
+
 
 class Transformer(object):
     @property
@@ -233,7 +235,7 @@ class GPModel(ProbModel):
         else:
             self._current_thetas = [self.gpy_model.param_array]
 
-    def get_statistics(self, X, full_cov=True):
+    def _predict(self, X, func, full_cov=True):
         """[summary]
         
         Arguments:
@@ -256,8 +258,10 @@ class GPModel(ProbModel):
      
         for i, theta in enumerate(self._current_thetas):
             self.gpy_model[:] = theta
-            mean_i, covar_i = self.gpy_model.predict(X, full_cov=True)
-            covar_i = covar_i if len(covar_i.shape) == 3 else covar_i[:, :, None] 
+            mean_i, covar_i = func(X, full_cov=True)
+
+            if len(covar_i.shape) != 3:
+                covar_i = covar_i[:, :, None] 
 
             mean[i, :] = mean_i
 
@@ -272,6 +276,112 @@ class GPModel(ProbModel):
             return mean, covar
         else:
             return mean, var
+
+    def get_statistics(self, X, full_cov=True):
+        return self._predict(X, self.gpy_model.predict, full_cov=full_cov)
+
+    # def predict_jacobian_1sample(self, X, full_cov=True):
+    #     N_new = 1
+    #     N, D = self.X.shape
+    #     x = X[0]
+
+    #     self.gpy_model[:] = self._current_thetas[0]
+
+    #     l_inv = 1 / self.gpy_model.kern.lengthscale
+    #     Lambda_inv = np.diag(l_inv.repeat(D))
+
+    #     X_tilde = x - self.X
+    #     np.testing.assert_array_equal(X_tilde.shape, [N,D])
+
+    #     alpha = self.gpy_model.posterior.woodbury_vector
+    #     k_Xx = self.gpy_model.kern.K(self.X, np.array([x]))
+    #     np.testing.assert_array_equal(k_Xx.shape, [N, D])
+
+    #     interm = np.dot(X_tilde.T, (k_Xx * alpha))
+    #     return - Lambda_inv @ interm, None
+    
+    # def predict_jacobian_1sample(self, X, full_cov=True):
+    #     N_new = 1
+    #     N, D = self.X.shape
+    #     x = X[0]
+
+    #     self.gpy_model[:] = self._current_thetas[0]
+
+    #     l_inv = 1 / self.gpy_model.kern.lengthscale
+    #     Lambda_inv = np.diag(l_inv.repeat(D))
+
+    #     X_tilde = x - self.X
+    #     np.testing.assert_array_equal(X_tilde.shape, [N,D])
+
+    #     alpha = self.gpy_model.posterior.woodbury_vector
+    #     k_Xx = self.gpy_model.kern.K(self.X, np.array([x]))
+    #     np.testing.assert_array_equal(k_Xx.shape, [N, N_new])
+
+    #     interm = np.einsum("jk,ji->k", X_tilde, (k_Xx * alpha))
+    #     return - np.einsum("kk,k->k", Lambda_inv, interm), None
+
+    def predict_jacobian(self, X, full_cov=True):
+        N_new = X.shape[0]
+        N, D = self.X.shape
+
+        self.gpy_model[:] = self._current_thetas[0]
+
+        l_inv = 1 / self.gpy_model.kern.lengthscale
+        Lambda_inv = np.diag(l_inv.repeat(D))
+
+        X_tilde = X[None, :, :] - self.X[:, None, :]
+        np.testing.assert_array_equal(X_tilde.shape, [N, N_new, D])
+
+        alpha = self.gpy_model.posterior.woodbury_vector
+        k_Xx = self.gpy_model.kern.K(self.X, X)
+
+        interm = np.einsum("jik,ji->ik", X_tilde, (k_Xx * alpha))
+        return - np.einsum("kk,ik->ik", Lambda_inv, interm), None
+
+    def predict_hessian(self, X, full_cov=True):
+        """Does not support variance yet.
+        Does not support hyperparameters either...
+
+        returns np.ndarray (N*, D, D)
+        """
+        assert isinstance(self.gpy_model.kern, GPyRBF), "Only support RBF for now"
+
+        N_new = X.shape[0]
+        N, D = self.X.shape
+
+        self.gpy_model[:] = self._current_thetas[0]
+
+        # (D, D)
+        l_inv = 1 / self.gpy_model.kern.lengthscale
+        Lambda_inv = np.diag(l_inv.repeat(D))
+
+        # (N, O)
+        alpha = self.gpy_model.posterior.woodbury_vector
+
+        X_tilde = X[None, :, :] - self.X[:, None, :]
+        np.testing.assert_array_equal(X_tilde.shape, [N, N_new, D])
+
+        k_Xx = self.gpy_model.kern.K(self.X, X)
+        np.testing.assert_array_equal(k_Xx.shape, [N, N_new])
+
+        #dK_Xx = self.gpy_model.kern.dK_dr_via_X(self.X, X)
+        # dK_Xx = self.gpy_model.kern.gradients_X(alpha, X, self.X)
+        # TODO: X_hat is just -X_tilde
+        X_hat = -X_tilde
+        np.testing.assert_array_equal(X_hat.shape, [N, N_new, D])
+
+        dK_Xx = np.einsum("ji,jik->jik", (k_Xx * alpha), (X_hat @ Lambda_inv))
+        np.testing.assert_array_equal(dK_Xx.shape, [N, N_new, D])
+
+        Ones = np.ones((N_new, N, D, D))
+
+        # Take dot product along N axis.
+        prod_rule = np.einsum("ijkl,ji->ikl", Ones, k_Xx * alpha) \
+            + np.einsum("jik,jil->ikl", X_tilde, dK_Xx)
+
+        # TODO: what axis is it multiplying?
+        hessian_mean = -np.einsum("kk,ikl->ikl", Lambda_inv, prod_rule)
+        return hessian_mean, None
 
 
 class DerivativeGPModel(GPModel):

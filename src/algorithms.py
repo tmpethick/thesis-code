@@ -1,5 +1,6 @@
 import warnings
 
+import emcee
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy import optimize
@@ -199,7 +200,7 @@ class AcquisitionAlgorithm(object):
 
             ax = fig.add_subplot(223)
             ax.set_title('Acq func')
-            Z = call_function_on_grid(self.acquisition_function, XY)[...,0]
+            Z = call_function_on_grid(self.acquisition_function, XY)
             cont = ax.contourf(X,Y,Z, 50)
             fig.colorbar(cont)
             ax.plot(self.X[:, 0], self.X[:, 1], '.', markersize=10)
@@ -216,7 +217,54 @@ class AcquisitionAlgorithm(object):
 
     def model_estimate(self, X):
         mean, var = self.models[0].get_statistics(X, full_cov=False)
+
+        # aggregate hyperparameters dimension
+        if mean.ndim == 3:
+            mean = np.mean(mean, axis=0)
+
         return mean
+
+
+class SampleAlgorithm(AcquisitionAlgorithm):
+    """
+    Sampling with MCMC does not make much sense since many 
+    samples are required for it to converge.
+    We only have few-shots in BO setting so each has to be picked carefully.
+    """
+    def __init__(self, *args, **kwargs):
+        super(SampleAlgorithm, self).__init__(*args, **kwargs)
+        
+        walkers = 4
+        n_leap_size = 100
+        dim = self.f.input_dim
+        p0s = random_hypercube_samples(walkers, self.bounds)
+
+        def acq_one(x):
+            return self.acquisition_function(np.array([x]))[0]
+
+        self.sampler = emcee.EnsembleSampler(walkers, dim, acq_one)
+        self.sample_iterator = self.sampler.sample(p0s,
+                                                   iterations=10e100, 
+                                                   thin=n_leap_size, 
+                                                   storechain=False)
+
+    def _next_x(self):
+        # Sample from Acquisition as if it was an unnormalized distribution.
+        sample = next(self.sample_iterator)
+        pos = sample[0]
+        pos_1walker = pos[0]
+        return pos_1walker
+
+    def run(self, callback=None):
+        self._init_run()
+
+        for i in range(0, self.n_iter):
+            # new datapoint from acq
+            x_new = self._next_x()
+            self._add_observations(x_new)
+
+            if callable(callback):
+                callback(self, i)
 
 
 class StableOpt(AcquisitionAlgorithm):

@@ -20,11 +20,18 @@ class BaseEnvironment(object):
     def derivative(self, x):
         raise NotImplementedError
 
+    def hessian(self, x):
+        raise NotImplementedError
+
     def plot(self):
         return self._plot(self)
 
     def plot_derivative(self):
         return self._plot(self.derivative)
+
+    def plot_curvature(self):
+        assert self.bounds.shape[0] == 1, "curvature only supported in 1D"
+        return self._plot(self.hessian)
 
     def _plot(self, func):
         assert self.bounds.shape[0] in [1,2], "Only support 1D/2D plots."
@@ -79,16 +86,39 @@ class Kink1D(BaseEnvironment):
     def derivative(self, x):
         return (2 * x) / ((x ** 2 + 1 / 10000) ** 2)
 
+class Sin2D(BaseEnvironment):
+    def __call__(self, x):
+        return (0.5 * np.sin(13 * x[..., 0]) * np.sin(27 * x[..., 0]) + 0.5) * (0.5 * np.sin(13 * x[..., 1]) * np.sin(27 * x[..., 1]) + 0.5)
+
 
 class Sinc(BaseEnvironment):
-    bounds = np.array([[-10, 10]])
+    bounds = np.array([[-20, 20]])
 
     def __call__(self, x):
-       return np.sinc(x)
+       return np.sin(x) / x
 
     def derivative(self, x):
         # TODO: fix devision by zero if it becomes a problem.
-        return (np.cos(x) - np.sinc(x)) / x
+        return (x * np.cos(x) - np.sin(x)) / (x ** 2)
+
+    def hessian(self, x):
+        return -((x ** 2 - 2) * np.sin(x) + 2 * x * np.cos(x)) / (x ** 3)
+
+
+class Sinc2D(BaseEnvironment):
+    bounds = np.array([[-20, 20], [-20, 20]])
+
+    def __call__(self, x):
+        r = np.sqrt(x[..., 0] ** 2 + x[..., 1] ** 2)
+        return np.sin(r) / r
+
+    def derivative(self, x):
+        r_pow = x[..., 0] ** 2 + x[..., 1] ** 2
+        r = np.sqrt(r_pow)
+        return (x * (np.cos(r) / r) - (np.sin(r) / r_pow)) / r
+
+    def hessian(self, x):
+        pass
 
 
 class Kink2D(BaseEnvironment):
@@ -106,6 +136,20 @@ class Kink2D(BaseEnvironment):
         dy = -(4 * y ** 3 * (-0.5 + x ** 4 + y ** 4)) / (np.abs((0.5 - x ** 4 - y ** 4)) * (np.abs(0.5 - x ** 4 - y ** 4) + 0.1) ** 2)
         dd = np.stack((dx, dy), axis=-1)
         return dd
+
+
+class DynamicBell(BaseEnvironment):
+    def __init__(self, input_dim=10):
+        self.dim = input_dim
+
+    def __call__(self, X):
+        n = x.shape[0]
+        y = np.zeros(n, float)
+        
+        # solve bellman equations at training points
+        for i in range(n):
+            y[i] = solver.initial(X[i], self.dim)[0] 
+        return y[:, None]
 
 
 class ActiveSubspaceTest(BaseEnvironment):

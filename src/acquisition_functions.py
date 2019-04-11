@@ -67,6 +67,52 @@ class QuadratureAcquisition(AcquisitionBase):
 #         return np.abs(mean) + self.beta * np.sqrt(var)
 
 
+class CurvatureAcquisition(AcquisitionBase):
+    def __init__(self, model):
+        self.model = model
+
+    def __call__(self, X):
+        mean, var = self.model.get_statistics(X, full_cov=False)
+
+        # aggregate hyperparameters dimension
+        if var.ndim == 3:
+            mean = np.mean(mean, axis=0)
+            var = np.mean(var, axis=0)
+
+        hessian_mean, hessian_var = self.model.predict_hessian(X, full_cov=False)
+        hess_norm = np.linalg.norm(hessian_mean, ord='fro', axis=(-2,-1))
+
+        # Remove output dimensions
+        var = var[...,0]
+        
+        return hess_norm * np.sqrt(var)
+
+
+class CurvatureAcquisitionDistribution(AcquisitionBase):
+    """Use this with MCMC sampling (not maximization).
+    """
+
+    def __init__(self, model, beta=2):
+        self.model = model
+        self.beta = beta
+
+    def __call__(self, X):
+        mean, var = self.model.get_statistics(X, full_cov=False)
+
+        # aggregate hyperparameters dimension
+        if var.ndim == 3:
+            mean = np.mean(mean, axis=0)
+            var = np.mean(var, axis=0)
+
+        hessian_mean, hessian_var = self.model.predict_hessian(X, full_cov=False)
+        hess_norm = np.linalg.norm(hessian_mean, ord='fro', axis=(-2,-1))
+
+        # Remove output dimensions
+        var = var[...,0]
+        
+        return hess_norm + self.beta * np.sqrt(var)
+
+
 class DerivativeAcquisition(AcquisitionBase):
     """Redundant but helpful for structure.
     Should be extracted into a multi-object GP.
