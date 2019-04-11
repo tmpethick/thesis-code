@@ -26,7 +26,7 @@ from src import environments as environments_module
 from src import kernels as kernels_module
 from src import algorithms as algorithm_module
 from src.algorithms import AcquisitionAlgorithm
-from src.utils import mean_square_error, random_hypercube_samples, construct_2D_grid, call_function_on_grid
+from src.utils import root_mean_square_error, random_hypercube_samples, construct_2D_grid, call_function_on_grid
 from src import settings
 
 
@@ -53,6 +53,7 @@ def create_ex():
     ex.observers.append(MongoObserver.create(db_name='lions'))
 
     ex.add_config({
+        'gp_use_derivatives': False,
         'verbosity': {
             'plot': True,
             'bo_show_iter': 30,
@@ -62,7 +63,7 @@ def create_ex():
 
     @ex.capture
     def dklgpmodel_training_callback(model, i, loss, _log, _run):
-        # TODO: save model
+        # TODO: save modelgp_use_derivatives
         # Log
         _log.info('Iter %d/%d - Loss: %.3f' % (i + 1, model.n_iter, loss))
 
@@ -139,13 +140,13 @@ def create_ex():
         _log.info("... starting BO round {} / {}".format(i, algorithm.n_iter))
 
         # Metrics
-        mse = mean_square_error(algorithm.models[0], algorithm.f)
-        _run.log_scalar('mse', mse, i)
+        rmse = root_mean_square_error(algorithm.models[0], algorithm.f)
+        _run.log_scalar('rmse', rmse, i)
 
         # TODO: save weights
 
         # Update real-time info
-        _run.result = mse
+        _run.result = rmse
 
         # Save files
         if i % 5 == 0 or i == algorithm.n_iter:
@@ -185,7 +186,7 @@ def create_ex():
                 model.init(X, Y)
 
 
-        all_mse = np.zeros(len(models))
+        all_rmse = np.zeros(len(models))
 
         for i, model in enumerate(models):
             if input_dim == 1:
@@ -234,12 +235,12 @@ def create_ex():
                     save_fig(fig, settings.ARTIFACT_DKLGP_FEATURES_FILENAME.format(model_idx=i))
 
             # Log
-            mse = mean_square_error(model, f)
+            rmse = root_mean_square_error(model, f)
             log_info('MSE for {} with idx {}: {}'.format(model, i, mse))
-            all_mse[i] = mse
+            all_rmse[i] = rmse
 
         # Only store result for `model` (not `model2`) as it is rarely used on its own.
-        _run.result = all_mse[0]
+        _run.result = all_rmse[0]
 
 
     @ex.main

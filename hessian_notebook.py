@@ -9,7 +9,7 @@ from runner import notebook_run
 # Testing sampling pattern:
 # 2D sin (with hessian)
 # See that sampling matches hessian
-    # run BO and plot samples (kde?) against hessian.
+    # Run BO and plot samples against hessian. (kde? requires too many samples...)
 
 # Methods:
     # sample w.r.t. to the true hessian
@@ -24,6 +24,16 @@ from runner import notebook_run
     # Use derivatives
 # Requires:
     # Implement hessian for DKL and lengthscale
+
+# TODO:
+# Compare: uniform, GP variance, hessian
+# Find functions for which the sampling stategy is especially effective
+# Find models for which the sampling strategy is especially effective
+
+# Implement for DKL
+# Implement for Lengthscale
+# How do we veryfy behavior for high-dim? (construct?)
+
 
 # --------- Old comments -----------
 # Codebase:
@@ -144,6 +154,111 @@ plt.hist(model.X, bins=50, normed=True)
 #sns.distplot(model.X)
 plt.show()
 
+
+#%% Run uniform sampling, variance sampling, curvature sampling
+N_SAMPLES = 65
+FUNC = 'Kink2D'
+
+run = notebook_run(config_updates={
+    'obj_func': {
+        'name': FUNC,
+    },
+    'model': {
+        'name': 'GPModel',
+        'kwargs': {
+            'kernel': {
+                'name': 'GPyRBF',
+                'kwargs': {
+                    'lengthscale': 1
+                }
+            },
+            'noise_prior': None,
+            'do_optimize': True,
+            'num_mcmc': 0,
+            'subsample_interval': 10,
+            'step_size': 1e-1,
+            'leapfrog_steps': 20,
+            'n_burnin': 100,
+        }
+    },
+    'gp_samples': N_SAMPLES,
+}, options={'--force': True})
+
+run = notebook_run(config_updates={
+    'obj_func': {
+        'name': FUNC,
+    },
+    'model': {
+        'name': 'GPModel',
+        'kwargs': {
+            'kernel': {
+                'name': 'GPyRBF',
+                'kwargs': {
+                    'lengthscale': 1
+                }
+            },
+            'noise_prior': None,
+            'do_optimize': True,
+            'num_mcmc': 0,
+            'subsample_interval': 10,
+            'step_size': 1e-1,
+            'leapfrog_steps': 20,
+            'n_burnin': 100,
+        }
+    },
+    'acquisition_function': {
+        'name': 'QuadratureAcquisition',
+    },
+    'bo': {
+        'name': 'AcquisitionAlgorithm',
+        'kwargs': {
+            'n_init': 5,
+            'n_iter': N_SAMPLES - 5,
+            'n_acq_max_starts': 10,
+        }
+    },
+}, options={'--force': True})
+
+run = notebook_run(config_updates={
+    'obj_func': {
+        'name': FUNC,
+    },
+    'model': {
+        'name': 'GPModel',
+        'kwargs': {
+            'kernel': {
+                'name': 'GPyRBF',
+                'kwargs': {
+                    'lengthscale': 1
+                }
+            },
+            'noise_prior': None,
+            'do_optimize': True,
+            'num_mcmc': 0,
+            'subsample_interval': 10,
+            'step_size': 1e-1,
+            'leapfrog_steps': 20,
+            'n_burnin': 100,
+        }
+    },
+    'acquisition_function': {
+        'name': 'CurvatureAcquisition',
+    },
+    'bo': {
+        'name': 'AcquisitionAlgorithm',
+        'kwargs': {
+            'n_init': 5,
+            'n_iter': N_SAMPLES - 5,
+            'n_acq_max_starts': 10,
+        }
+    },
+}, options={'--force': True})
+
+
+# %%
+# What function do we expect it to be good on?
+# If model is specified correctly we will sample "uniformly" (true)
+# So only if mis-specified model.
 
 #%% Debugging MCMC... (depends on a BO constructed with a run)
 

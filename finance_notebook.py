@@ -1,5 +1,5 @@
 #%%
-from src.utils import mean_square_error
+from src.utils import root_mean_square_error
 %load_ext autoreload
 %autoreload 2
 
@@ -70,7 +70,7 @@ bq.run()
 bq.plot()
 
 plt.hist(bq.models[0].X)
-mse_vanilla = mean_square_error(bq.models[0], bq.f)
+rmse_vanilla = root_mean_square_error(bq.models[0], bq.f)
 
 #%% Model Mismatch sampling approach
 from src.acquisition_functions import AcquisitionModelMismatch
@@ -96,12 +96,12 @@ bq = AcquisitionAlgorithm(f, models, acq, bounds=bounds, n_init=2, n_iter=100, n
 bq.run()
 bq.plot()
 
-mse_model_mismatch = mean_square_error(bq.models[0], bq.f)
+rmse_model_mismatch = root_mean_square_error(bq.models[0], bq.f)
 
 #%%
 
-print("MSE model mismatch:", mse_model_mismatch) # 169.9740896452874
-print("MSE vanilla:", mse_vanilla) # 10075.7768671319
+print("MSE model mismatch:", rmse_model_mismatch) # 169.9740896452874
+print("MSE vanilla:", rmse_vanilla) # 10075.7768671319
 
 #%%
 # Test 2D Finance function 

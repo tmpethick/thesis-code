@@ -86,6 +86,7 @@ class Kink1D(BaseEnvironment):
     def derivative(self, x):
         return (2 * x) / ((x ** 2 + 1 / 10000) ** 2)
 
+
 class Sin2D(BaseEnvironment):
     def __call__(self, x):
         return (0.5 * np.sin(13 * x[..., 0]) * np.sin(27 * x[..., 0]) + 0.5) * (0.5 * np.sin(13 * x[..., 1]) * np.sin(27 * x[..., 1]) + 0.5)

@@ -4,7 +4,7 @@ import numpy as np
 from src.models.models import BaseModel
 
 
-def mean_square_error(model: BaseModel, f):
+def root_mean_square_error(model: BaseModel, f):
     if f.input_dim == 1:
         X_line = np.linspace(f.bounds[0, 0], f.bounds[0, 1], 500)[:, None]
     elif f.input_dim == 2:
@@ -22,9 +22,9 @@ def mean_square_error(model: BaseModel, f):
     if Y_hat.ndim == 3:
         Y_hat = np.mean(Y_hat, axis=0)
 
-    mse = np.sqrt(np.sum(np.square(Y - Y_hat)))
+    rmse = np.sqrt(np.sum(np.square(Y - Y_hat)))
 
-    return mse
+    return rmse
 
 
 def random_hypercube_samples(n_samples, bounds, rng=None):

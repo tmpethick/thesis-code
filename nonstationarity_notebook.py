@@ -6,7 +6,7 @@
 import numpy as np
 from src.plot_utils import plot2D, plot1D, plot_function
 from src.algorithms import AcquisitionAlgorithm, bo_plot_callback
-from src.utils import random_hypercube_samples, mean_square_error
+from src.utils import random_hypercube_samples, root_mean_square_error
 from src.environments import Kink1D, Kink2D, BaseEnvironment
 from src.models.models import BaseModel
 from sklearn.metrics import mean_squared_error
