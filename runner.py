@@ -236,7 +236,7 @@ def create_ex():
 
             # Log
             rmse = root_mean_square_error(model, f)
-            log_info('MSE for {} with idx {}: {}'.format(model, i, mse))
+            log_info('MSE for {} with idx {}: {}'.format(model, i, rmse))
             all_rmse[i] = rmse
 
         # Only store result for `model` (not `model2`) as it is rarely used on its own.
@@ -296,15 +296,71 @@ def create_ex():
         }
         mse = _run.result
         return mse
-        
+
+    @ex.command
+    def test(_config):
+        print(json.dumps(_config))
+
     return ex
 
 
-def notebook_run(*args, **kwargs):
+from src.encoder import PythonDictSyntax
+
+
+def config_dict_to_cli(conf, cmd_name=None):
+    config_list =  ["{}={}".format(k, json.dumps(v, cls=PythonDictSyntax)) for k,v in conf.items()]
+    cmd = ["python", "runner.py", "with"] + config_list
+    if cmd_name is not None:
+        cmd.insert(2, cmd_name)
+    return cmd
+
+
+def run_through_CLI(*args, config_updates=None, **kwargs):
+    """Run as shell script.
+    
+    Keyword Arguments:
+        config_updates {[type]} -- [description] (default: {None})
+    """
+    assert len(args) <= 1, "Currently only support `command name` as args."
+    assert not kwargs, "Currently only supports `config_updates` changes."
+
+    cmd_name = args[0] if args else None
+
+    import subprocess
+
+    if config_updates is None:
+        config_updates = {}
+
+    cmd = config_dict_to_cli(config_updates, cmd_name=cmd_name)
+    print(cmd)
+    subprocess.call(cmd)
+    #print(subprocess.check_output(cmd))
+
+
+def notebook_run(*args, through_CLI=False, **kwargs):
+    """Run experiment from a notebook/IPython env.
+    
+    Keyword Arguments:
+        run_shell {bool} -- Run as a shell or not (default: {False})
+    
+    Returns:
+        Experiment -- Includes _run.interactive_stash to access constructured models.
+                      (this is not supported when running as shell!)
+    """
+    assert not kwargs.get('options'), "Currently options are not supported since we override them."
+
     ex = create_ex()
-    return ex.run(*args, **kwargs)
+    if through_CLI:
+        run_through_CLI(*args, **kwargs)
+    else:
+        kwargs = dict(options = {'--force': True}, **kwargs)
+        return ex.run(*args, **kwargs)
 
 
 if __name__ == '__main__':
     ex = create_ex()
     ex.run_commandline(sys.argv + ["--force"])
+
+
+# ex.run_on_server (CLI)
+# should cp then run

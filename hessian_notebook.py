@@ -32,7 +32,7 @@ from runner import notebook_run
 
 # Implement for DKL
 # Implement for Lengthscale
-# How do we veryfy behavior for high-dim? (construct?)
+# How do we verify behavior for high-dim? (construct?)
 
 
 # --------- Old comments -----------
@@ -101,7 +101,7 @@ plt.show()
 
 #%%
 
-run = notebook_run(config_updates={
+run = notebook_run(through_CLI=True, config_updates={
     'obj_func': {
         'name': 'Sinc',
     },
@@ -134,7 +134,7 @@ run = notebook_run(config_updates={
             'n_acq_max_starts': 10,
         }
     },
-}, options={'--force': True})
+})
 
 
 #%% See that sampling strategy indeed matches curvature
@@ -157,9 +157,9 @@ plt.show()
 
 #%% Run uniform sampling, variance sampling, curvature sampling
 N_SAMPLES = 65
-FUNC = 'Kink2D'
+FUNC = 'IncreasingOscillationDecreasingAmplitude'
 
-run = notebook_run(config_updates={
+run = notebook_run(through_CLI=True, config_updates={
     'obj_func': {
         'name': FUNC,
     },
@@ -182,9 +182,9 @@ run = notebook_run(config_updates={
         }
     },
     'gp_samples': N_SAMPLES,
-}, options={'--force': True})
+}
 
-run = notebook_run(config_updates={
+run = notebook_run(through_CLI=True, config_updates={
     'obj_func': {
         'name': FUNC,
     },
@@ -217,9 +217,9 @@ run = notebook_run(config_updates={
             'n_acq_max_starts': 10,
         }
     },
-}, options={'--force': True})
+})
 
-run = notebook_run(config_updates={
+run = notebook_run(through_CLI=True, config_updates={
     'obj_func': {
         'name': FUNC,
     },
@@ -252,7 +252,7 @@ run = notebook_run(config_updates={
             'n_acq_max_starts': 10,
         }
     },
-}, options={'--force': True})
+})
 
 
 # %%
@@ -298,7 +298,7 @@ run = notebook_run(config_updates={
             'n_acq_max_starts': 10,
         }
     },
-}, options={'--force': True})
+})
 
 
 import matplotlib.pyplot as plt
