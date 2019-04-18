@@ -1,8 +1,12 @@
 import numpy as np
+from numpy.core.numeric import where
+
 from src.utils import construct_2D_grid, call_function_on_grid
 
 
 class BaseEnvironment(object):
+    x_opt = None
+
     def __repr__(self):
         return "{}".format(type(self).__name__)
 
@@ -16,6 +20,12 @@ class BaseEnvironment(object):
     @property
     def input_dim(self):
         return self.bounds.shape[0]
+
+    @property
+    def f_opt(self):
+        if self.x_opt is None:
+            raise Exception("Function does not have an optimum defined. Please specify `x_opt`.")
+        return self(np.array([self.x_opt]))[0]
 
     def derivative(self, x):
         raise NotImplementedError
@@ -94,9 +104,12 @@ class Sin2D(BaseEnvironment):
 
 class Sinc(BaseEnvironment):
     bounds = np.array([[-20, 20]])
+    x_opt = 0
 
     def __call__(self, x):
-       return np.sin(x) / x
+        x = np.asanyarray(x)
+        y = where(x == 0, 1.0e-20, x)
+        return np.sin(y)/y
 
     def derivative(self, x):
         # TODO: fix devision by zero if it becomes a problem.
@@ -104,6 +117,11 @@ class Sinc(BaseEnvironment):
 
     def hessian(self, x):
         return -((x ** 2 - 2) * np.sin(x) + 2 * x * np.cos(x)) / (x ** 3)
+
+
+class NegSinc(Sinc):
+    def __call__(self, x):
+        return -super().__call__(x)
 
 
 class Sinc2D(BaseEnvironment):

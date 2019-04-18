@@ -42,6 +42,8 @@ def plot_function(f: BaseEnvironment, func, title="Function", points=None):
     else:
         raise ValueError("Cannot plot in input dim above 2.")
 
+    plt.tight_layout()
+    
     return fig
 
 
@@ -63,6 +65,9 @@ def plot1D(model: BaseModel, f: BaseEnvironment) -> plt.Figure:
     ax.fill_between(X_line.reshape(-1),
                     (mean + 2 * np.sqrt(var)).reshape(-1),
                     (mean - 2 * np.sqrt(var)).reshape(-1), alpha=0.5)
+    
+    plt.tight_layout()
+    
     return fig
 
 
@@ -109,6 +114,8 @@ def plot2D(model: BaseModel, f: BaseEnvironment) -> plt.Figure:
     ax.set_title('Estimate Error |f-m|')
     conf = ax.contourf(X, Y, np.abs(mean - ground_truth), 50)
     fig.colorbar(cont)
-    return fig
 
+    plt.tight_layout()
+
+    return fig
 

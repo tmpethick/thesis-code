@@ -68,8 +68,10 @@ class QuadratureAcquisition(AcquisitionBase):
 
 
 class CurvatureAcquisition(AcquisitionBase):
-    def __init__(self, model):
+    def __init__(self, model, use_var=True, beta=0):
         self.model = model
+        self.use_var = use_var
+        self.beta = beta
 
     def __call__(self, X):
         mean, var = self.model.get_statistics(X, full_cov=False)
@@ -80,12 +82,14 @@ class CurvatureAcquisition(AcquisitionBase):
             var = np.mean(var, axis=0)
 
         hessian_mean, hessian_var = self.model.predict_hessian(X, full_cov=False)
-        hess_norm = np.linalg.norm(hessian_mean, ord='fro', axis=(-2,-1))
+        hess_norm = np.linalg.norm(hessian_mean, ord='fro', axis=(-2, -1))
+        hess_norm = hess_norm[:, None]
 
         # Remove output dimensions
-        var = var[...,0]
-        
-        return hess_norm * np.sqrt(var)
+        if self.use_var:
+            return hess_norm * np.sqrt(var) + self.beta * np.sqrt(var)
+        else:
+            return hess_norm
 
 
 class CurvatureAcquisitionDistribution(AcquisitionBase):
@@ -107,9 +111,6 @@ class CurvatureAcquisitionDistribution(AcquisitionBase):
         hessian_mean, hessian_var = self.model.predict_hessian(X, full_cov=False)
         hess_norm = np.linalg.norm(hessian_mean, ord='fro', axis=(-2,-1))
 
-        # Remove output dimensions
-        var = var[...,0]
-        
         return hess_norm + self.beta * np.sqrt(var)
 
 

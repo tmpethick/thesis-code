@@ -164,7 +164,7 @@ class AcquisitionAlgorithm(object):
             ax.set_title('Ground truth')
             ax.scatter(self.X, self.Y)
             ax.plot(X_line, self.f(X_line))
-            
+
             ax = fig.add_subplot(222)
             ax.set_title('Acq func')
             ax.plot(X_line, self.acquisition_function(X_line))
@@ -177,7 +177,9 @@ class AcquisitionAlgorithm(object):
             
             ax = fig.add_subplot(224)
             ax.set_title('Sample density')
-            ax.hist(self.X)
+            ax.hist(self.X, bins=20)
+
+            plt.tight_layout()
 
         elif dims == 2:
             fig = plt.figure()
@@ -200,7 +202,7 @@ class AcquisitionAlgorithm(object):
 
             ax = fig.add_subplot(223)
             ax.set_title('Acq func')
-            Z = call_function_on_grid(self.acquisition_function, XY)
+            Z = call_function_on_grid(self.acquisition_function, XY)[...,0]
             cont = ax.contourf(X,Y,Z, 50)
             fig.colorbar(cont)
             ax.plot(self.X[:, 0], self.X[:, 1], '.', markersize=10)
@@ -210,6 +212,8 @@ class AcquisitionAlgorithm(object):
             sns.kdeplot(data=self.X[..., 0], data2=self.X[..., 1], ax=ax,
                         clip=self.bounds, shade=True, cbar=True, cmap="Reds", shade_lowest=False)
             sns.scatterplot(self.X[...,0], self.X[...,1], ax=ax)
+            
+            plt.tight_layout()
         else:
             warnings.warn("Cannot plot above 2D.", Warning)
             fig = None

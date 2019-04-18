@@ -8,6 +8,55 @@ from scipy.linalg import cho_factor, cho_solve
 from src.kernels import GPyRBF
 
 
+def zero_mean_unit_var_normalization(X, mean=None, std=None):
+    if mean is None:
+        mean = np.mean(X, axis=0)
+    if std is None:
+        std = np.std(X, axis=0)
+
+    X_normalized = (X - mean) / std
+
+    return X_normalized, mean, std
+
+
+def zero_mean_unit_var_unnormalization(X_normalized, mean, std):
+    return X_normalized * std + mean
+
+
+class Normalizer(object):
+    def __init__(self, X, Y, normalize_input=True, normalize_output=True):
+        self._X_mean = None
+        self._X_std = None
+        self.normalize_input = normalize_input
+
+        self._y_mean = None
+        self._y_std = None
+        self.normalize_output = normalize_output
+
+        self.X = None
+        self.Y = None
+
+        if self.normalize_input:
+            self.X, self._X_mean, self._X_std = zero_mean_unit_var_normalization(X)
+        else:
+            self.X = X
+
+        if self.normalize_output:
+            self.Y, self._y_mean, self._y_std = zero_mean_unit_var_normalization(Y)
+        else:
+            self.Y = Y
+
+    def normalize_X(self, X):
+        if self.normalize_input:
+            X, _, _ = zero_mean_unit_var_normalization(X, mean=self._X_mean, std=self._X_std)
+        return X
+
+    def denormalize_Y(self, Y):
+        if self.normalize_output:
+            Y = zero_mean_unit_var_unnormalization(Y, self._y_mean, self._y_std)
+            # var = var * self._y_std ** 2
+        return Y
+
 class Transformer(object):
     @property
     def output_dim(self):
@@ -106,6 +155,11 @@ class ActiveSubspace(Transformer):
 
 
 class BaseModel(object):
+    def __init__(self, normalize_input=False, normalize_output=False):
+        self.normalizer = None
+        self._normalize_input = normalize_input
+        self._normalize_output = normalize_output
+
     def __repr__(self):
         return "{}".format(type(self).__name__)
 
@@ -117,6 +171,9 @@ class BaseModel(object):
         self.X = X
         self.Y = Y
         self.Y_dir = Y_dir
+
+        self.normalizer = Normalizer(self.X, self.Y, normalize_input=self._normalize_input, normalize_output=self._normalize_output)
+
         if train:
             self._fit(self.X, self.Y, Y_dir=self.Y_dir, is_initial=True)
 
@@ -124,6 +181,8 @@ class BaseModel(object):
         # Update data
         self.X = np.concatenate([self.X, X_new])
         self.Y = np.concatenate([self.Y, Y_new])
+
+        self.normalizer = Normalizer(self.X, self.Y, normalize_input=self._normalize_input, normalize_output=self._normalize_output)
 
         if self.Y_dir is not None:
             self.Y_dir = np.concatenate([self.Y_dir, Y_dir_new])
@@ -187,7 +246,10 @@ class GPModel(ProbModel):
             n_burnin=100,
             subsample_interval=10,
             step_size=1e-1,
-            leapfrog_steps=20):
+            leapfrog_steps=20,
+            normalize_input=False,
+            normalize_output=False):
+        super(GPModel, self).__init__(normalize_input=normalize_input, normalize_output=normalize_output)
 
         self.kernel = kernel
         self.noise_prior = noise_prior
@@ -204,13 +266,18 @@ class GPModel(ProbModel):
         self.output_dim = None
 
     def _fit(self, X, Y, Y_dir=None, is_initial=True):
+        # Use the normalized X,Y which we know has been updated.
+        # For now let the GPModel take care of normalizing the output.
+        X = self.normalizer.X
+        # Y = self.normalizer.Y
+
         assert X.shape[0] == Y.shape[0], \
             "X and Y has to match size. It was {} and {} respectively".format(X.shape[0], Y.shape[0])
 
         self.output_dim = Y.shape[-1]
 
         if self.gpy_model is None:
-            self.gpy_model = GPy.models.GPRegression(X, Y, self.kernel)
+            self.gpy_model = GPy.models.GPRegression(X, Y, self.kernel, normalizer=self._normalize_output)
             if self.noise_prior:
                 if isinstance(self.noise_prior, float):
                     self.gpy_model.Gaussian_noise.fix(self.noise_prior)
@@ -244,6 +311,9 @@ class GPModel(ProbModel):
         Returns:
             numpy.array -- shape (hyperparams, stats, obs, obj_dim)
         """
+
+        # Normalize the input (normalization of output is dealt with by GPy)
+        X = self.normalizer.normalize_X(X)
 
         num_X = X.shape[0]
         num_obj = self.output_dim
@@ -321,6 +391,9 @@ class GPModel(ProbModel):
     #     return - np.einsum("kk,k->k", Lambda_inv, interm), None
 
     def predict_jacobian(self, X, full_cov=True):
+        # Normalize the input (normalization of output is dealt with by GPy)
+        X = self.normalizer.normalize_X(X)
+
         N_new = X.shape[0]
         N, D = self.X.shape
 
@@ -344,6 +417,9 @@ class GPModel(ProbModel):
 
         returns np.ndarray (N*, D, D)
         """
+        # Normalize the input (normalization of output is dealt with by GPy)
+        X = self.normalizer.normalize_X(X)
+
         assert isinstance(self.gpy_model.kern, GPyRBF), "Only support RBF for now"
 
         N_new = X.shape[0]
@@ -398,8 +474,8 @@ class TransformerModel(ProbModel):
     """Proxy a ProbModel through a Transformer first.
     """
 
-
-    def __init__(self, *, transformer: Transformer, prob_model: ProbModel):
+    def __init__(self, *, transformer: Transformer, prob_model: ProbModel, normalize_input=False, normalize_output=False):
+        super(TransformerModel, self).__init__(normalize_input=normalize_input, normalize_output=normalize_output)
         self.transformer = transformer
         self.prob_model = prob_model
 
@@ -421,7 +497,8 @@ class TransformerModel(ProbModel):
 
 
 class GPVanillaModel(ProbModel):
-    def __init__(self, gamma=0.1, noise=0.01):
+    def __init__(self, gamma=0.1, noise=0.01, normalize_input=False, normalize_output=False):
+        super(GPVanillaModel, self).__init__(normalize_input=normalize_input, normalize_output=normalize_output)
         self.K_noisy_inv = None
         self.gamma = gamma
         self.noise = noise
@@ -468,7 +545,8 @@ class GPVanillaLinearModel(GPVanillaModel):
 
 
 class LowRankGPModel(ProbModel):
-    def __init__(self, gamma=0.1, noise = 0.01, n_features=10):
+    def __init__(self, gamma=0.1, noise = 0.01, n_features=10, normalize_input=False, normalize_output=False):
+        super(LowRankGPModel, self).__init__(normalize_input=normalize_input, normalize_output=normalize_output)
         self.noise = noise
         self.gamma = gamma
         self.m = n_features
@@ -538,10 +616,10 @@ class RandomFourierFeaturesModel(LowRankGPModel):
     [1]: https://www.cs.cmu.edu/~dsutherl/papers/rff_uai15.pdf
     """
 
-    def __init__(self, gamma=0.1, noise=0.01, n_features=10):
+    def __init__(self, gamma=0.1, noise=0.01, n_features=10, normalize_input=False, normalize_output=False):
         assert n_features % 2 == 0, "`n_features` has to be even."
         
-        super(RandomFourierFeaturesModel, self).__init__(gamma=gamma, noise=noise, n_features=n_features)
+        super(RandomFourierFeaturesModel, self).__init__(gamma=gamma, noise=noise, n_features=n_features, normalize_input=normalize_input, normalize_output=normalize_output)
 
         # TODO: right now only SE is supported.
         self.W = None
@@ -570,8 +648,8 @@ class RandomFourierFeaturesModel(LowRankGPModel):
 
 
 class EfficientLinearModel(LowRankGPModel):
-    def __init__(self, gamma=0.1, noise=0.01, n_features=None):
-        super(EfficientLinearModel, self).__init__(gamma=gamma, noise=noise, n_features=n_features)
+    def __init__(self, gamma=0.1, noise=0.01, n_features=None, normalize_input=False, normalize_output=False):
+        super(EfficientLinearModel, self).__init__(gamma=gamma, noise=noise, n_features=n_features, normalize_input=normalize_input, normalize_output=normalize_output)
 
     def feature_map(self, X):
         n, d = X.shape
@@ -595,10 +673,10 @@ def cartesian_product(*arrays):
 
 class QuadratureFourierFeaturesModel(LowRankGPModel):
 
-    def __init__(self, gamma=0.1, noise=0.01, n_features=100):
+    def __init__(self, gamma=0.1, noise=0.01, n_features=100, normalize_input=False, normalize_output=False):
         assert n_features % 2 == 0, "`n_features` has to be even."
 
-        super(QuadratureFourierFeaturesModel, self).__init__(gamma=gamma, noise=noise, n_features=n_features)
+        super(QuadratureFourierFeaturesModel, self).__init__(gamma=gamma, noise=noise, n_features=n_features, normalize_input=normalize_input, normalize_output=normalize_output)
         
         # Not used since the structure is implicit in the particular use of the Gauss-Hermite Scheme.
         self.spectral_kernel_pdf = lambda w: np.exp(- np.square(w).dot(np.square(self.gamma))/ 2)
