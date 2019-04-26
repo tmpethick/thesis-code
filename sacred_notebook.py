@@ -51,7 +51,7 @@ run = notebook_run(config_updates={
         }
     },
 
-}, options={'--force': True})
+})
 
 #%%
 # -------------------------- Derivative Exploitation ------------------------
@@ -110,7 +110,7 @@ run = notebook_run(config_updates={
             'n_acq_max_starts': 2,            
         }
     },
-}, options={'--force': True})
+})
 
 #%%
 run = notebook_run(config_updates={
@@ -154,7 +154,7 @@ run = notebook_run(config_updates={
             'n_acq_max_starts': 2,            
         }
     },
-}, options={'--force': True})
+})
 
 
 
@@ -203,7 +203,7 @@ run = notebook_run(config_updates={
         }
     },
     'gp_samples': 50,
-}, options={'--force': True})
+})
 
 #%%
 
@@ -228,7 +228,7 @@ run = notebook_run(config_updates={
             'n_acq_max_starts': 2,            
         }
     },
-}, options={'--force': True})
+})
 
 
 #%% AS
@@ -268,7 +268,7 @@ run = notebook_run(config_updates={
         }
     },
     'gp_samples': 100,
-}, options={'--force': True})
+})
 
 #%%
 run = notebook_run(config_updates={
@@ -285,7 +285,7 @@ run = notebook_run(config_updates={
         }
     },
     'gp_samples': 100,
-}, options={'--force': True})
+})
 
 
 #%%
@@ -314,7 +314,7 @@ run = notebook_run(config_updates={
             'n_acq_max_starts': 2,            
         }
     },
-}, options={'--force': True})
+})
 
 
 #%%
@@ -333,7 +333,7 @@ run = notebook_run(config_updates={
         }
     },
     'gp_samples': 10,
-}, options={'--force': True})
+})
 
 
 #%%
@@ -375,7 +375,7 @@ notebook_run(config_updates={
         },
     },
     'gp_samples': 5,
-}, options={'--force': True})
+})
 
 # %% Fully specified GP with acq
 notebook_run(config_updates={
@@ -404,7 +404,7 @@ notebook_run(config_updates={
         'name': 'QuadratureAcquisition',
     },
     'gp_samples': 5,
-}, options={'--force': True})
+})
 
 # %% Fully specified BO
 
@@ -441,7 +441,7 @@ notebook_run(config_updates={
             'n_acq_max_starts': 10,            
         }
     },
-}, options={'--force': True})
+})
 
 #%%
 
@@ -466,7 +466,7 @@ notebook_run(config_updates={
             'n_acq_max_starts': 10,            
         }
     },
-}, options={'--force': True})
+})
 
 
 # %% Small modifications
@@ -491,7 +491,7 @@ run = notebook_run(config_updates={
         'kwargs': {}
     },
     'gp_samples': 50,
-}, options={'--force': True})
+})
 
 # %%
 # --------------- Utils ----------------
@@ -502,9 +502,9 @@ notebook_run('save_config', named_configs=['gpy'], config_updates={'config_filen
 
 # %% Print configs
 
-notebook_run('print_config', named_configs=['config/gpy.yaml'], options={'--force': True})
+notebook_run('print_config', named_configs=['config/gpy.yaml'])
 
 # %% YAML to python dict
 
-run = notebook_run('print_config', named_configs=['configs/gpy.yaml'], options={'--force': True})
+run = notebook_run('print_config', named_configs=['configs/gpy.yaml'])
 run.config

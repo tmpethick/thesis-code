@@ -127,6 +127,15 @@ for l in [1, 10, 1000]:
     plt.show()
 
 #%%
+run = execute("print_config", config_updates={
+    'obj_func': {
+        'name': 'Sinc',
+    },
+})
+
+CMD=('python' 'runner.py' 'print_config' 'with' 'obj_func={"name": "Sinc"}'); ./hpc.sh
+
+#%%
 
 run = execute(config_updates={
     'obj_func': {

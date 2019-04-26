@@ -1,3 +1,7 @@
+##################################################
+# This notebook is used for debugging in PyCharm
+##################################################
+
 from runner import notebook_run
 
 N_SAMPLES = 65

@@ -114,34 +114,3 @@ bq.run(callback=bo_plot_callback)
 
 # config is JSON serilizable
 # How to convert ('Class', {})
-
-#%%
-
-# Present:
-# Show length scale 1D, 2D
-# Show 2D DKL (and desktop plot)
-    # 2D not different from baseline BUT variance is different! (sometimes)
-    # Very unreliable (huge variance in behavior)
-# Show model mismatch (and desktop plot)
-# Smoothness
-# Robustness
-
-
-# TODO: (big picture)
-# Nonstationarity
-    # See exisiting models work
-    # Try own (model mismatch and kinky)
-    # Ensure robust in BO setting (e.g. no mode collapse)
-# Active sampling strategies
-    # model mismatch
-    # robustness
-# Can curvature help with adjusting lengthscale? (i.e. is it any use outside active sampling?)
-# Combine with high-dim
-    # Built into DKL
-# Scalability
-    # DKL is QFF comp.
-    # Learn inverse map (avoid data issue)
-
-#%%
-
-#

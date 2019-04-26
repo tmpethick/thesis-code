@@ -1,3 +1,7 @@
+###############################################
+# This notebook explores BO <-> Opt 
+# (Frank-Wolfe and friends.)
+###############################################
 #%%
 %load_ext autoreload
 %autoreload 2

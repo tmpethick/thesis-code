@@ -346,7 +346,7 @@ def hpc_wrap(cmd):
         [string] -- Return array that can be executed with `subprocess.call`.
     """
     python_cmd_args = " ".join(map(lambda x: "'{}'".format(x), cmd))
-    server_cmd = "cd mthesis; CMD=({}); sbatch hpc.sh".format(python_cmd_args)
+    server_cmd = "cd mthesis; sbatch hpc.sh {}".format(python_cmd_args)
     ssh_cmd = ["ssh", "simba", server_cmd]
     return ssh_cmd
 

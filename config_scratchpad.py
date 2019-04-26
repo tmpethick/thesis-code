@@ -1,3 +1,8 @@
+################################################ 
+# If we are ever to standardise configs through
+# class mixin this will come in handy.
+################################################
+
 # Can't do model config outside classes (not flexibel enough).
 # Wouldn't be able to specify BO.GPModel.some_class
 
