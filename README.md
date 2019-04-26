@@ -92,6 +92,10 @@ ssh -N -f -L localhost:8889:localhost:7000 rkarimi@simba-compute-gpu-3
 jupyter notebook
 ```
 
+## Server
+
+It requires to have `simba` configured in `~/.ssh/config`.
+
 ## Troubleshoot
 
   Temporarily fixed `conda install numpy=1.15.4` (https://github.com/SheffieldML/GPy/issues/728#issuecomment-459379268) to fix plotting problem in GPy.

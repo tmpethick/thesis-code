@@ -2,7 +2,7 @@
 %load_ext autoreload
 %autoreload 2
 
-from runner import notebook_run, notebook_run_CLI, notebook_run_server
+from runner import notebook_run, notebook_run_CLI, notebook_run_server, execute
 
 
 #%%
@@ -33,8 +33,6 @@ from runner import notebook_run, notebook_run_CLI, notebook_run_server
 # Find functions for which the sampling stategy is especially effective
 # Find models for which the sampling strategy is especially effective
 # Think about cool applications
-
-# How to setup cluster
 
 # Implement for DKL
 # Implement for Lengthscale
@@ -130,7 +128,7 @@ for l in [1, 10, 1000]:
 
 #%%
 
-run = notebook_run(config_updates={
+run = execute(config_updates={
     'obj_func': {
         'name': 'Sinc',
     },
@@ -155,14 +153,14 @@ run = notebook_run(config_updates={
     'acquisition_function': {
         'name': 'CurvatureAcquisition',
     },
-    ''bo': {
+    'bo': {
         'name': 'AcquisitionAlgorithm',
         'kwargs': {
             'n_init': 5,
             'n_iter': 60,
             'n_acq_max_starts': 10,
         }
-    },'
+    },
 })
 
 

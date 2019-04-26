@@ -49,8 +49,8 @@ def hash_subdict(d, keys=None):
     return hashlib.sha1(json.dumps(d, sort_keys=True).encode()).hexdigest()
 
 
-def create_ex():
-    ex = Experiment(settings.EXP_NAME, interactive=settings.EXP_INTERACTIVE)
+def create_ex(interactive=False):
+    ex = Experiment(settings.EXP_NAME, interactive=interactive)
     ex.observers.append(MongoObserver.create(url=settings.MONGO_DB_URL, db_name=settings.MONGO_DB_NAME))
 
     ex.add_config({
@@ -352,6 +352,7 @@ def hpc_wrap(cmd):
 
 
 def notebook_run_server(*args, **kwargs):
+    # TODO: test if changes have been made to src
     cmd = notebook_to_CLI(*args, **kwargs)
     ssh_cmd = hpc_wrap(cmd) 
     print(ssh_cmd)
@@ -372,15 +373,22 @@ def notebook_run(*args, **kwargs):
     """
     assert not kwargs.get('options'), "Currently options are not supported since we override them."
 
-    ex = create_ex()
+    ex = create_ex(interactive=True)
     kwargs = dict(options = {'--force': True}, **kwargs)
     return ex.run(*args, **kwargs)
 
 
+def execute(*args, **kwargs):
+    if settings.MODE == settings.MODES.SERVER:
+        func = notebook_run_server
+    elif settings.MODE == settings.MODES.LOCAL_CLI:
+        func = notebook_run_CLI
+    else:
+        func = notebook_run
+
+    return func(*args, **kwargs)
+
+
 if __name__ == '__main__':
-    ex = create_ex()
+    ex = create_ex(interactive=False)
     ex.run_commandline(sys.argv + ["--force"])
-
-
-# ex.run_on_server (CLI)
-# should cp then run

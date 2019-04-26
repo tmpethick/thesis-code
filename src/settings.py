@@ -1,12 +1,25 @@
 import os
+from enum import Enum
 
 from .env import MONGO_DB_PASSWORD
+
+# ---------------- Setting options
+# ----------------
+
+class MODES(Enum):
+    SERVER = 1
+    LOCAL_CLI = 2
+    LOCAL = 3
+
+# ----------------- Settings
+# -----------------
+
+MODE = MODES.LOCAL
 
 MONGO_DB_URL = 'mongodb+srv://admin:{}@lions-rbvzc.mongodb.net/test?retryWrites=true'.format(MONGO_DB_PASSWORD)
 MONGO_DB_NAME = 'test'
 
 EXP_NAME = "lions"
-EXP_INTERACTIVE = True
 
 EXP_HASH = 'exp_hash'     # Unique for (model, obj_func) pair.
 MODEL_HASH = 'model_hash' # Unique for each model.
