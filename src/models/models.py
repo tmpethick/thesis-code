@@ -279,7 +279,8 @@ class GPModel(ProbModel):
         if self.gpy_model is None:
             self.gpy_model = GPy.models.GPRegression(X, Y, self.kernel, normalizer=self._normalize_output)
             if self.noise_prior:
-                if isinstance(self.noise_prior, float):
+                if isinstance(self.noise_prior, float) or isinstance(self.noise_prior, int):
+                    assert self.noise_prior != 0, "Zero noise is ignored. Use e.g. 1e-10 instead."
                     self.gpy_model.Gaussian_noise.fix(self.noise_prior)
                 else:
                     self.gpy_model.Gaussian_noise.variance.set_prior(self.noise_prior)

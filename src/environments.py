@@ -119,6 +119,13 @@ class Sinc(BaseEnvironment):
         return -((x ** 2 - 2) * np.sin(x) + 2 * x * np.cos(x)) / (x ** 3)
 
 
+class BigSinc(Sinc):
+    bounds = np.array([[-0.2, 0.2]])
+
+    def __call__(self, x):
+        return super().__call__(100 * x)
+
+
 class NegSinc(Sinc):
     def __call__(self, x):
         return -super().__call__(x)
@@ -157,6 +164,41 @@ class Kink2D(BaseEnvironment):
         return dd
 
 
+class ActiveSubspaceTest(BaseEnvironment):
+    """"    
+    Code:
+    https://github.com/sischei/global_solution_yale19/blob/master/Lecture_6/code/AS_ex2.py
+
+    Paper (fig. 4):
+    https://papers.ssrn.com/sol3/papers.cfm?abstract_id=2927400
+    """
+    bounds = np.array([[-1,1]] * 10)
+
+    def __call__(self, X):
+        y = np.exp(0.01*X[...,0] + 0.7*X[...,1] + 0.02*X[...,2] + 0.03*X[...,3] + 0.04*X[...,4] + 
+                    0.05*X[...,5] + 0.06*X[...,6] + 0.08*X[...,7] + 0.09*X[...,8] + 0.1*X[...,9])
+        return y[...,None]
+
+    def derivative(self, X):
+        Y = self(X)
+        coefs = np.array([0.01, 0.7, 0.02, 0.03, 0.04, 0.05, 0.06, 0.08, 0.09, 0.1])
+        return Y * coefs[None, :]
+
+
+class ActiveSubspaceModifiedTest(ActiveSubspaceTest):
+    def __call__(self, X):
+        return X[..., 1]*X[..., 2] * super(ActiveSubspaceModifiedTest, self).__call__(X)
+
+    def derivative(self, X):
+        _test_old = super().derivative(X)
+        val = np.atleast_1d(X[..., 1] * X[..., 2] * _test_old)
+        coefs = np.array([0.01, 0.7, 0.02, 0.03, 0.04, 0.05, 0.06, 0.08, 0.09, 0.1])
+        out = val[:, None] * coefs[None, :]
+        out[:, 1] += X[..., 2] * _test_old
+        out[:, 2] += X[..., 1] * _test_old
+        return out
+
+
 class DynamicBell(BaseEnvironment):
     def __init__(self, input_dim=10):
         self.dim = input_dim
@@ -169,20 +211,6 @@ class DynamicBell(BaseEnvironment):
         for i in range(n):
             y[i] = solver.initial(X[i], self.dim)[0] 
         return y[:, None]
-
-
-class ActiveSubspaceTest(BaseEnvironment):
-    bounds = np.array([[-1,1]] * 10)
-
-    def __call__(self, X):
-        y = np.exp(0.01*X[...,0] + 0.7*X[...,1] + 0.02*X[...,2] + 0.03*X[...,3] + 0.04*X[...,4] + 
-                    0.05*X[...,5] + 0.06*X[...,6] + 0.08*X[...,7] + 0.09*X[...,8] + 0.1*X[...,9])
-        return y[...,None]
-
-    def derivative(self, X):
-        Y = self(X)
-        coefs = np.array([0.01, 0.7, 0.02, 0.03, 0.04, 0.05, 0.06, 0.08, 0.09, 0.1])
-        return Y * coefs[None, :]
 
 
 from GPyOpt.objective_examples import experiments2d

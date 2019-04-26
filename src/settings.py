@@ -1,4 +1,9 @@
+import os
 
+from .env import MONGO_DB_PASSWORD
+
+MONGO_DB_URL = 'mongodb+srv://admin:{}@lions-rbvzc.mongodb.net/test?retryWrites=true'.format(MONGO_DB_PASSWORD)
+MONGO_DB_NAME = 'test'
 
 EXP_NAME = "lions"
 EXP_INTERACTIVE = True

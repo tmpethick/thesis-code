@@ -1,4 +1,5 @@
 import sys
+import subprocess
 
 from src.environments import BaseEnvironment
 from src.models import BaseModel, LocalLengthScaleGPModel, DKLGPModel
@@ -50,7 +51,7 @@ def hash_subdict(d, keys=None):
 
 def create_ex():
     ex = Experiment(settings.EXP_NAME, interactive=settings.EXP_INTERACTIVE)
-    ex.observers.append(MongoObserver.create(db_name='lions'))
+    ex.observers.append(MongoObserver.create(url=settings.MONGO_DB_URL, db_name=settings.MONGO_DB_NAME))
 
     ex.add_config({
         'gp_use_derivatives': False,
@@ -315,7 +316,7 @@ def config_dict_to_cli(conf, cmd_name=None):
     return cmd
 
 
-def run_through_CLI(*args, config_updates=None, **kwargs):
+def notebook_to_CLI(*args, config_updates=None, **kwargs):
     """Run as shell script.
     
     Keyword Arguments:
@@ -326,35 +327,54 @@ def run_through_CLI(*args, config_updates=None, **kwargs):
 
     cmd_name = args[0] if args else None
 
-    import subprocess
 
     if config_updates is None:
         config_updates = {}
 
     cmd = config_dict_to_cli(config_updates, cmd_name=cmd_name)
-    print(cmd)
-    subprocess.call(cmd)
+    return cmd
     #print(subprocess.check_output(cmd))
 
 
-def notebook_run(*args, through_CLI=False, **kwargs):
-    """Run experiment from a notebook/IPython env.
+def hpc_wrap(cmd):
+    """Takes a python script and wraps it in `sbatch` over `ssh`.
     
-    Keyword Arguments:
-        run_shell {bool} -- Run as a shell or not (default: {False})
+    Arguments:
+        cmd {[string]} -- The python script to be executed.
+    
+    Returns:
+        [string] -- Return array that can be executed with `subprocess.call`.
+    """
+    python_cmd_args = " ".join(map(lambda x: "'{}'".format(x), cmd))
+    server_cmd = "cd mthesis; CMD=({}); sbatch hpc.sh".format(python_cmd_args)
+    ssh_cmd = ["ssh", "simba", server_cmd]
+    return ssh_cmd
+
+
+def notebook_run_server(*args, **kwargs):
+    cmd = notebook_to_CLI(*args, **kwargs)
+    ssh_cmd = hpc_wrap(cmd) 
+    print(ssh_cmd)
+    subprocess.call(ssh_cmd)
+
+
+def notebook_run_CLI(*args, **kwargs):
+    cmd = notebook_to_CLI(*args, **kwargs)
+    print(cmd)
+    subprocess.call(cmd)
+
+
+def notebook_run(*args, **kwargs):
+    """Run experiment from a notebook/IPython env.
     
     Returns:
         Experiment -- Includes _run.interactive_stash to access constructured models.
-                      (this is not supported when running as shell!)
     """
     assert not kwargs.get('options'), "Currently options are not supported since we override them."
 
     ex = create_ex()
-    if through_CLI:
-        run_through_CLI(*args, **kwargs)
-    else:
-        kwargs = dict(options = {'--force': True}, **kwargs)
-        return ex.run(*args, **kwargs)
+    kwargs = dict(options = {'--force': True}, **kwargs)
+    return ex.run(*args, **kwargs)
 
 
 if __name__ == '__main__':

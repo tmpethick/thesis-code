@@ -31,28 +31,33 @@
 
 ## Installation
 
+On linux for pytorch:
+conda install -y -c anaconda mkl
+conda install -y pytorch-cpu torchvision-cpu -c pytorch
 
 - General requirements:
-  ```bash
-  source $HOME/miniconda/bin/activate
-  conda create -n lions python=3.6
-  source activate lions
-  conda install -y pytorch torchvision -c pytorch
-  conda install -y gpytorch -c gpytorch
-  conda install -y -c conda-forge numpy blas seaborn scipy matplotlib pandas gpy
-  pip install pydot-ng
-  pip install gpyopt
-  pip install emcee
+```bash
+source $HOME/miniconda/bin/activate
+conda create -n lions python=3.6
+source activate lions
+conda install -y pytorch torchvision -c pytorch
+pip install gpytorch
+conda install -y -c conda-forge numpy blas seaborn scipy matplotlib pandas gpy
+conda install -y pylint
+pip install pydot-ng
+pip install gpyopt
+pip install emcee
 
-  conda install -y scikit-learn
-  pip install git+https://github.com/IDSIA/sacred.git
-  pip install pyyaml GitPython pymongo
-  pip install incense
+conda install -y scikit-learn
+pip install git+https://github.com/IDSIA/sacred.git
+pip install dnspython
+pip install pyyaml GitPython pymongo
+pip install incense
 
-  git clone https://github.com/jmetzen/gp_extras.git
-  cd gp_extras
-  python setup.py install 
-  ```
+git clone https://github.com/jmetzen/gp_extras.git
+cd gp_extras
+python setup.py install 
+```
 
 - Notebook requirements:
   ```bash
@@ -71,6 +76,20 @@
 ```
 npm install -g omniboard
 omniboard -m localhost:27017:lions
+omniboard --mu "mongodb+srv://admin:<password>@lions-rbvzc.mongodb.net/test?retryWrites=true"
+PASS=$(python -c 'from src import env; print(env.MONGO_DB_PASSWORD)'); omniboard --mu "mongodb+srv://admin:${PASS}@lions-rbvzc.mongodb.net/test?retryWrites=true"
+```
+
+If MongoDB is living on a firewalled server (not currently the case):
+```
+ssh -fN -l root -i path/to/id_rsa -L 9999:localhost:27017 host.com
+ssh -N -f -L localhost:8889:localhost:7000 rkarimi@simba-compute-gpu-3
+```
+
+## Jupyter notebook
+
+```
+jupyter notebook
 ```
 
 ## Troubleshoot

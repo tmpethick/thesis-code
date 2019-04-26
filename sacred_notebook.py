@@ -186,7 +186,7 @@ run = notebook_run(config_updates={
     },
     'gp_use_derivatives': True,
     'gp_samples': 50,
-}, options={'--force': True})
+})
 
 #%%
 
@@ -341,6 +341,12 @@ run = notebook_run(config_updates={
 #                          run.interactive_stash['model2'], \
 #                          run.interactive_stash['acq'], \
 #                          run.interactive_stash['bo']
+
+#%%
+# ------------------- High Dim Fast ----------------------
+
+
+
 
 #%%
 # ------------------ Templates --------------------

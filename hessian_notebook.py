@@ -2,24 +2,7 @@
 %load_ext autoreload
 %autoreload 2
 
-from runner import notebook_run
-
-#%% PDF of max of gaussians
-import scipy
-import numpy as np
-
-
-mu_1 = 1
-sigma_1 = 1
-mu_2 = 0
-sigma_2 = 1
-corr = 0
-
-mu = mu_1 - mu_2
-sigma = np.sqrt ( sigma_1 ** 2 + sigma_2 ** 2 - 2 * corr * sigma_1 * sigma_2 )
-
-# x1 > x2
-1 - scipy.stats.norm(mu, sigma).cdf(0)
+from runner import notebook_run, notebook_run_CLI, notebook_run_server
 
 
 #%%
@@ -104,9 +87,50 @@ plt.plot(X_line, f.hessian(X_line), label="True hessian")
 plt.legend()
 plt.show()
 
+
+#%% Curvature hyperparameter experiment (how does the distance R between points influence the variance at the midpoint)
+
+import numpy as np
+import matplotlib.pyplot as plt
+
+from src.models import GPModel
+from src.kernels import GPyRBF
+
+
+for l in [1, 10, 1000]:
+    # l = 10
+    kern = GPyRBF(1, lengthscale=l)
+    model = GPModel(kernel=kern, noise_prior=1e-10)
+    
+    N = 100
+    D = np.zeros(N)
+    D_var = np.zeros(N)
+
+    for i, R in enumerate(np.arange(1, N+1)):
+        x1 = np.array([0])
+        x2 = np.array([1])
+        y1 = R * x1
+        y2 = R * x2
+        model.init(np.array([y1, y2]), np.array([[0], [0]]))
+        d = np.array([y1 + 0.5 * (y2 - y1)])
+        mu, var = model.get_statistics(d, full_cov=False)
+
+        if i % 10 == 0:
+            X_line = np.linspace(y1[0], y2[0], 100)[:, None]
+            # model.plot(X_line)
+            # plt.show()
+
+        D[i] = R
+        D_var[i] = var[0,0,0]
+
+    plt.plot(D, D_var)
+    plt.ylabel("$\sigma_Y(1/2 |y_2 - y_1|)$")
+    plt.xlabel("$R=|y_1 - y_2|$ distance")
+    plt.show()
+
 #%%
 
-run = notebook_run(through_CLI=True, config_updates={
+run = notebook_run(config_updates={
     'obj_func': {
         'name': 'Sinc',
     },
@@ -131,14 +155,14 @@ run = notebook_run(through_CLI=True, config_updates={
     'acquisition_function': {
         'name': 'CurvatureAcquisition',
     },
-    'bo': {
+    ''bo': {
         'name': 'AcquisitionAlgorithm',
         'kwargs': {
             'n_init': 5,
             'n_iter': 60,
             'n_acq_max_starts': 10,
         }
-    },
+    },'
 })
 
 
@@ -259,10 +283,11 @@ run = notebook_run(through_CLI=False, config_updates={
     },
 })
 
+
 #%% Run only CurvatureAcquisition 2D
-run = notebook_run(through_CLI=False, config_updates={
+run = notebook_run_server(config_updates={
     'obj_func': {
-        'name': 'Sinc',
+        'name': 'BigSinc',
     },
     'model': {
         'name': 'GPModel',
@@ -270,7 +295,7 @@ run = notebook_run(through_CLI=False, config_updates={
             'kernel': {
                 'name': 'GPyRBF',
                 'kwargs': {
-                    'lengthscale': 1
+                    'lengthscale': 0.01
                 }
             },
             'noise_prior': None,
@@ -285,18 +310,20 @@ run = notebook_run(through_CLI=False, config_updates={
     'acquisition_function': {
         'name': 'CurvatureAcquisition',
         'kwargs': {
-            'beta': 10,
+            'beta': 0,
+            'use_var': False,
         }
     },
-    #'gp_samples': 100,
-     'bo': {
-         'name': 'AcquisitionAlgorithm',
-         'kwargs': {
-             'n_init': 5,
-             'n_iter': 50,
-             'n_acq_max_starts': 10,
-         }
-     },
+    # Scale the curvature
+    'gp_samples': 50,
+    #  'bo': {
+    #      'name': 'AcquisitionAlgorithm',
+    #      'kwargs': {
+    #          'n_init': 5,
+    #          'n_iter': 50,
+    #          'n_acq_max_starts': 10,
+    #      }
+    #  },
 })
 
 

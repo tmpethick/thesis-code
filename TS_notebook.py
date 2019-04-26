@@ -11,6 +11,23 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 sns.set_style("darkgrid")
 
+#%% PDF of max of gaussians
+import scipy
+import numpy as np
+
+
+mu_1 = 1
+sigma_1 = 1
+mu_2 = 0
+sigma_2 = 1
+corr = 0
+
+mu = mu_1 - mu_2
+sigma = np.sqrt ( sigma_1 ** 2 + sigma_2 ** 2 - 2 * corr * sigma_1 * sigma_2 )
+
+# x1 > x2
+1 - scipy.stats.norm(mu, sigma).cdf(0)
+
 #%% Testing out Frank-Wolfe
 
 f = NegSinc()
