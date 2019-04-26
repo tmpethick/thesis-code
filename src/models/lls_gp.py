@@ -5,6 +5,7 @@ from sklearn.gaussian_process import GaussianProcessRegressor
 from sklearn.gaussian_process.kernels \
     import ConstantKernel as C, Matern
 
+from gp_extras.kernels import LocalLengthScalesKernel
 
 from src.models.models import BaseModel
 
@@ -18,7 +19,6 @@ class LocalLengthScaleGPModel(BaseModel):
         self.n_optimizer_iter = n_optimizer_iter
 
     def _fit(self, X, Y, Y_dir=None, is_initial=True):
-        from gp_extras.kernels import LocalLengthScalesKernel
         # Define custom optimizer for hyperparameter-tuning of non-stationary kernel
         # This is required here because the log-marginal-likelihood for the LocalLengthScalesKernel is highly
         # multi-modal, which is problematic for gradient-based methods like L-BFGS.
