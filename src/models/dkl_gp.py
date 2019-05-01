@@ -56,7 +56,9 @@ def default_training_callback(model, i, loss):
 
 
 class DKLGPModel(BaseModel):
-    def __init__(self, n_iter=50, gp_kwargs=None, nn_kwargs=None, training_callback=default_training_callback):
+    def __init__(self, n_iter=50, gp_kwargs=None, nn_kwargs=None, training_callback=default_training_callback, **kwargs):
+        super(DKLGPModel, self).__init__(**kwargs)
+
         self.gp_kwargs = gp_kwargs if gp_kwargs is not None else {}
         self.nn_kwargs = nn_kwargs if nn_kwargs is not None else {}
 
@@ -138,6 +140,7 @@ class DKLGPModel(BaseModel):
 
         test_x = torch.Tensor(X).contiguous().to(device)
 
+        # Use Toeplitz and LOVE
         with torch.no_grad(), gpytorch.settings.use_toeplitz(False), gpytorch.settings.fast_pred_var():
             multivariate_normal = self.model(test_x)
 

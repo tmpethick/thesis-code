@@ -51,7 +51,9 @@ def hash_subdict(d, keys=None):
 
 def create_ex(interactive=False):
     ex = Experiment(settings.EXP_NAME, interactive=interactive)
-    ex.observers.append(MongoObserver.create(url=settings.MONGO_DB_URL, db_name=settings.MONGO_DB_NAME))
+
+    if settings.SAVE:
+        ex.observers.append(MongoObserver.create(url=settings.MONGO_DB_URL, db_name=settings.MONGO_DB_NAME))
 
     ex.add_config({
         'gp_use_derivatives': False,

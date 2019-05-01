@@ -8,6 +8,23 @@ from scipy.linalg import cho_factor, cho_solve
 from src.kernels import GPyRBF
 
 
+def rejection_sampling(pdf, size = (1,1)):
+    """Pulled from QFF
+    """
+    n = size[0]
+    d = size[1]
+    from scipy.stats import norm
+    output = np.zeros(shape =size)
+    i = 0
+    while i < n:
+        Z = np.random.normal (size = (1,d))
+        u = np.random.uniform()
+        if pdf(Z) < u:
+            output[i,:] = Z
+            i=i+1
+
+    return output
+
 def zero_mean_unit_var_normalization(X, mean=None, std=None):
     if mean is None:
         mean = np.mean(X, axis=0)
@@ -546,12 +563,13 @@ class GPVanillaLinearModel(GPVanillaModel):
 
 
 class LowRankGPModel(ProbModel):
-    def __init__(self, gamma=0.1, noise = 0.01, n_features=10, normalize_input=False, normalize_output=False):
+    def __init__(self, noise = 0.01, n_features=10, normalize_input=False, normalize_output=False):
         super(LowRankGPModel, self).__init__(normalize_input=normalize_input, normalize_output=normalize_output)
         self.noise = noise
-        self.gamma = gamma
         self.m = n_features
         
+        self.is_noise_free = float(noise) == 0.0
+
         self.K_noisy_inv = None
         self.X = None
         self.Y = None
@@ -566,8 +584,17 @@ class LowRankGPModel(ProbModel):
         Q = self.feature_map(X)
         noise_inv = (1 / self.noise)
         small_kernel = self.noise * np.identity(self.m) + Q.T @ Q
-        small_kernel_inv = np.linalg.inv(small_kernel)
-        self.K_noisy_inv = noise_inv * np.identity(n) - noise_inv * (Q @ small_kernel_inv @ Q.T)
+
+        # Chol decomp
+        L = np.linalg.cholesky(small_kernel)
+        L_inv = np.linalg.inv(L)
+        small_kernel_inv = np.dot(L_inv.T, L_inv)
+
+        # small_kernel_inv = np.linalg.inv(small_kernel)
+        if self.is_noise_free:
+            raise NotImplementedError
+        else:
+            self.K_noisy_inv = noise_inv * np.identity(n) - noise_inv * (Q @ small_kernel_inv @ Q.T)
 
         # compute inverse K_inv of K based on its Cholesky
         # decomposition L and its inverse L_inv
@@ -611,25 +638,49 @@ class LowRankGPModel(ProbModel):
             return mu, np.diagonal(cov)[:, None]
 
 
+class RFFKernel(object):
+    def sample(size):
+        raise NotImplementedError
+
+
+class RFFMatern(RFFKernel):
+    def __init__(self, gamma=0.1, nu=0.5):
+        self.nu = nu
+        self.gamma = gamma
+        self.pdf = lambda x: np.prod(2*(self.gamma)/(np.power((1. + self.gamma**2*x**2),self.nu) * np.pi),axis =1)
+
+    def sample(self, size):
+        return rejection_sampling(self.pdf,size=size)
+
+
+class RFFRBF(RFFKernel):
+    def __init__(self, gamma=0.1):
+        self.gamma = gamma
+    
+    def sample(self, size):
+        return np.random.normal(size=size) * (1.0 / self.gamma)
+
+
 class RandomFourierFeaturesModel(LowRankGPModel):
     """Based on analysis in [1] we choose the unbiased variant as it has strictly smaller variance for the Squared Exponential.
 
     [1]: https://www.cs.cmu.edu/~dsutherl/papers/rff_uai15.pdf
     """
 
-    def __init__(self, gamma=0.1, noise=0.01, n_features=10, normalize_input=False, normalize_output=False):
+    def __init__(self, kernel, noise=0.01, n_features=10, normalize_input=False, normalize_output=False):
         assert n_features % 2 == 0, "`n_features` has to be even."
         
-        super(RandomFourierFeaturesModel, self).__init__(gamma=gamma, noise=noise, n_features=n_features, normalize_input=normalize_input, normalize_output=normalize_output)
+        super(RandomFourierFeaturesModel, self).__init__(noise=noise, n_features=n_features, normalize_input=normalize_input, normalize_output=normalize_output)
 
-        # TODO: right now only SE is supported.
+        # `self.kernel` is already reserved by LowRankGPModel
+        self.rff_kernel = kernel
         self.W = None
 
     def spectral_kernel(self, size):
         if self.W is not None: 
             return self.W 
         else:
-            self.W = np.random.normal(size=size) * (1.0 / self.gamma)
+            self.W = self.rff_kernel.sample(size)
             return self.W
 
     def feature_map(self, X):
@@ -649,8 +700,8 @@ class RandomFourierFeaturesModel(LowRankGPModel):
 
 
 class EfficientLinearModel(LowRankGPModel):
-    def __init__(self, gamma=0.1, noise=0.01, n_features=None, normalize_input=False, normalize_output=False):
-        super(EfficientLinearModel, self).__init__(gamma=gamma, noise=noise, n_features=n_features, normalize_input=normalize_input, normalize_output=normalize_output)
+    def __init__(self, noise=0.01, n_features=None, normalize_input=False, normalize_output=False):
+        super(EfficientLinearModel, self).__init__(noise=noise, n_features=n_features, normalize_input=normalize_input, normalize_output=normalize_output)
 
     def feature_map(self, X):
         n, d = X.shape
@@ -677,9 +728,10 @@ class QuadratureFourierFeaturesModel(LowRankGPModel):
     def __init__(self, gamma=0.1, noise=0.01, n_features=100, normalize_input=False, normalize_output=False):
         assert n_features % 2 == 0, "`n_features` has to be even."
 
-        super(QuadratureFourierFeaturesModel, self).__init__(gamma=gamma, noise=noise, n_features=n_features, normalize_input=normalize_input, normalize_output=normalize_output)
+        super(QuadratureFourierFeaturesModel, self).__init__(noise=noise, n_features=n_features, normalize_input=normalize_input, normalize_output=normalize_output)
         
         # Not used since the structure is implicit in the particular use of the Gauss-Hermite Scheme.
+        self.gamma = gamma
         self.spectral_kernel_pdf = lambda w: np.exp(- np.square(w).dot(np.square(self.gamma))/ 2)
 
     def feature_map(self, X):

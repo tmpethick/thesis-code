@@ -1,18 +1,25 @@
+import math 
 import numpy as np
 
 # from src.environments import BaseEnvironment
 from src.models.models import BaseModel
 
 
-def root_mean_square_error(model: BaseModel, f):
-    if f.input_dim == 1:
-        X_line = np.linspace(f.bounds[0, 0], f.bounds[0, 1], 500)[:, None]
+def root_mean_square_error(model: BaseModel, f, rand=False):
+    if rand:
+        N = 2500
+        X_line = random_hypercube_samples(N, f.bounds)
+    elif f.input_dim == 1:
+        N = 500
+        X_line = np.linspace(f.bounds[0, 0], f.bounds[0, 1], N)[:, None]
     elif f.input_dim == 2:
-        XY, X, Y = construct_2D_grid(f.bounds)
+        N = 2500
+        XY, X, Y = construct_2D_grid(f.bounds, N=N)
         X_line = XY.reshape((-1, 2))
     else:
         # TODO: put down grid instead.
-        X_line = random_hypercube_samples(100000, f.bounds)
+        N = 100000
+        X_line = random_hypercube_samples(N, f.bounds)
         #raise ValueError("Does not support dim above 2.")
 
     Y = f(X_line)
@@ -53,11 +60,12 @@ def constrain_points(x, bounds):
     return np.clip(x, a_min=minx, a_max=maxx)
 
 
-def construct_2D_grid(bounds):
+def construct_2D_grid(bounds, N=2500):
+    n = int(math.sqrt(N))
     x_bounds = bounds[0]
     y_bounds = bounds[1]
-    X = np.linspace(x_bounds[0], x_bounds[1], 50)
-    Y = np.linspace(y_bounds[0], y_bounds[1], 50)
+    X = np.linspace(x_bounds[0], x_bounds[1], n)
+    Y = np.linspace(y_bounds[0], y_bounds[1], n)
     X, Y = np.meshgrid(X, Y)
     XY = np.stack((X,Y), axis=-1)
 

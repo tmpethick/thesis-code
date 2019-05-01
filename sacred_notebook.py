@@ -2,7 +2,7 @@
 %load_ext autoreload
 %autoreload 2
 
-from runner import notebook_run
+from runner import notebook_run, execute
 
 #%%
 # --------------------- Active sampling -----------------------
@@ -188,6 +188,7 @@ run = notebook_run(config_updates={
     'gp_samples': 50,
 })
 
+
 #%%
 
 # Works very well when the lengthscale indeed has a smooth functional form of x.
@@ -205,7 +206,25 @@ run = notebook_run(config_updates={
     'gp_samples': 50,
 })
 
-#%%
+#%% LLS also correctly has higher variance in high frequency area (necessary for correct active sampling.)
+
+run = execute(config_updates={
+    'obj_func': {
+        'name': 'IncreasingOscillation',
+    },
+    'model': {
+        'name': 'LocalLengthScaleGPModel',
+        'kwargs': {
+            'l_samples': 5,
+        }
+    },
+    'acquisition_function': {
+        'name': 'QuadratureAcquisition',
+    },
+    'gp_samples': 50,
+})
+
+#%% It has a tendency to overfit however...
 
 run = notebook_run(config_updates={
     'obj_func': {
@@ -230,6 +249,29 @@ run = notebook_run(config_updates={
     },
 })
 
+#%%
+run = execute(config_updates={
+    'obj_func': {
+        'name': 'Kink2D',
+    },
+    'model': {
+        'name': 'LocalLengthScaleGPModel',
+        'kwargs': {
+            'l_samples': 5,
+        }
+    },
+    'acquisition_function': {
+        'name': 'QuadratureAcquisition',
+    },
+    'bo': {
+        'name': 'AcquisitionAlgorithm',
+        'kwargs': {
+            'n_init': 5,
+            'n_iter': 50,
+            'n_acq_max_starts': 2,            
+        }
+    },
+})
 
 #%% AS
 from src.utils import random_hypercube_samples

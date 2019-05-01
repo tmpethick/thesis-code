@@ -102,13 +102,13 @@ def plot2D(model: BaseModel, f: BaseEnvironment) -> plt.Figure:
     ax.set_title('Mean estimate m')
     cont = ax.contourf(X, Y, mean, 50)
     fig.colorbar(cont)
-    ax.plot(model.X[:, 0], model.X[:, 1], '.', markersize=10)
+    # ax.plot(model.X[:, 0], model.X[:, 1], '.', markersize=10)
 
     ax = fig.add_subplot(223)
     ax.set_title('Model std')
-    cont = ax.contourf(X, Y, np.sqrt(var), 50)
+    cont = ax.contourf(X, Y, np.sqrt(var), 50, vmin=0)
     fig.colorbar(cont)
-    ax.plot(model.X[:, 0], model.X[:, 1], '.', markersize=10)
+    # ax.plot(model.X[:, 0], model.X[:, 1], '.', markersize=10)
 
     ax = fig.add_subplot(224)
     ax.set_title('Estimate Error |f-m|')

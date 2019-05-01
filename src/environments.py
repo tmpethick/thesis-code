@@ -3,6 +3,7 @@ from numpy.core.numeric import where
 
 from src.utils import construct_2D_grid, call_function_on_grid
 
+# TODO: latent Dirichlet allocation
 
 class BaseEnvironment(object):
     x_opt = None
@@ -39,9 +40,14 @@ class BaseEnvironment(object):
     def plot_derivative(self):
         return self._plot(self.derivative)
 
-    def plot_curvature(self):
-        assert self.bounds.shape[0] == 1, "curvature only supported in 1D"
-        return self._plot(self.hessian)
+    def plot_curvature(self, norm="fro"):
+        if self.bounds.shape[0] != 1:
+            def hess(x):
+                H = self.hessian(x)
+                return np.linalg.norm(H, ord=norm, axis=(-2, -1))[...,None]
+        else:
+            hess = self.hessian
+        return self._plot(hess)
 
     def _plot(self, func):
         assert self.bounds.shape[0] in [1,2], "Only support 1D/2D plots."
@@ -71,11 +77,26 @@ class Jump1D(BaseEnvironment):
         return np.sin(5*x) + np.sign(x)
 
 
+class Sin(BaseEnvironment):
+    bounds = np.array([[0, 1]])
+
+    def __call__(self, x):
+        import scipy.stats
+        return np.sin(30 * x)
+
+
 class IncreasingOscillation(BaseEnvironment):
     bounds = np.array([[0, 1]])
 
     def __call__(self, x):
         return np.sin(60 * x ** 4)
+
+class IncreasingAmplitude(BaseEnvironment):
+    bounds = np.array([[0, 1]])
+
+    def __call__(self, x):
+        import scipy.stats
+        return np.sin(60 * x) * scipy.stats.norm.pdf(x, 1, 0.3)
 
 
 class IncreasingOscillationDecreasingAmplitude(IncreasingOscillation):
@@ -148,6 +169,18 @@ class Sinc2D(BaseEnvironment):
 
 
 class Kink2D(BaseEnvironment):
+    """To generate derivative and hessian we use sympy:
+
+    ```
+    from sympy import *
+    from sympy.utilities.lambdify import lambdify, implemented_function,lambdastr
+    x, y, z = symbols('x y z', real=True)
+    z=1 / (abs(0.5 - x ** 4 - y ** 4) + 0.1)
+    z.diff(x)
+    hess = [simplify(z.diff(x0).diff(x1)) for x0 in [x,y] for x1 in [x,y]]
+    lambdastr(x, hess[0])
+    ```
+    """
     bounds = np.array([[0, 1], [0, 1]])
 
     def __call__(self, x):
@@ -162,6 +195,20 @@ class Kink2D(BaseEnvironment):
         dy = -(4 * y ** 3 * (-0.5 + x ** 4 + y ** 4)) / (np.abs((0.5 - x ** 4 - y ** 4)) * (np.abs(0.5 - x ** 4 - y ** 4) + 0.1) ** 2)
         dd = np.stack((dx, dy), axis=-1)
         return dd
+    
+    def hessian(self, X):
+        x = X[...,0]
+        y = X[...,1]
+        a=np.where(x**4 + y**4 - 0.5 == 0, 0.0, np.copysign(1, x**4 + y**4 - 0.5))
+        DiracDelta = lambda x: np.where(x == 0, 1e20, 0)
+        h11 = 4*x**2*(8*x**4*a**2 - (8*x**4*DiracDelta(x**4 + y**4 - 0.5) + 3*a)*(np.abs(x**4 + y**4 - 0.5) + 0.1))/(np.abs(x**4 + y**4 - 0.5) + 0.1)**3
+        h12 = 32*x**3*y**3*(-(np.abs(x**4 + y**4 - 0.5) + 0.1)*DiracDelta(x**4 + y**4 - 0.5) + a**2)/(np.abs(x**4 + y**4 - 0.5) + 0.1)**3
+        h22 = 32*x**3*y**3*(-(np.abs(x**4 + y**4 - 0.5) + 0.1)*DiracDelta(x**4 + y**4 - 0.5) + a**2)/(np.abs(x**4 + y**4 - 0.5) + 0.1)**3
+        h21 = 4*y**2*(8*y**4*a**2 - (8*y**4*DiracDelta(x**4 + y**4 - 0.5) + 3*a)*(np.abs(x**4 + y**4 - 0.5) + 0.1))/(np.abs(x**4 + y**4 - 0.5) + 0.1)**3
+        hess = np.array([[h11, h12],
+                         [h21, h22]])
+        return np.moveaxis(hess, -1, 0)
+
 
 
 class ActiveSubspaceTest(BaseEnvironment):
