@@ -12,6 +12,115 @@ sns.set_style("darkgrid")
 # DKL (learn inverse mapping as well)
 # DKL will QFF help if we can have more samples?
 
+
+#%% ----------------- See if RFF cannot fit in 1D -----------------
+
+from src.plot_utils import plot1D
+from src.models.models import QuadratureFourierFeaturesModel, RandomFourierFeaturesModel, RFFMatern, RFFRBF
+from src.utils import random_hypercube_samples
+from src.environments import Kink1D
+
+f = Kink1D()
+n_features = 300
+
+X1 = np.linspace(-1,-0.5, 3)
+X2 = np.linspace(-0.5, 0.5, 20)
+X3 = np.linspace(0.5, 1, 3)
+X = np.concatenate([X1, X2, X3])[:,None]
+Y = f(X)
+
+#%% Noise makes a big difference. (1e-5 forces it to go through point which makes it oscillated.)
+# Oscillation is still a problem for RFF with noise though.
+# These VFF guys have similar problem: http://gpss.cc/gpa17/slides/VFF.pdf
+from src.models.models import GPModel
+from src.kernels import GPyRBF
+from src.models.models import RandomFourierFeaturesModel, RFFRBF
+
+noise = 0.1
+kernel = RFFRBF(gamma=0.1)
+model = RandomFourierFeaturesModel(kernel, noise=noise, n_features=n_features)
+model.init(X, Y)
+plot1D(model, f)
+plt.title("{} with $\sigma^2=${}".format(model, noise))
+
+noise = 0.1
+kernel = GPyRBF(1, lengthscale=0.1)
+model = GPModel(kernel, noise_prior=noise)
+model.init(X, Y)
+plot1D(model, f)
+plt.title("{} with $\sigma^2=${}".format(model, noise))
+
+noise = 1e-5
+kernel = RFFRBF(gamma=0.1)
+model = RandomFourierFeaturesModel(kernel, noise=noise, n_features=n_features)
+model.init(X, Y)
+plot1D(model, f)
+plt.title("{} with $\sigma^2=${}".format(model, noise))
+
+noise = 1e-5
+kernel = GPyRBF(1, lengthscale=0.1)
+model = GPModel(kernel, noise_prior=noise)
+model.init(X, Y)
+plot1D(model, f)
+plt.title("{} with $\sigma^2=${}".format(model, noise))
+
+
+#%% Fixing RFF oscillation (would increased variance help?)
+# For ExactGP small variance fairs better when noise is (very!)small.
+n_features = 500
+
+for var in [0.1, 1, 100, 1000]:
+    # kernel = RFFRBF(gamma=0.1, variance=var)
+    # model = RandomFourierFeaturesModel(kernel, noise=1, n_features=n_features)
+    kernel = GPyRBF(1, lengthscale=0.1, variance=var)
+    model = GPModel(kernel, noise_prior=1e-5)
+
+    model.init(X, Y)
+    plot1D(model, f)
+    plt.show()
+
+#%% Fixing RFF oscillation (would increased variance help?)
+# Variance will even make the mean vary more wildly for RFF.
+# Can this be explained by the expression for the mean?
+n_features = 500
+
+for var in [1, 1000]:
+    kernel = RFFRBF(gamma=0.1, variance=var)
+    model = RandomFourierFeaturesModel(kernel, noise=0.1, n_features=n_features)
+
+    model.init(X, Y)
+    plot1D(model, f)
+    plt.show()
+
+#%% Show oscillation outside observation with RFF on smooth function.
+# sin(x) with changing lengthscale.
+
+from src.environments import IncreasingOscillation
+
+f = IncreasingOscillation()
+half_way = f.bounds[0,0] + (f.bounds[0,1] - f.bounds[0,0]) / 2
+X1 = np.random.uniform(f.bounds[0,0], half_way, 5)
+X2 = np.random.uniform(half_way, f.bounds[0,1], 50)
+X = np.concatenate([X1, X2])[:, None]
+Y = f(X)
+
+n_features = 500
+
+kernel = GPyRBF(1, lengthscale=0.008, variance=1)
+model = GPModel(kernel, noise_prior=1e-5, do_optimize=True)
+
+model.init(X, Y)
+plot1D(model, f)
+plt.show()
+
+kernel = RFFRBF(gamma=0.008, variance=1)
+model = RandomFourierFeaturesModel(kernel, noise=1e-5, n_features=n_features)
+
+model.init(X, Y)
+plot1D(model, f)
+plt.show()
+
+
 #%%--------------------- Using true Hessian -------------------------
 
 #%% Generate Hessian of Kink2D
@@ -101,7 +210,12 @@ plt.figure()
 sns.kdeplot(data_sub[:, 0], data_sub[:,1], cmap="Reds", shade=True, bw='silverman', clip=[[0,1],[0,1]])
 plt.show()
 
-#%% Plot with sparse using 1000 inducing points
+#%% Plot with sparseGP using 1000 inducing points
+# What out. The reason it might do well in undersampled region is because *the prior* is correct (=0). Because of the high lengthscale it would not be able to do well in that area. 
+# So we have to be careful when evaluating the performance based on Kink2D. 
+# Two distinct problems:
+# 1) For stationary undersampled regions rely on good prior. (since samples will only change local behaviour if lengthscale is short)
+# 2) RFF oscillation in undersample regions (still around prior mean)
 import GPy
 
 kernel = GPy.kern.Matern32(2)
@@ -191,53 +305,6 @@ plot2D(model, f)
 # Calc error
 RMSE = root_mean_square_error(model, f, rand=True)
 print(RMSE)
-
-#%% See if RFF cannot fit in 1D
-
-from src.plot_utils import plot1D
-from src.models.models import QuadratureFourierFeaturesModel, RandomFourierFeaturesModel, RFFMatern, RFFRBF
-from src.utils import random_hypercube_samples
-from src.environments import Kink1D
-
-f = Kink1D()
-n_features = 300
-
-X1 = np.linspace(-1,-0.5, 3)
-X2 = np.linspace(-0.5, 0.5, 20)
-X3 = np.linspace(0.5, 1, 3)
-X = np.concatenate([X1, X2, X3])[:,None]
-Y = f(X)
-
-# Lessons
-#%% Noise makes a big difference. (1e-5 forces it to go through point which makes it ocilated.)
-# Ocillation is still a problem for RFF with noise though.
-
-kernel = RFFRBF(gamma=0.1)
-model = RandomFourierFeaturesModel(kernel, noise=0.1, n_features=n_features)
-model.init(X, Y)
-plot1D(model, f)
-
-kernel = GPyRBF(1, lengthscale=0.1)
-model = GPModel(kernel, noise_prior=0.1)
-model.init(X, Y)
-plot1D(model, f)
-
-kernel = RFFRBF(gamma=0.1)
-model = RandomFourierFeaturesModel(kernel, noise=1e-5, n_features=n_features)
-model.init(X, Y)
-plot1D(model, f)
-
-kernel = GPyRBF(1, lengthscale=0.1)
-model = GPModel(kernel, noise_prior=1e-5)
-model.init(X, Y)
-plot1D(model, f)
-
-#%% Fixing RFF oscillation (would increased variance help?)
-
-kernel = RFFRBF(gamma=0.1)
-model = RandomFourierFeaturesModel(kernel, noise=0.1, n_features=n_features)
-model.init(X, Y)
-plot1D(model, f)
 
 #%% Plot with RFF (using lengthscale learned with scalableGP...)
 

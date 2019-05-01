@@ -282,6 +282,9 @@ class GPModel(ProbModel):
         self.has_mcmc_warmup = False 
         self.output_dim = None
 
+    def __repr__(self):
+        return "ExactGP"
+
     def _fit(self, X, Y, Y_dir=None, is_initial=True):
         # Use the normalized X,Y which we know has been updated.
         # For now let the GPModel take care of normalizing the output.
@@ -639,12 +642,17 @@ class LowRankGPModel(ProbModel):
 
 
 class RFFKernel(object):
+    def __init__(self, variance=1.0):
+        self.variance = variance
+
     def sample(size):
         raise NotImplementedError
 
 
 class RFFMatern(RFFKernel):
-    def __init__(self, gamma=0.1, nu=0.5):
+    def __init__(self, gamma=0.1, nu=0.5, **kwargs):
+        super(RFFMatern, self).__init__(**kwargs)
+        
         self.nu = nu
         self.gamma = gamma
         self.pdf = lambda x: np.prod(2*(self.gamma)/(np.power((1. + self.gamma**2*x**2),self.nu) * np.pi),axis =1)
@@ -654,7 +662,9 @@ class RFFMatern(RFFKernel):
 
 
 class RFFRBF(RFFKernel):
-    def __init__(self, gamma=0.1):
+    def __init__(self, gamma=0.1, **kwargs):
+        super(RFFRBF, self).__init__(**kwargs)
+        
         self.gamma = gamma
     
     def sample(self, size):
@@ -676,12 +686,13 @@ class RandomFourierFeaturesModel(LowRankGPModel):
         self.rff_kernel = kernel
         self.W = None
 
+    def __repr__(self):
+        return "RFF"
+
     def spectral_kernel(self, size):
-        if self.W is not None: 
-            return self.W 
-        else:
+        if self.W is None: 
             self.W = self.rff_kernel.sample(size)
-            return self.W
+        return self.W
 
     def feature_map(self, X):
         n, d = X.shape 
@@ -691,7 +702,7 @@ class RandomFourierFeaturesModel(LowRankGPModel):
 
         # Compute m x n feature map
         Z = W @ X.T
-        uniform_weight = np.sqrt(2.0 / self.m)
+        uniform_weight = np.sqrt(2.0 / self.m) * self.rff_kernel.variance
         Q_cos = uniform_weight * np.cos(Z)
         Q_sin = uniform_weight * np.sin(Z)
 
