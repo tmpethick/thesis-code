@@ -198,10 +198,12 @@ class DKLGPModel(BaseModel):
             # Collapse (if X was 2D)
             ax.plot(Z.flatten(), O.flatten())
         elif Z.shape[-1] == 2:
-  
-            ax = fig.add_subplot(122)
-            ax.set_title('f in feature space')
-            ax.contourf(Z[...,0], Z[...,1], O[...,0], 50)
+            # TODO: fix for 1D->2D case
+            if self.X.shape[-1] == 2:
+                Z = np.reshape(Z, (-1, 2))
+                ax = fig.add_subplot(122)
+                ax.set_title('f in feature space')
+                ax.contourf(Z[...,0], Z[...,1], O[...,0], 50)
 
 
         plt.tight_layout()

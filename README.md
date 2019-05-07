@@ -101,6 +101,12 @@ For debugging:
 sbatch hpc.sh 'python' 'runner.py' 'print_config' 'with' 'obj_func={"name": "Sinc"}'
 ```
 
+## Adapative Sparse Grid installation
+
+- Run `make` in `SparseGridCode/`.
+- Replace `basestring` with `str` in `SparseGridCode/TasmanianSparseGrids/InterfacePython/TasmanianSG.py`.
+
+
 ## Troubleshoot
 
   Temporarily fixed `conda install numpy=1.15.4` (https://github.com/SheffieldML/GPy/issues/728#issuecomment-459379268) to fix plotting problem in GPy.

@@ -3,3 +3,6 @@ data/
 .cache/
 *.pyc
 
+SparseGridCode/spinterp_v5.1.1
+SparseGridCode/pyipopt
+SparseGridCode/TasmanianSparseGrids
