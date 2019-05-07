@@ -34,28 +34,30 @@ class BaseEnvironment(object):
     def hessian(self, x):
         raise NotImplementedError
 
-    def plot(self):
-        return self._plot(self)
+    def plot(self, projection=None):
+        return self._plot(self, projection=projection, title="$f$")
 
-    def plot_derivative(self):
-        return self._plot(self.derivative)
+    def plot_derivative(self, projection=None):
+        return self._plot(self.derivative, projection=projection, title="$\\nabla f$")
 
-    def plot_curvature(self, norm="fro"):
+    def plot_curvature(self, norm="fro", projection=None):
         if self.bounds.shape[0] != 1:
             def hess(x):
                 H = self.hessian(x)
                 return np.linalg.norm(H, ord=norm, axis=(-2, -1))[...,None]
         else:
             hess = self.hessian
-        return self._plot(hess)
+        return self._plot(hess, projection=projection, title="$\\nabla^2 f$")
 
-    def _plot(self, func):
+    def _plot(self, func, projection=None, title=None):
         assert self.bounds.shape[0] in [1,2], "Only support 1D/2D plots."
 
         if self.bounds.shape[0] == 1:
             import matplotlib.pyplot as plt
             fig, ax = plt.subplots()
             X = np.linspace(self.bounds[0,0], self.bounds[0,1], 1000)
+            if title is not None:
+                ax.set_title(title)
             ax.plot(X, func(X))
             return fig
 
@@ -65,9 +67,73 @@ class BaseEnvironment(object):
             Z = call_function_on_grid(func, XY)[...,0]
 
             fig = plt.figure()
-            ax = fig.add_subplot(111)
+            ax = fig.add_subplot(111, projection=projection)
             ax.contourf(X, Y, Z, 50)
             return fig
+
+
+class TwoKink1D(BaseEnvironment):
+    bounds = np.array([[0,1]])
+
+    def __init__(self, *args, **kwargs):
+        self.alpha = 5
+        self.beta = 2
+        self.x_1 = 0.3
+        self.x_2 = 0.6
+
+        self.fst = lambda x: self.alpha * x ** 2
+
+        self.b = self.fst(self.x_1)
+        self.snd = lambda x: self.b
+
+        self.c = self.snd(self.x_2)
+        self.trd = lambda x: self.beta * x + (self.c - self.beta * self.x_2)
+    
+    def __call__(self, X):
+        return np.piecewise(X, [X < self.x_1, X > self.x_1, X >= self.x_2], [self.fst, self.snd, self.trd])
+
+    def derivative(self, X):
+        fst = lambda x: 2 * self.alpha * x
+        snd = lambda x: 0
+        trd = lambda x: self.beta
+        return np.piecewise(X, [X < self.x_1, X > self.x_1, X >= self.x_2], [fst, snd, trd])
+
+
+class TwoKink2D(TwoKink1D):
+    bounds = np.array([[0,1], [0,1]])
+
+    def _transform(self, X):
+        return (X[...,0]**2 + X[...,1]**2)[..., None]
+
+    def __call__(self, X):
+        z = self._transform(X)
+        return super(TwoKink2D, self).__call__(z)
+
+    def derivative(self, X):
+        z = self._transform(X)
+        return super(TwoKink2D, self).derivative(z) * 2 * X
+
+
+class TwoKinkDEmbedding(TwoKink1D):
+    def __init__(self, D=10):
+        super().__init__()
+        self.D = D
+        self.Alpha = np.random.uniform(size=(D,1))
+        self.bounds = np.array([[0,1]] * D)
+
+    def _transform(self, X):
+        # Apply elementwise linear transformation
+        return X.dot(self.Alpha)
+
+    def __call__(self, X):
+        assert X.shape[1] == self.D, "X does not match the required input dim."        
+        
+        z = self._transform(X)
+        return super().__call__(z)
+
+    def derivative(self, X):
+        z = self._transform(X)
+        return super().derivative(z) * self.Alpha[:,0]
 
 
 class Jump1D(BaseEnvironment):
@@ -209,6 +275,12 @@ class Kink2D(BaseEnvironment):
                          [h21, h22]])
         return np.moveaxis(hess, -1, 0)
 
+
+class Kink2DShifted(Kink2D):
+    bounds = np.array([[0, 1], [0, 1]])
+
+    def __call__(self, x):
+        return super().__call__(x) + 20
 
 
 class ActiveSubspaceTest(BaseEnvironment):

@@ -11,12 +11,10 @@ from .models import \
     GPVanillaModel, \
     GPVanillaLinearModel, \
     LowRankGPModel, \
-    RFFKernel, \
-    RFFMatern, \
-    RFFRBF, \
     RandomFourierFeaturesModel, \
     EfficientLinearModel, \
     QuadratureFourierFeaturesModel
+from src.kernels import RFFKernel, RFFMatern, RFFRBF
 from .lls_gp import \
     LocalLengthScaleGPModel, \
     LocalLengthScaleGPBaselineModel

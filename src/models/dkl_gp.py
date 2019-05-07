@@ -3,6 +3,9 @@ import torch
 import gpytorch
 
 from src.models.models import BaseModel
+from src.utils import construct_2D_grid, call_function_on_grid
+import matplotlib.pyplot as plt
+
 
 if torch.cuda.is_available():
     device = torch.device("cuda")
@@ -56,12 +59,13 @@ def default_training_callback(model, i, loss):
 
 
 class DKLGPModel(BaseModel):
-    def __init__(self, n_iter=50, gp_kwargs=None, nn_kwargs=None, training_callback=default_training_callback, **kwargs):
+    def __init__(self, n_iter=50, noise=None, gp_kwargs=None, nn_kwargs=None, training_callback=default_training_callback, **kwargs):
         super(DKLGPModel, self).__init__(**kwargs)
 
         self.gp_kwargs = gp_kwargs if gp_kwargs is not None else {}
         self.nn_kwargs = nn_kwargs if nn_kwargs is not None else {}
 
+        self.noise = noise
         self.model = None
         self.feature_extractor = None
         self.likelihood = None
@@ -86,13 +90,20 @@ class DKLGPModel(BaseModel):
         self.model.train()
         self.likelihood.train()
 
-        # Use the adam optimizer
-        optimizer = torch.optim.Adam([
+        opt_parameter_list = [
             {'params': self.model.feature_extractor.parameters()},
             {'params': self.model.covar_module.parameters()},
             {'params': self.model.mean_module.parameters()},
-            {'params': self.model.likelihood.parameters()},
-        ], lr=0.01)
+        ]
+
+        # Only add noise as hyperparameter if it is not fixed.
+        if self.noise is not None:
+            self.likelihood.initialize(noise=self.noise)
+        else:
+            opt_parameter_list.append({'params': self.model.likelihood.parameters()})
+
+        # optimize with Adam
+        optimizer = torch.optim.Adam(opt_parameter_list, lr=0.01)
 
         # "Loss" for GPs - the marginal log likelihood
         mll = gpytorch.mlls.ExactMarginalLogLikelihood(self.likelihood, self.model)
@@ -140,8 +151,8 @@ class DKLGPModel(BaseModel):
 
         test_x = torch.Tensor(X).contiguous().to(device)
 
-        # Use Toeplitz and LOVE
-        with torch.no_grad(), gpytorch.settings.use_toeplitz(False), gpytorch.settings.fast_pred_var():
+        # Use LOVE
+        with torch.no_grad(), gpytorch.settings.use_toeplitz(True), gpytorch.settings.fast_pred_var():
             multivariate_normal = self.model(test_x)
 
             mean = multivariate_normal.mean.numpy()[:cut_tail, None]
@@ -150,3 +161,48 @@ class DKLGPModel(BaseModel):
                 return mean, multivariate_normal.covariance_matrix.numpy()[:cut_tail, None]
             else:
                 return mean, multivariate_normal.variance.numpy()[:cut_tail, None]
+
+    def plot_features(self, f):
+        if not self.X.shape[-1] in [1, 2]:
+            return None
+
+        if self.X.shape[-1] == 1:
+            X_line = np.linspace(f.bounds[0, 0], f.bounds[0, 1], 100)[:,None]
+            fig = plt.figure()
+
+            ax = fig.add_subplot(121)
+            ax.set_title("Feature mapping")
+
+            Z = self.get_features(X_line)
+            O = f(X_line)
+            for j in range(Z.shape[1]):
+                ax.plot(X_line, Z[:,j])
+
+
+        elif self.X.shape[-1] == 2:
+            XY, X, Y = construct_2D_grid(f.bounds)
+            Z = call_function_on_grid(self.get_features, XY)
+            O = call_function_on_grid(f, XY)
+
+            fig = plt.figure()
+            ax = fig.add_subplot(121, projection='3d')
+            ax.set_title('Feature mapping')
+
+            #palette = itertools.cycle(sns.color_palette(as_cmap=True))
+            for j in range(Z.shape[-1]):
+                ax.contourf(X, Y, Z[...,j], 50) #, cmap=next(palette))
+
+        if Z.shape[-1] == 1:
+            ax = fig.add_subplot(122)
+            ax.set_title('f in feature space')
+            # Collapse (if X was 2D)
+            ax.plot(Z.flatten(), O.flatten())
+        elif Z.shape[-1] == 2:
+  
+            ax = fig.add_subplot(122)
+            ax.set_title('f in feature space')
+            ax.contourf(Z[...,0], Z[...,1], O[...,0], 50)
+
+
+        plt.tight_layout()
+        return fig

@@ -46,6 +46,14 @@ def plot_function(f: BaseEnvironment, func, title="Function", points=None):
     
     return fig
 
+def plot_model(model: BaseModel, f: BaseEnvironment):
+    if f.bounds.shape[0] == 1:
+        return plot1D(model, f)
+    elif f.bounds.shape[0] == 2:
+        return plot2D(model, f)
+    else:
+        return None
+
 
 def plot1D(model: BaseModel, f: BaseEnvironment) -> plt.Figure:
     X_line = np.linspace(f.bounds[0, 0], f.bounds[0, 1], 100)[:, None]

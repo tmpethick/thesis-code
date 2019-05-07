@@ -8,15 +8,25 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 sns.set_style("darkgrid")
 
+from src.utils import *
+from src.plot_utils import *
+from src.kernels import *
+from src.models.models import *
+from src.models.dkl_gp import *
+from src.models.lls_gp import *
+from src.environments import *
+from src.acquisition_functions import *
+from src.algorithms import *
+
 # AS + active sampling (learning inverse mapping A^T as well)
 # DKL (learn inverse mapping as well)
 # DKL will QFF help if we can have more samples?
 
+#%%
 
-#%% ----------------- See if RFF cannot fit in 1D -----------------
 
 from src.plot_utils import plot1D
-from src.models.models import QuadratureFourierFeaturesModel, RandomFourierFeaturesModel, RFFMatern, RFFRBF
+from src.models.models import QuadratureFourierFeaturesModel, RandomFourierFeaturesModel
 from src.utils import random_hypercube_samples
 from src.environments import Kink1D
 
@@ -29,15 +39,51 @@ X3 = np.linspace(0.5, 1, 3)
 X = np.concatenate([X1, X2, X3])[:,None]
 Y = f(X)
 
+
+#%%
+
+class Step(BaseEnvironment):
+    bounds = np.array([[0,1]])
+
+    def __call__(self, X):
+        noise = np.random.normal(0, 0.1, X.shape)
+        return np.where(X > 0.5, 0, 5) + noise
+
+#%%
+from src.models.models import RandomFourierFeaturesModel, RFFRBF, GPModel
+
+# f = Step()
+# X = np.random.uniform(f.bounds[0,0],f.bounds[0,1], 100)[:, None]
+f = Sinc()
+X = np.random.uniform(f.bounds[0,0],f.bounds[0,1], 20)[:, None]
+
+Y = f(X)
+
+noise = 0.001
+variance = 0.2
+opt = False
+kernel = RFFRBF(lengthscale=0.8, variance=variance)
+model = RandomFourierFeaturesModel(kernel, noise=noise, n_features=500, do_optimize=opt)
+kernel = GPyRBF(1, lengthscale=0.8, variance=variance)
+model.init(X,Y)
+plot_model(model, f)
+print(model.kernel_.theta)
+plt.show()
+
+model = GPModel(kernel, noise_prior=noise, do_optimize=opt)
+model.init(X,Y)
+plot_model(model, f)
+plt.show()
+
 #%% Noise makes a big difference. (1e-5 forces it to go through point which makes it oscillated.)
 # Oscillation is still a problem for RFF with noise though.
 # These VFF guys have similar problem: http://gpss.cc/gpa17/slides/VFF.pdf
 from src.models.models import GPModel
-from src.kernels import GPyRBF
-from src.models.models import RandomFourierFeaturesModel, RFFRBF
+from src.kernels import GPyRBF, RFFMatern, RFFRBF
+from src.models.models import RandomFourierFeaturesModel
 
 noise = 0.1
-kernel = RFFRBF(gamma=0.1)
+kernel = RFFRBF(lengthscale=0.1)
 model = RandomFourierFeaturesModel(kernel, noise=noise, n_features=n_features)
 model.init(X, Y)
 plot1D(model, f)
@@ -51,7 +97,7 @@ plot1D(model, f)
 plt.title("{} with $\sigma^2=${}".format(model, noise))
 
 noise = 1e-5
-kernel = RFFRBF(gamma=0.1)
+kernel = RFFRBF(lengthscale=0.1)
 model = RandomFourierFeaturesModel(kernel, noise=noise, n_features=n_features)
 model.init(X, Y)
 plot1D(model, f)
@@ -70,7 +116,7 @@ plt.title("{} with $\sigma^2=${}".format(model, noise))
 n_features = 500
 
 for var in [0.1, 1, 100, 1000]:
-    # kernel = RFFRBF(gamma=0.1, variance=var)
+    # kernel = RFFRBF(lengthscale=0.1, variance=var)
     # model = RandomFourierFeaturesModel(kernel, noise=1, n_features=n_features)
     kernel = GPyRBF(1, lengthscale=0.1, variance=var)
     model = GPModel(kernel, noise_prior=1e-5)
@@ -85,7 +131,7 @@ for var in [0.1, 1, 100, 1000]:
 n_features = 500
 
 for var in [1, 1000]:
-    kernel = RFFRBF(gamma=0.1, variance=var)
+    kernel = RFFRBF(lengthscale=0.1, variance=var)
     model = RandomFourierFeaturesModel(kernel, noise=0.1, n_features=n_features)
 
     model.init(X, Y)
@@ -113,7 +159,7 @@ model.init(X, Y)
 plot1D(model, f)
 plt.show()
 
-kernel = RFFRBF(gamma=0.008, variance=1)
+kernel = RFFRBF(lengthscale=0.008, variance=1)
 model = RandomFourierFeaturesModel(kernel, noise=1e-5, n_features=n_features)
 
 model.init(X, Y)
@@ -210,36 +256,7 @@ plt.figure()
 sns.kdeplot(data_sub[:, 0], data_sub[:,1], cmap="Reds", shade=True, bw='silverman', clip=[[0,1],[0,1]])
 plt.show()
 
-#%% Plot with sparseGP using 1000 inducing points
-# What out. The reason it might do well in undersampled region is because *the prior* is correct (=0). Because of the high lengthscale it would not be able to do well in that area. 
-# So we have to be careful when evaluating the performance based on Kink2D. 
-# Two distinct problems:
-# 1) For stationary undersampled regions rely on good prior. (since samples will only change local behaviour if lengthscale is short)
-# 2) RFF oscillation in undersample regions (still around prior mean)
-import GPy
-
-kernel = GPy.kern.Matern32(2)
-num_inducing = 1000
-
-n = 1000
-data_sub = data[np.random.choice(N, size=n, replace=False)]
-
-X = data_sub
-Y = f(X)
-
-#model = GPy.models.SparseGPRegression(X, Y, kernel=kernel, num_inducing=num_inducing)
-model.Gaussian_noise.fix(1e-5)
-model = GPy.models.GPRegression(X, Y, kernel=kernel, num_inducing=num_inducing)
-model.randomize()
-model.optimize()
-model.plot()
-plt.show()
-print(kernel.lengthscale)
-
-
-#%% Test the error
-# More data does not seem to help much. (sparse Matern 1k-inducing with 31k points does as well as 4k). The inducing points might be the bottleneck. Both have test-error N(2.5, ~0.1).
-# RBF fails completely (even with 31k points). error of ~190. With optimization it can even explode to 50k...
+#%% Prepare duck typing for RMSE testing 
 
 from src.utils import root_mean_square_error
 from src.models import GPModel
@@ -252,11 +269,89 @@ class DuckTypeModel(object):
         mean, var = self.model.predict(X, full_cov=False)
         return mean, var
 
+
+#%% Plot with sparseGP using 1000 inducing points
+# What out. The reason it might do well in undersampled region is because *the prior* is correct (=0). Because of the high lengthscale it would not be able to do well in that area. 
+# So we have to be careful when evaluating the performance based on Kink2D. 
+# Two distinct problems:
+# 1) For stationary undersampled regions rely on good prior. (since samples will only change local behaviour if lengthscale is short)
+# 2) RFF oscillation in undersample regions (still around prior mean)
+import GPy
+
+kernel = GPy.kern.Matern32(2)
+
+n = 4000
+data_sub = data[np.random.choice(N, size=n, replace=False)]
+#data_sub = random_hypercube_samples(n, f.bounds)
+
+# uniform vs curvature
+# noise vs noiseless
+# kernel..
+
+X = data_sub
+Y = f(X)
+
+#num_inducing = 1000
+#model = GPy.models.SparseGPRegression(X, Y, kernel=kernel, num_inducing=num_inducing)
+model = GPy.models.GPRegression(X, Y, kernel=kernel)
+model.Gaussian_noise.fix(1e-5)
+model.randomize()
+model.optimize()
+model.plot()
+plt.show()
+print(kernel.lengthscale)
+
+model_wrapper = DuckTypeModel(model)
+RMSE = root_mean_square_error(model_wrapper, f, rand=True)
+print(RMSE)
+
+# What to answer?
+# Is non-stationary kernel required?
+# Does it help scaling to many observations?
+# Would active sampling be beneficial?
+
+
+#%% ExactGP
+# (Kink2D + 20) is a problem for small lengthscale + few samples in high lengthscale area.
+# Normalizing would help. But wouldn't solve the inherint problem with stationarity.
+
+
+from src.environments import Kink2DShifted
+from src.plot_utils import plot2D
+from src.models.models import GPModel
+from src.kernels import GPyRBF
+from src.utils import random_hypercube_samples
+
+f = Kink2DShifted()
+
+n = 1000
+
+data_sub = data[np.random.choice(N, size=n, replace=False)]
+#data_sub = random_hypercube_samples(n, f.bounds)
+X = data_sub
+Y = f(X)
+
+# Hyperparams taken from Opt of ExactGP.
+kernel = GPyRBF(2, lengthscale=0.05)
+model = GPModel(kernel, noise_prior=1e-5)
+model.init(X, Y)
+plot2D(model, f)
+
+# Calc error
+RMSE = root_mean_square_error(model, f, rand=True)
+print(RMSE)
+
+
+#%% Test the error
+# More data does not seem to help much. (sparse Matern 1k-inducing with 31k points does as well as 4k). The inducing points might be the bottleneck. Both have test-error N(2.5, ~0.1).
+# RBF fails completely (even with 31k points). error of ~190. With optimization it can even explode to 50k...
+
 model_wrapper = DuckTypeModel(model)
 RMSE = root_mean_square_error(model_wrapper, f, rand=True)
 print(RMSE)
 
 #%% RFF does reasonable on uniform sample (but fails horribly if not uniform!!)
+# It is extremely sensitive to lengthscale/lengthscale: [0.03, ..0.06]
 
 from src.plot_utils import plot2D
 from src.models.models import QuadratureFourierFeaturesModel, RandomFourierFeaturesModel, RFFMatern, RFFRBF
@@ -271,19 +366,20 @@ X = data_sub
 Y = f(X)
 
 # TODO: fix for very low noise
-# TODO: find gamma (MLE?)
+# TODO: find lengthscale (MLE?)
 
 # Hyperparams taken from Opt of ExactGP.
-kernel = RFFRBF(gamma=0.05)
-#kernel = RFFMatern(gamma=0.86, nu=3/2)
+kernel = RFFRBF(lengthscale=0.05)
+#kernel = RFFMatern(lengthscale=0.86, nu=3/2)
 model = RandomFourierFeaturesModel(kernel, noise=1e-5, n_features=n_features)
-#model = QuadratureFourierFeaturesModel(gamma=0.2, noise=1e-2, n_features=n_features)
+#model = QuadratureFourierFeaturesModel(lengthscale=0.2, noise=1e-2, n_features=n_features)
 model.init(X, Y)
 plot2D(model, f)
 
 # Calc error
 RMSE = root_mean_square_error(model, f, rand=True)
 print(RMSE)
+
 
 #%% Test QFF
 from src.plot_utils import plot2D
@@ -298,7 +394,7 @@ data_sub = random_hypercube_samples(n, f.bounds)
 X = data_sub
 Y = f(X)
 
-model = QuadratureFourierFeaturesModel(gamma=0.05, noise=1e-5, n_features=n_features)
+model = QuadratureFourierFeaturesModel(lengthscale=0.05, noise=1e-5, n_features=n_features)
 model.init(X, Y)
 plot2D(model, f)
 
@@ -315,22 +411,22 @@ from src.plot_utils import plot2D
 from src.models.models import QuadratureFourierFeaturesModel, RandomFourierFeaturesModel, RFFMatern, RFFRBF
 from src.utils import random_hypercube_samples
 
-n_features = 300
+n_features = 1000
 n = 1000
 
-data_sub = data[np.random.choice(N, size=n, replace=False)]
-#data_sub = random_hypercube_samples(n, f.bounds)
+#data_sub = data[np.random.choice(N, size=n, replace=False)]
+data_sub = random_hypercube_samples(n, f.bounds)
 X = data_sub
 Y = f(X)
 
 # TODO: fix for very low noise
-# TODO: find gamma (MLE?)
+# TODO: find lengthscale (MLE?)
 
 # Hyperparams taken from Opt of ExactGP.
-kernel = RFFRBF(gamma=0.05)
-#kernel = RFFMatern(gamma=0.86, nu=3/2)
+kernel = RFFRBF(lengthscale=0.05)
+#kernel = RFFMatern(lengthscale=0.86, nu=3/2)
 model = RandomFourierFeaturesModel(kernel, noise=1e-5, n_features=n_features)
-#model = QuadratureFourierFeaturesModel(gamma=0.05, noise=1e-5, n_features=n_features)
+#model = QuadratureFourierFeaturesModel(lengthscale=0.05, noise=1e-5, n_features=n_features)
 model.init(X, Y)
 plot2D(model, f)
 
@@ -352,8 +448,7 @@ class GPRegressionModel(gpytorch.models.ExactGP):
         super(GPRegressionModel, self).__init__(train_x, train_y, likelihood)
         
         #grid_size = gpytorch.utils.grid.choose_grid_size(train_x)
-        grid_size = 1000
-        print(grid_size)
+        grid_size = 100
         
         kernel = gpytorch.kernels.RBFKernel()
         
@@ -362,14 +457,16 @@ class GPRegressionModel(gpytorch.models.ExactGP):
         likelihood.initialize(noise=1e-5)
 
         self.mean_module = gpytorch.means.ConstantMean()
+        #self.covar_module = gpytorch.kernels.ProductStructureKernel(
         self.covar_module = gpytorch.kernels.GridInterpolationKernel(
-            gpytorch.kernels.ScaleKernel(
-                kernel,
-            ), 
-            grid_size=grid_size, 
-            grid_bounds=grid_bounds,
-            num_dims=2
-        )
+                gpytorch.kernels.ScaleKernel(
+                    kernel,
+                ), 
+                grid_size=grid_size, 
+                grid_bounds=grid_bounds,
+                num_dims=2
+            )
+        #, num_dims=2)
 
     def forward(self, x):
         mean_x = self.mean_module(x)
@@ -390,7 +487,7 @@ class KISSGP(DKLGPModel):
 
         # noise=torch.ones(train_x.shape[0]) * 1e-5
         self.likelihood = gpytorch.likelihoods.GaussianLikelihood()
-        self.model = GPRegressionModel(self.X_torch, self.Y_torch, self.likelihood, grid_bounds=self.grid_bounds)
+        self.model = GPRegressionModel(self.X_torch, self.Y_torch, self.likelihood, )#grid_bounds=self.grid_bounds)
 
         self.model.train()
         self.likelihood.train()
@@ -420,13 +517,18 @@ from src.utils import random_hypercube_samples
 from src.plot_utils import plot2D
 from src.utils import root_mean_square_error
 
-n = 100
-data_sub = random_hypercube_samples(n, f.bounds)
+# What interpolation strategy are we using?
+
+n = 10000
+data_sub = data[np.random.choice(N, size=n, replace=False)]
+#data_sub = random_hypercube_samples(n, f.bounds)
 X = data_sub
 Y = f(X)
 
 model = KISSGP(grid_bounds=f.bounds)
-%timeit model.init(X, Y)
+model.init(X, Y)
+
+#%%
 plot2D(model, f)
 
 # Calc error
@@ -466,6 +568,65 @@ print(kernel.lengthscale)
 model_wrapper = DuckTypeModel(model)
 RMSE = root_mean_square_error(model_wrapper, f, rand=True)
 print(RMSE)
+
+
+#%% ------------------ Kink2D (uniform) --------------------
+# Neither shifting nor RBF/Matern seems to make a difference for n=3000.
+# In all instances ~10.
+
+from src.plot_utils import plot2D
+from src.utils import random_hypercube_samples
+from src.models.models import GPModel
+from src.environments import Kink2D, Kink2DShifted
+from src.kernels import GPyMatern32, GPyRBF
+
+f = Kink2DShifted()
+
+n = 3000
+
+data_sub = random_hypercube_samples(n, f.bounds)
+X = data_sub
+Y = f(X)
+
+# Hyperparams taken from Opt of ExactGP.
+#kernel = GPyRBF(2, lengthscale=0.05)       
+kernel = GPyMatern32(2, lengthscale=0.05)  
+model = GPModel(kernel, noise_prior=1e-5)
+model.init(X, Y)
+plot2D(model, f)
+
+# Calc error
+RMSE = root_mean_square_error(model, f, rand=True)
+print(RMSE)
+
+#%% DKLModel
+from src.plot_utils import plot2D
+from src.utils import random_hypercube_samples
+from src.models.dkl_gp import DKLGPModel
+from src.environments import Kink2D, Kink2DShifted, Kink1D
+from src.kernels import GPyMatern32, GPyRBF
+from src.plot_utils import plot_model
+
+#f = Kink1D()
+#f = Kink2DShifted()
+f = Kink2D()
+n = 3000
+
+data_sub = random_hypercube_samples(n, f.bounds)
+X = data_sub
+Y = f(X)
+
+model = DKLGPModel(n_iter=50, nn_kwargs={'layers': (1000, 500, 50, 1)})
+model.init(X, Y)
+plot_model(model, f)
+
+# Calc error
+RMSE = root_mean_square_error(model, f, rand=True)
+print(RMSE)
+
+model.plot_features(f)
+
+#%% ---------------------- Hessian -------------------------
 
 #%% Hessian of Kink2D
 
@@ -1031,7 +1192,6 @@ run = notebook_run_server(config_updates={
 
 #%%
 
-
 # What function do we expect it to be good on?
 # If model is specified correctly we will sample "uniformly" (given stationary kernel)
 # So only if mis-specified model.
@@ -1046,6 +1206,7 @@ run = notebook_run_server(config_updates={
     # How did we get a diagonal? (seems like two modes are being connected)
 
 #%%
+
 run = notebook_run(through_CLI=False, config_updates={
     'obj_func': {
         'name': "Kink2D",

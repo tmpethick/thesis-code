@@ -2,10 +2,10 @@ import math
 import numpy as np
 
 # from src.environments import BaseEnvironment
-from src.models.models import BaseModel
+# from src.models.models import BaseModel
 
 
-def root_mean_square_error(model: BaseModel, f, rand=False):
+def root_mean_square_error(model, f, rand=False):
     if rand:
         N = 2500
         X_line = random_hypercube_samples(N, f.bounds)
@@ -82,3 +82,5 @@ def call_function_on_grid(func, XY):
     # recreate grid
     Z = Z.reshape((original_grid_size, original_grid_size) + Z.shape[1:])
     return Z
+
+

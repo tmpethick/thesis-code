@@ -2,8 +2,10 @@ import sys
 import subprocess
 
 from src.environments import BaseEnvironment
-from src.models import BaseModel, LocalLengthScaleGPModel, DKLGPModel
-from src.plot_utils import plot1D, plot2D, plot_function
+from src.models.models import BaseModel
+from src.models.lls_gp import LocalLengthScaleGPModel
+from src.models.dkl_gp import DKLGPModel
+from src.plot_utils import plot1D, plot2D, plot_function, plot_model
 
 # For some reason it breaks without TkAgg when running from CLI.
 # import matplotlib
@@ -29,6 +31,7 @@ from src import algorithms as algorithm_module
 from src.algorithms import AcquisitionAlgorithm
 from src.utils import root_mean_square_error, random_hypercube_samples, construct_2D_grid, call_function_on_grid
 from src import settings
+from GPy.kern import Kern
 
 
 def unpack(config_obj):
@@ -38,8 +41,12 @@ def unpack(config_obj):
 
 
 def create_kernel(name, kwargs, input_dim):
+    print(name, kwargs, input_dim)
     Class = getattr(kernels_module, name)
-    return Class(input_dim, **kwargs)
+    if issubclass(Class, Kern):
+        return Class(input_dim, **kwargs)
+    else:
+        return Class(**kwargs)
 
 def hash_subdict(d, keys=None):
     if keys is None:
@@ -143,7 +150,7 @@ def create_ex(interactive=False):
         _log.info("... starting BO round {} / {}".format(i, algorithm.n_iter))
 
         # Metrics
-        rmse = root_mean_square_error(algorithm.models[0], algorithm.f)
+        rmse = root_mean_square_error(algorithm.models[0], algorithm.f, rand=True)
         _run.log_scalar('rmse', rmse, i)
 
         # TODO: save weights
@@ -192,15 +199,16 @@ def create_ex(interactive=False):
         all_rmse = np.zeros(len(models))
 
         for i, model in enumerate(models):
-            if input_dim == 1:
-                fig = plot1D(model, f)
-            elif input_dim == 2:
-                fig = plot2D(model, f)
-            else:
-                fig = None
+            fig = plot_model(model, f)
 
             if fig is not None:
                 save_fig(fig, settings.ARTIFACT_GP_FILENAME.format(model_idx=i))
+
+            # Transformed model
+            # if isinstance(model, TransformerModel):
+            #     model.transform
+            #     fig = plot_function(f, acquisition_function, title="Acquisition functions", points=X)
+            #     save_fig(fig, settings.ARTIFACT_GP_ACQ_FILENAME.format(model_idx=i))
 
             # Acquisition
             if acquisition_function is not None:
@@ -212,33 +220,14 @@ def create_ex(interactive=False):
                 fig = plot_function(f, lambda x: 1 / model.get_lengthscale(x)[:,None], title="1/Lengthscale", points=X)
                 save_fig(fig, settings.ARTIFACT_LLS_GP_LENGTHSCALE_FILENAME.format(model_idx=i))
             
+            # Plot feature space for DKLGP
             elif isinstance(model, DKLGPModel):
-                if X.shape[-1] == 1:
-                    X_line = np.linspace(bounds[0, 0], bounds[0, 1], 100)[:,None]
-                    fig, ax = plt.subplots()
-                    ax.set_title("Features")
-
-                    Z = model.get_features(X_line)
-                    for j in range(Z.shape[1]):
-                        ax.plot(X_line, Z[:,j])
-
-                    save_fig(fig, settings.ARTIFACT_DKLGP_FEATURES_FILENAME.format(model_idx=i))
-                elif X.shape[-1] == 2:
-                    XY, X, Y = construct_2D_grid(f.bounds)
-                    Z = call_function_on_grid(model.get_features, XY)
-
-                    fig = plt.figure()
-                    ax = fig.add_subplot(111, projection='3d')
-                    ax.set_title('Features')
-
-                    #palette = itertools.cycle(sns.color_palette(as_cmap=True))
-                    for j in range(Z.shape[-1]):
-                        ax.contourf(X, Y, Z[...,j], 50) #, cmap=next(palette))
-
+                fig = model.plot_features(f)
+                if fig is not None:
                     save_fig(fig, settings.ARTIFACT_DKLGP_FEATURES_FILENAME.format(model_idx=i))
 
             # Log
-            rmse = root_mean_square_error(model, f)
+            rmse = root_mean_square_error(model, f, rand=True)
             log_info('MSE for {} with idx {}: {}'.format(model, i, rmse))
             all_rmse[i] = rmse
 
@@ -282,12 +271,15 @@ def create_ex(interactive=False):
         else:
             bo = None
 
-            # Throw exceptions as warning so interactive mode can still play with the objects.
+            # TODO: Throw exceptions as warning so interactive mode can still play with the objects.
             # Updates _run.result
+            # try:
             test_gp_model(f, models, 
                 acquisition_function=acq, 
                 n_samples=_config['gp_samples'],
                 use_derivatives=_config['gp_use_derivatives'])
+            # except:
+            #     print("ups")
 
         #Hack to have model available after run in interactive mode.
         _run.interactive_stash = {
