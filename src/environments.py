@@ -184,11 +184,6 @@ class Kink1D(BaseEnvironment):
         return (2 * x) / ((x ** 2 + 1 / 10000) ** 2)
 
 
-class Sin2D(BaseEnvironment):
-    def __call__(self, x):
-        return (0.5 * np.sin(13 * x[..., 0]) * np.sin(27 * x[..., 0]) + 0.5) * (0.5 * np.sin(13 * x[..., 1]) * np.sin(27 * x[..., 1]) + 0.5)
-
-
 class Sinc(BaseEnvironment):
     bounds = np.array([[-20, 20]])
     x_opt = 0
@@ -218,12 +213,23 @@ class NegSinc(Sinc):
         return -super().__call__(x)
 
 
+class Sin2D(BaseEnvironment):
+    def __call__(self, x):
+        return (0.5 * np.sin(13 * x[..., 0]) * np.sin(27 * x[..., 0]) + 0.5) * (0.5 * np.sin(13 * x[..., 1]) * np.sin(27 * x[..., 1]) + 0.5)
+
+
+class CosProd2D(BaseEnvironment):
+    bounds = np.array([[-1,1], [-1,1]])
+    def __call__(self, X):
+        return (np.cos(0.5 * np.pi * X[..., 0]) * np.cos(0.5 * np.pi * X[..., 1]))[..., None]
+
+
 class Sinc2D(BaseEnvironment):
     bounds = np.array([[-20, 20], [-20, 20]])
 
     def __call__(self, x):
         r = np.sqrt(x[..., 0] ** 2 + x[..., 1] ** 2)
-        return np.sin(r) / r
+        return (np.sin(r) / r)[..., None]
 
     def derivative(self, x):
         r_pow = x[..., 0] ** 2 + x[..., 1] ** 2

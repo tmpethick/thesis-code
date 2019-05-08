@@ -19,9 +19,11 @@ import numpy as np
 from sacred import Experiment
 from sacred.observers import MongoObserver
 
+import matplotlib
 import matplotlib.pyplot as plt
 import seaborn as sns
 sns.set_style("darkgrid")
+matplotlib.rcParams['figure.dpi'] = 300 # migh high-res friendlly
 
 from src import models as models_module
 from src import acquisition_functions as acquisition_functions_module
