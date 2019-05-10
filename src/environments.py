@@ -77,7 +77,7 @@ class TwoKink1D(BaseEnvironment):
 
     def __init__(self, *args, **kwargs):
         self.alpha = 5
-        self.beta = 2
+        self.beta = 1
         self.x_1 = 0.3
         self.x_2 = 0.6
 
@@ -87,7 +87,7 @@ class TwoKink1D(BaseEnvironment):
         self.snd = lambda x: self.b
 
         self.c = self.snd(self.x_2)
-        self.trd = lambda x: self.beta * x + (self.c - self.beta * self.x_2)
+        self.trd = lambda x: self.beta * np.log(x) + (self.c - self.beta * np.log(self.x_2))
     
     def __call__(self, X):
         return np.piecewise(X, [X < self.x_1, X > self.x_1, X >= self.x_2], [self.fst, self.snd, self.trd])
@@ -95,8 +95,21 @@ class TwoKink1D(BaseEnvironment):
     def derivative(self, X):
         fst = lambda x: 2 * self.alpha * x
         snd = lambda x: 0
-        trd = lambda x: self.beta
+        trd = lambda x: self.beta / x
         return np.piecewise(X, [X < self.x_1, X > self.x_1, X >= self.x_2], [fst, snd, trd])
+
+
+N_steps = 5
+X_steps = np.random.uniform(-1, 1, size=N_steps)
+X_steps = np.sort(X_steps)
+Y_values = 10*np.cos(2.5*X_steps-4) + 20 + np.random.uniform(-2, 2, size=N_steps)
+
+
+class Step(BaseEnvironment):
+    bounds = np.array([[0,1]])
+    def __call__(self, X):
+        condlist = [X > threshold for threshold in X_steps]
+        return np.piecewise(X, condlist, Y_values)
 
 
 class TwoKink2D(TwoKink1D):

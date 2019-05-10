@@ -14,8 +14,8 @@ class MODES(Enum):
 # ----------------- Settings
 # -----------------
 
-MODE = MODES.LOCAL
-SAVE = False
+MODE = MODES.SERVER
+SAVE = True
 
 MONGO_DB_URL = 'mongodb+srv://admin:{}@lions-rbvzc.mongodb.net/test?retryWrites=true'.format(MONGO_DB_PASSWORD)
 MONGO_DB_NAME = 'test'

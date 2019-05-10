@@ -166,13 +166,13 @@ def plot2D(model: BaseModel, f: BaseEnvironment) -> plt.Figure:
 
     fig = plt.figure()
     ax = fig.add_subplot(221)
-    ax.set_title('Ground truth f')
+    ax.set_title('Ground truth $f$')
     cont = ax.contourf(X, Y, ground_truth, 50)
     fig.colorbar(cont)
     ax.plot(model.X[:, 0], model.X[:, 1], '.', markersize=10)
 
     ax = fig.add_subplot(222)
-    ax.set_title('Mean estimate m')
+    ax.set_title('Mean estimate $m$')
     cont = ax.contourf(X, Y, mean, 50)
     fig.colorbar(cont)
     # ax.plot(model.X[:, 0], model.X[:, 1], '.', markersize=10)
@@ -184,7 +184,7 @@ def plot2D(model: BaseModel, f: BaseEnvironment) -> plt.Figure:
     # ax.plot(model.X[:, 0], model.X[:, 1], '.', markersize=10)
 
     ax = fig.add_subplot(224)
-    ax.set_title('Estimate Error |f-m|')
+    ax.set_title('Estimate Error $|f-m|$')
     conf = ax.contourf(X, Y, np.abs(mean - ground_truth), 50)
     fig.colorbar(cont)
 

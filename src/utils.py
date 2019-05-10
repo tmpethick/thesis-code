@@ -29,7 +29,7 @@ def root_mean_square_error(model, f, rand=False):
     if Y_hat.ndim == 3:
         Y_hat = np.mean(Y_hat, axis=0)
 
-    rmse = np.sqrt(np.sum(np.square(Y - Y_hat)))
+    rmse = np.sqrt(np.sum(np.square(Y - Y_hat)) / N)
 
     return rmse
 

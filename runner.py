@@ -8,8 +8,10 @@ from src.models.dkl_gp import DKLGPModel
 from src.plot_utils import plot1D, plot2D, plot_function, plot_model
 
 # For some reason it breaks without TkAgg when running from CLI.
-# import matplotlib
-# matplotlib.use("TkAgg")
+# from src import settings
+# if settings.MODE in [settings.MODES.SERVER, settings.MODES.LOCAL_CLI]:
+#     import matplotlib
+#     matplotlib.use("TkAgg")
 
 import hashlib
 import json
@@ -67,7 +69,7 @@ def create_ex(interactive=False):
     ex.add_config({
         'gp_use_derivatives': False,
         'verbosity': {
-            'plot': True,
+            'plot': settings.MODE is not settings.MODES.SERVER, # do not plot on server by default.
             'bo_show_iter': 30,
         }
     })
@@ -75,12 +77,13 @@ def create_ex(interactive=False):
 
     @ex.capture
     def dklgpmodel_training_callback(model, i, loss, _log, _run):
-        # TODO: save modelgp_use_derivatives
-        # Log
-        _log.info('Iter %d/%d - Loss: %.3f' % (i + 1, model.n_iter, loss))
+        if i % 30 == 0:
+            # TODO: save model
+            # Log
+            _log.info('Iter %d/%d - Loss: %.3f' % (i + 1, model.n_iter, loss))
 
-        # Metrics
-        _run.log_scalar('DKLGPModel.training.loss', loss, i)
+            # Metrics
+            _run.log_scalar('DKLGPModel.training.loss', loss, i)
 
 
     def create_model(name, kwargs, input_dim=None):
@@ -230,7 +233,7 @@ def create_ex(interactive=False):
 
             # Log
             rmse = root_mean_square_error(model, f, rand=True)
-            log_info('MSE for {} with idx {}: {}'.format(model, i, rmse))
+            log_info('RMSE for {} with idx {}: {}'.format(model, i, rmse))
             all_rmse[i] = rmse
 
         # Only store result for `model` (not `model2`) as it is rarely used on its own.
