@@ -252,6 +252,15 @@ class Sinc2D(BaseEnvironment):
     def hessian(self, x):
         pass
 
+class Kink2DStraight(BaseEnvironment):
+    """Kink2D but ignores y.
+    """
+    bounds = np.array([[0, 1], [0, 1]])
+
+    def __call__(self, x):
+        y = 1 / (np.abs(0.5 - x[..., 0] ** 4) + 0.1)
+        return y[..., None]
+
 
 class Kink2D(BaseEnvironment):
     """To generate derivative and hessian we use sympy:

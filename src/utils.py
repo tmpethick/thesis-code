@@ -5,7 +5,25 @@ import numpy as np
 # from src.models.models import BaseModel
 
 
-def root_mean_square_error(model, f, rand=False):
+def calc_errors(model, f, rand=False):
+    est1 = lambda X_line: model.get_statistics(X_line, full_cov=False)[0]
+    est2 = lambda X_line: f(X_line)
+    return _calc_errors(est1, est2, f, rand=rand)
+
+
+def calc_errors_model_compare_mean(model1, model2, f, rand=False):
+    est1 = lambda X_line: model1.get_statistics(X_line, full_cov=False)[0]
+    est2 = lambda X_line: model2.get_statistics(X_line, full_cov=False)[0]
+    return _calc_errors(est1, est2, f, rand=rand)
+
+
+def calc_errors_model_compare_var(model1, model2, f, rand=False):
+    est1 = lambda X_line: model1.get_statistics(X_line, full_cov=False)[1]
+    est2 = lambda X_line: model2.get_statistics(X_line, full_cov=False)[1]
+    return _calc_errors(est1, est2, f, rand=rand)
+
+
+def _calc_errors(est1, est2, f, rand=False):
     if rand:
         N = 2500
         X_line = random_hypercube_samples(N, f.bounds)
@@ -22,16 +40,22 @@ def root_mean_square_error(model, f, rand=False):
         X_line = random_hypercube_samples(N, f.bounds)
         #raise ValueError("Does not support dim above 2.")
 
-    Y = f(X_line)
-    Y_hat, var = model.get_statistics(X_line, full_cov=False)
+    Y = est2(X_line)
+    Y_hat = est1(X_line)
 
     # average over hyperparameters if there.
     if Y_hat.ndim == 3:
         Y_hat = np.mean(Y_hat, axis=0)
 
-    rmse = np.sqrt(np.sum(np.square(Y - Y_hat)) / N)
+    # average over hyperparameters if there.
+    if Y.ndim == 3:
+        Y = np.mean(Y, axis=0)
 
-    return rmse
+    Y_diff = Y - Y_hat
+    rmse = np.sqrt(np.sum(np.square(Y_diff)) / N)
+    max_err = np.max(np.fabs(Y_diff))
+
+    return rmse, max_err
 
 
 def random_hypercube_samples(n_samples, bounds, rng=None):

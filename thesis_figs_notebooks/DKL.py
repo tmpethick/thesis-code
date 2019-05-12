@@ -148,132 +148,149 @@ run = execute(config_updates={
 print("RMSE: {:1.2e}".format(run.result))
 
 
-#%%
+#%% Kink2D learned feature mapping
+# \label{fig:dkl-kink2D-manifold}
 
-run = execute(config_updates={
-    'obj_func': {
-        'name': 'Step',
-    },
+config = {
+    'obj_func': {'name': 'Kink2D'},
     'model': {
         'name': 'DKLGPModel',
         'kwargs': {
-            'noise': 1e-2,
-            'n_iter': 1000,
-            'nn_kwargs': {
-                'layers': (1, 50, 2), #(1000, 1000, 500, 50, 2),
-            }
-        }
-    },
-    'gp_samples': 100
-})
-print("RMSE: {:1.2e}".format(run.result))
-
-
-#%% 
-
-obj_funs = [
-    {'name': 'TwoKink1D'},
-    {'name': 'TwoKink2D'},
-    {'name': 'TwoKinkDEmbedding', 'kwargs': {'D': 2}},
-]
-
-# ExactGP: Matern32, RBF
-exactGP = [{
-    'name': 'GPModel',
-    'kwargs': {
-        'kernel': {
-            'name': kernel,
-            'kwargs': {
-                'lengthscale': 1
-            }
+            'learning_rate': 0.01,
+            'n_iter': 100,
+            'nn_kwargs': {'layers': [100, 50, 2]},
+            'noise': 0.01
         },
-        'noise_prior': 1e-2,
-        'do_optimize': True,
-        'num_mcmc': 0,
     },
-} for kernel in ['GPyRBF', 'GPyMatern32']]
+    'gp_samples': 1000,
+}
+run = execute(config_updates=config)
+
+#%%
+
+model = run.interactive_stash['model']
+f = run.interactive_stash['f']
+
+latexify(columns=2)
+fig = f.plot()
+savefig(fig, 'DKL/dkl-kink2D-manifold-f.pdf')
+plt.show()
+
+fig, ax = plt.subplots()
+ax.set_title('f in feature space')
+
+XY, X, Y = construct_2D_grid(f.bounds)
+Z = call_function_on_grid(model.get_features, XY)
+O = call_function_on_grid(f, XY)
+ax.contourf(Z[...,0], Z[...,1], O[...,0], 50)
+
+plt.tight_layout()
+savefig(fig, 'DKL/dkl-kink2D-manifold-features.pdf')
 
 
-# DKL "ExactGP": RBF
-n_iters = [100, 1000]
-DKL_exact = [{
-    'name': 'DKLGPModel',
-    'kwargs': {
-        'noise': 1e-2,
-        'n_iter': n_iter,
-        'nn_kwargs': {
-            'layers': None, 
-        }
-    }
-} for n_iter in n_iters]
+#%% IncreasingOscillation lengthscale change
+# \label{fig:dkl-lengthscale}
 
-# DKL:  n_iter, learning_rate, layers, (noise)
-import itertools
-n_iters = [100, 1000]
-learning_rates = [0.05, 0.01, 0.1]
-layerss = [(100, 50, 2), (50, 2)]
-parameters = itertools.product(n_iters, learning_rates, layerss)
-DKL = [{
-    'name': 'DKLGPModel',
-    'kwargs': {
-        'noise': 1e-2,
-        'learning_rate': learning_rate,
-        'n_iter': n_iter,
-        'nn_kwargs': {
-            'layers': layers, 
-        }
-    }
-} for (n_iter, learning_rate, layers) in parameters]
+config = {
+    'obj_func': {'name': 'IncreasingOscillation'},
+    'model': {
+        'name': 'DKLGPModel',
+        'kwargs': {
+            'learning_rate': 0.01,
+            'n_iter': 1000,
+            'nn_kwargs': {'layers': [100, 50, 1]},
+            'noise': 0.01
+        },
+    },
+    'gp_samples': 1000,
+}
+run = execute(config_updates=config)
 
-model_types = [exactGP, DKL_exact, DKL]
+#%% Plot DKL varying lengthscale features
+
+model = run.interactive_stash['model']
+f = run.interactive_stash['f']
+
+latexify(columns=2)
+fig = f.plot()
+savefig(fig, 'DKL/dkl-lengthscale-f.pdf')
+plt.show()
+
+X_line = np.linspace(f.bounds[0, 0], f.bounds[0, 1], 1000)[:,None]
+Z = model.get_features(X_line)
+O = f(X_line)
+
+fig, ax = plt.subplots()
+ax.set_title('f in feature space')
+ax.plot(Z.flatten(), O.flatten())
+
+plt.tight_layout()
+savefig(fig, 'DKL/dkl-lengthscale-features.pdf')
 
 
 #%%
-i = 0
+run.interactive_stash['model'].plot_features(run.interactive_stash['f'])
 
-for obj_fun in obj_funs:
-    for model_type in model_types:
-        for model in model_type:
-            i += 1
-            print(i)
-            config = {
-                'obj_func': obj_fun,
-                'model': model,
-                'gp_samples': 1000,
-            }
-            # import traceback
-            # try:
-            execute(config_updates=config)
-            # except Exception as exc:
-            #     print(traceback.format_exc())
-            #     print(exc)
+#%%
+# Reproducability
 
+# run two models and compare differences
+
+config = {
+    'obj_func': {'name': 'Sinc'},
+    'model': {
+        'name': 'DKLGPModel',
+        'kwargs': {
+            'learning_rate': 0.01,
+            'n_iter': 1,
+            'nn_kwargs': {'layers': None},
+            'noise': 0.001
+        },
+    },
+    'model2': {
+        'name': 'GPModel',
+        'kwargs': {
+            'kernel': {
+                'name': 'GPyRBF',
+                'kwargs': {
+                    'lengthscale': 1
+                }
+            },
+            'noise_prior': 0.001,
+            'do_optimize': True,
+            'num_mcmc': 0,
+        },
+    },
+    'gp_samples': 10,
+    'compare_models': True
+}
+run = execute(config_updates=config)
+
+
+
+#%% 
 
 # Install ASG on server
 # ASG: threshold
 # Test effect of normalization.
 # Add max_error/Loo_err
-
-
-#%%
-
-# Make TwoKink Steeper / concave
-# # Fix pos def error
+# Fix pos def error
 # Understand how #parameters and DKL interacts
 
-# config = {
-#     'obj_func': {'name': 'TwoKink2D'},
-#     'model': {
-#         'name': 'DKLGPModel',
-#         'kwargs': {'noise': 0.01,
-#             'learning_rate': 0.05,
-#             'n_iter': 1,
-#             'nn_kwargs': {'layers': (1000, 1000, 50, 2)}
-#         }
-#     },
-#     'gp_samples': 100,
-# }
-# run = execute(config_updates=config)
+# Aggregate RMSE
+# Click to open plot.
 
-# plot_model(run.interactive_stash['model'], run.interactive_stash['f'])
+# Question::
+# Is DKL model working? DKLGPModel vs GPModel NaN (ensure model works) √
+# Does *some* DKL model gain performance? DKLGPModel vs GPModel
+# How does learning rate influence DKL?
+# How does iterations influence DKL?
+# How does DKL behave on Kink2D and TwoKink1D?
 
+# What if we took a Kink2D that was not bend? Would it learn to stretch the domain?
+# How does it even help on step function?
+
+# Clickable exploration
+
+
+# Define trickier problems (variance is to small across models)

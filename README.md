@@ -64,6 +64,11 @@ python setup.py install
   conda -y install notebook
   pip install ipywidgets
   jupyter nbextension enable --py widgetsnbextension
+
+  pip install jupyter_contrib_nbextensions
+  jupyter contrib nbextension install --user
+  pip install jupyter_nbextensions_configurator
+  jupyter nbextensions_configurator enable --user
   ```
 
 - Plotly requirements for jupyterlab:  

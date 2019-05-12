@@ -24,7 +24,6 @@ from sacred.observers import MongoObserver
 import matplotlib
 import matplotlib.pyplot as plt
 import seaborn as sns
-sns.set_style("darkgrid")
 matplotlib.rcParams['figure.dpi'] = 300 # migh high-res friendlly
 
 from src import models as models_module
@@ -33,7 +32,7 @@ from src import environments as environments_module
 from src import kernels as kernels_module
 from src import algorithms as algorithm_module
 from src.algorithms import AcquisitionAlgorithm
-from src.utils import root_mean_square_error, random_hypercube_samples, construct_2D_grid, call_function_on_grid
+from src.utils import calc_errors, calc_errors_model_compare_mean, calc_errors_model_compare_var, random_hypercube_samples, construct_2D_grid, call_function_on_grid
 from src import settings
 from GPy.kern import Kern
 
@@ -68,6 +67,7 @@ def create_ex(interactive=False):
 
     ex.add_config({
         'gp_use_derivatives': False,
+        'compare_models': True, # Only works for GP model (not ßBO)
         'verbosity': {
             'plot': settings.MODE is not settings.MODES.SERVER, # do not plot on server by default.
             'bo_show_iter': 30,
@@ -150,18 +150,28 @@ def create_ex(interactive=False):
 
 
     @ex.capture
+    def log_scalar(name, value, step, _run):
+        _run.log_scalar(name, value, step)
+
+        # Update the result dict with the latest value (notice `step` is ignored).
+        result = _run.result
+        if type(result) is not dict:
+            result = {}
+        result[name] = value
+        _run.result = result
+
+
+    @ex.capture
     def plot(algorithm: AcquisitionAlgorithm, i, _run, _log):
         # Log
         _log.info("... starting BO round {} / {}".format(i, algorithm.n_iter))
 
         # Metrics
-        rmse = root_mean_square_error(algorithm.models[0], algorithm.f, rand=True)
-        _run.log_scalar('rmse', rmse, i)
+        rmse, max_err = calc_errors(algorithm.models[0], algorithm.f, rand=True)
+        log_scalar('rmse', rmse, i)
+        log_scalar('max_err', max_err, i)
 
         # TODO: save weights
-
-        # Update real-time info
-        _run.result = rmse
 
         # Save files
         if i % 5 == 0 or i == algorithm.n_iter:
@@ -181,7 +191,7 @@ def create_ex(interactive=False):
 
 
     @ex.capture
-    def test_gp_model(f: BaseEnvironment, models: [BaseModel], _run, acquisition_function=None, n_samples=15, use_derivatives=False):
+    def test_gp_model(f: BaseEnvironment, models: [BaseModel], _run, acquisition_function=None, n_samples=15, use_derivatives=False, compare_models=False):
         bounds = f.bounds
         input_dim = f.input_dim
 
@@ -200,8 +210,18 @@ def create_ex(interactive=False):
             for model in models:
                 model.init(X, Y)
 
+        if compare_models:
+            # TODO: For now only supports 2 models
+            model1 = models[0]
+            model2 = models[1]
+            rmse, max_err = calc_errors_model_compare_mean(model1, model2, f)
+            log_scalar('model_compare.mean.rmse', rmse, 0)
+            log_scalar('model_compare.mean.max_err', max_err, 0)
 
-        all_rmse = np.zeros(len(models))
+            rmse, max_err = calc_errors_model_compare_var(model1, model2, f)
+            log_scalar('model_compare.var.rmse', rmse, 0)
+            log_scalar('model_compare.var.max_err', max_err, 0)
+
 
         for i, model in enumerate(models):
             fig = plot_model(model, f)
@@ -232,12 +252,10 @@ def create_ex(interactive=False):
                     save_fig(fig, settings.ARTIFACT_DKLGP_FEATURES_FILENAME.format(model_idx=i))
 
             # Log
-            rmse = root_mean_square_error(model, f, rand=True)
-            log_info('RMSE for {} with idx {}: {}'.format(model, i, rmse))
-            all_rmse[i] = rmse
-
-        # Only store result for `model` (not `model2`) as it is rarely used on its own.
-        _run.result = all_rmse[0]
+            rmse, max_err = calc_errors(model, f, rand=True)
+            log_info('Model{}: {} has RMSE={} max_err={}'.format(i, model, rmse, max_err))
+            log_scalar('model{}.rmse'.format(i), rmse, 0)
+            log_scalar('model{}.max_err'.format(i), max_err, 0)
 
 
     @ex.main

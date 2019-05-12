@@ -36,6 +36,9 @@ def latexify(fig_width=None, fig_height=None, columns=3):
     # Width and max height in inches for IEEE journals taken from
     # computer.org/cms/Computer.org/Journal%20templates/transactions_art_guide.pdf
 
+    sns.set_style("whitegrid")
+    sns.set_palette(sns.color_palette('colorblind'))
+
     assert(columns in [1,2,3])
 
     # width in inches
@@ -71,6 +74,25 @@ def latexify(fig_width=None, fig_height=None, columns=3):
     }
 
     matplotlib.rcParams.update(params)
+
+SPINE_COLOR = 'gray'
+
+def format_axes(ax):
+  
+    for spine in ['top', 'right']:
+        ax.spines[spine].set_visible(False)
+
+    for spine in ['left', 'bottom']:
+        ax.spines[spine].set_color(SPINE_COLOR)
+        ax.spines[spine].set_linewidth(0.5)
+
+    ax.xaxis.set_ticks_position('bottom')
+    ax.yaxis.set_ticks_position('left')
+
+    for axis in [ax.xaxis, ax.yaxis]:
+        axis.set_tick_params(direction='out', color=SPINE_COLOR)
+
+    return ax
 
 
 def plot_function(f: BaseEnvironment, func, title="Function", points=None):

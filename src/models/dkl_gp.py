@@ -230,19 +230,23 @@ class DKLGPModel(BaseModel):
                 ax.contourf(X, Y, Z[...,j], 50) #, cmap=next(palette))
 
         if Z.shape[-1] == 1:
+            # 2D->1D case
             ax = fig.add_subplot(122)
             ax.set_title('f in feature space')
-            # Collapse (if X was 2D)
-            ax.plot(Z.flatten(), O.flatten())
+            if self.X.shape[-1] == 1:
+                ax.plot(Z.flatten(), O.flatten())
+            else:
+                O = np.reshape(O, (-1, 1))
+                ax.scatter(Z.flatten(), O.flatten())
         elif Z.shape[-1] == 2:
-            # TODO: fix for 1D->2D case
-            if self.X.shape[-1] == 2:
-                #Z = np.reshape(Z, (-1, 2))
-                ax = fig.add_subplot(122)
-                ax.set_title('f in feature space')
-                print(Z.shape, O.shape)
+            # 1D->2D case
+            ax = fig.add_subplot(122)
+            ax.set_title('f in feature space')
+            if self.X.shape[-1] == 1:
+                O = np.reshape(O, (-1, 1))
+                ax.scatter(Z[...,0], Z[...,1], O[...,0])
+            elif self.X.shape[-1] == 2:
                 ax.contourf(Z[...,0], Z[...,1], O[...,0], 50)
-
 
         plt.tight_layout()
         return fig

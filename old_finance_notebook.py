@@ -1,5 +1,5 @@
 #%%
-from src.utils import root_mean_square_error
+from src.utils import calc_errors
 %load_ext autoreload
 %autoreload 2
 
@@ -70,7 +70,7 @@ bq.run()
 bq.plot()
 
 plt.hist(bq.models[0].X)
-rmse_vanilla = root_mean_square_error(bq.models[0], bq.f)
+rmse_vanilla, max_err = calc_errors(bq.models[0], bq.f)
 
 #%% Model Mismatch sampling approach
 from src.acquisition_functions import AcquisitionModelMismatch
