@@ -99,17 +99,22 @@ class TwoKink1D(BaseEnvironment):
         return np.piecewise(X, [X < self.x_1, X > self.x_1, X >= self.x_2], [fst, snd, trd])
 
 
-N_steps = 5
-X_steps = np.random.uniform(-1, 1, size=N_steps)
-X_steps = np.sort(X_steps)
-Y_values = 10*np.cos(2.5*X_steps-4) + 20 + np.random.uniform(-2, 2, size=N_steps)
 
 
 class Step(BaseEnvironment):
     bounds = np.array([[0,1]])
+    
+    def __init__(self):
+        # N_steps = 5
+        # X_steps = np.random.uniform(0, 1, size=N_steps)
+        # X_steps = np.sort(X_steps)
+        # Y_values = 10*np.cos(2.5*X_steps-4) + 20 + np.random.uniform(-2, 2, size=N_steps)
+        self.X_steps = np.array([0.1059391 , 0.23668238, 0.38007559, 0.47764559, 0.62765332, 0.87921645, 0.93967713, 0.98301519])
+        self.Y_values = np.array([11.46027201,  9.59505656,  8.71181213, 11.93343655, 13.55133013, 18.15854289, 18.4201603 , 18.78589584])
+
     def __call__(self, X):
-        condlist = [X > threshold for threshold in X_steps]
-        return np.piecewise(X, condlist, Y_values)
+        condlist = [X > threshold for threshold in self.X_steps]
+        return np.piecewise(X, condlist, self.Y_values)
 
 
 class TwoKink2D(TwoKink1D):
@@ -128,11 +133,21 @@ class TwoKink2D(TwoKink1D):
 
 
 class TwoKinkDEmbedding(TwoKink1D):
-    def __init__(self, D=10):
+    def __init__(self, D=10, Alpha=None):
         super().__init__()
-        self.D = D
-        self.Alpha = np.random.uniform(size=(D,1))
+        if Alpha is not None:
+            self.Alpha = np.array(Alpha)
+            self.D = self.Alpha.shape[0]
+        else:
+            self.Alpha = TwoKinkDEmbedding.generate_alpha(D)
+            self.D = D
         self.bounds = np.array([[0,1]] * D)
+
+    @classmethod
+    def generate_alpha(cls, D):
+        """Useful if we want to fix Alpha across instances.
+        """
+        return np.random.uniform(size=(D,1))
 
     def _transform(self, X):
         # Apply elementwise linear transformation
@@ -332,12 +347,19 @@ class ActiveSubspaceTest(BaseEnvironment):
         return Y * coefs[None, :]
 
 
-class ActiveSubspaceModifiedTest(ActiveSubspaceTest):
+class ActiveSubspaceModifiedTest(BaseEnvironment):
+    bounds = np.array([[-1,1]] * 10)
+
+    def __init__(self):
+        self._f = ActiveSubspaceTest()
+    
     def __call__(self, X):
-        return X[..., 1]*X[..., 2] * super(ActiveSubspaceModifiedTest, self).__call__(X)
+        return X[..., 1]*X[..., 2] * self._f(X)
 
     def derivative(self, X):
-        _test_old = super().derivative(X)
+        """Fix derivative
+        """
+        _test_old = self._f.derivative(X)
         val = np.atleast_1d(X[..., 1] * X[..., 2] * _test_old)
         coefs = np.array([0.01, 0.7, 0.02, 0.03, 0.04, 0.05, 0.06, 0.08, 0.09, 0.1])
         out = val[:, None] * coefs[None, :]

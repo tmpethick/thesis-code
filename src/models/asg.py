@@ -26,6 +26,9 @@ print("TasmanianSG license: {0:s}".format(TasmanianSG.__license__))
 
 class AdaptiveSparseGrid(object):
     def __init__(self, f, depth=1, refinement_level=5, f_tol=1e-5, point_tol=None):
+        if refinement_level == 0 and point_tol is not None:
+            warnings.warn("`point_tol` will be ignored for fixed depth.")
+
         self.depth = depth
         self.refinement_level = refinement_level
         self.f_tol = f_tol
@@ -84,34 +87,63 @@ class AdaptiveSparseGrid(object):
 
     def plot(self):
         X_train = self.grid.getLoadedPoints()
-
-        fig = plt.figure()
-        XY, X, Y = construct_2D_grid(self.f.bounds)
         
-        ax = fig.add_subplot(221)
-        ax.set_title("f")
-        Z1 = call_function_on_grid(self.f, XY)[...,0]
-        cont = ax.contourf(X,Y,Z1, 50)
-        fig.colorbar(cont)
+        if X_train.shape[-1] == 1:
 
-        ax = fig.add_subplot(222)
-        ax.set_title("ASG Estimate $\hat{f}$")
-        Z2 = call_function_on_grid(self.evaluate, XY)[...,0]
-        cont = ax.contourf(X,Y,Z2, 50)
-        fig.colorbar(cont)
-        sns.scatterplot(X_train[...,0], X_train[...,1], ax=ax, size=2, alpha=0.5, legend=False)
+            fig = plt.figure()
+            X_line = np.linspace(self.f.bounds[0,0], self.f.bounds[0,1])[:, None]
 
-        ax = fig.add_subplot(223)
-        ax.set_title("$|f - \hat{f}|$")
-        Z = call_function_on_grid(self.evaluate, XY)[...,0]
-        cont = ax.contourf(X,Y,np.fabs(Z1 - Z2), 50)
-        fig.colorbar(cont)
+            ax = fig.add_subplot(221)
+            ax.set_title("f")
+            Z1 = self.f(X_line)
+            plt.plot(X_line, Z1)
 
-        plt.tight_layout()
+            ax = fig.add_subplot(222)
+            ax.set_title("ASG Estimate $\hat{f}$")
+            Z2 = self.evaluate(X_line)
+            plt.plot(X_line, Z2)
+            sns.scatterplot(X_train[...,0], self.f(X_train)[..., 0], ax=ax, size=2, alpha=0.5, legend=False)
 
-        # asg.grid.plotResponse2D()
-        # asg.grid.plotPoints2D()
+            ax = fig.add_subplot(223)
+            ax.set_title("$|f - \hat{f}|$")
+            ax.plot(X_line, np.fabs(Z1 - Z2))
 
-        return fig
+            plt.tight_layout()
+
+            # asg.grid.plotResponse2D()
+            # asg.grid.plotPoints2D()
+
+            return fig
+
+        if X_train.shape[-1] == 2:
+
+            fig = plt.figure()
+            XY, X, Y = construct_2D_grid(self.f.bounds)
+            
+            ax = fig.add_subplot(221)
+            ax.set_title("f")
+            Z1 = call_function_on_grid(self.f, XY)[...,0]
+            cont = ax.contourf(X,Y,Z1, 50)
+            fig.colorbar(cont)
+
+            ax = fig.add_subplot(222)
+            ax.set_title("ASG Estimate $\hat{f}$")
+            Z2 = call_function_on_grid(self.evaluate, XY)[...,0]
+            cont = ax.contourf(X,Y,Z2, 50)
+            fig.colorbar(cont)
+            sns.scatterplot(X_train[...,0], X_train[...,1], ax=ax, size=2, alpha=0.5, legend=False)
+
+            ax = fig.add_subplot(223)
+            ax.set_title("$|f - \hat{f}|$")
+            Z = call_function_on_grid(self.evaluate, XY)[...,0]
+            cont = ax.contourf(X,Y,np.fabs(Z1 - Z2), 50)
+            fig.colorbar(cont)
+
+            plt.tight_layout()
+
+            # asg.grid.plotResponse2D()
+            # asg.grid.plotPoints2D()
+
+            return fig
 
 

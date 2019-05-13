@@ -275,18 +275,31 @@ run = execute(config_updates={
 
 #%% AS
 from src.utils import random_hypercube_samples
-from src.environments import ActiveSubspaceTest
+from src.environments import ActiveSubspaceTest, TwoKinkDEmbedding
 from src.models import ActiveSubspace
 
+Alpha = np.array([[0.78695576],
+       [0.70777112],
+       [0.34515641],
+       [0.20288506],
+       [0.52388727],
+       [0.2025096 ],
+       [0.31752746],
+       [0.24497726],
+       [0.89249818],
+       [0.64264009]])
+
 f = ActiveSubspaceTest()
+#f = TwoKinkDEmbedding(Alpha=Alpha)
 X = random_hypercube_samples(100, f.bounds)
 G = f.derivative(X)
 model = ActiveSubspace()
-model.fit(X, G)
+model.fit(X, f(X), G)
 model.plot()
 plt.show()
 X_test = random_hypercube_samples(1, f.bounds)
 model.transform(X_test)
+
 
 
 #%%

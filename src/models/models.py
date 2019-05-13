@@ -95,11 +95,13 @@ class ActiveSubspace(Transformer):
     def output_dim(self):
         if self._output_dim is not None:
             return self._output_dim
+        elif self.W is not None:
+            return self.W.shape[-1]
         else:
             raise Exception("No promises can be made about `output_dim` since it is dynamically determind.")
 
     def _get_active_subspace_index(self, vals):
-        """ Given list of eigenvectors sorted in ascented order (e.g. `vals = [1,2,30,40,50]`) return the index `i` being the first occurrence of a big change in value (in the example `i=2`).
+        """ Given list of eigenvectors sorted in ascended order (e.g. `vals = [1,2,30,40,50]`) return the index `i` being the first occurrence of a big change in value (in the example `i=2`).
         """
         if self._output_dim is not None:
             return -self._output_dim

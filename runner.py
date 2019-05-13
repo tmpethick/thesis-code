@@ -2,7 +2,7 @@ import sys
 import subprocess
 
 from src.environments import BaseEnvironment
-from src.models.models import BaseModel
+from src.models.models import BaseModel, TransformerModel
 from src.models.lls_gp import LocalLengthScaleGPModel
 from src.models.dkl_gp import DKLGPModel
 from src.plot_utils import plot1D, plot2D, plot_function, plot_model
@@ -68,7 +68,7 @@ def create_ex(interactive=False):
     ex.add_config({
         'tag': 'default',
         'gp_use_derivatives': False,
-        'model_compare': True, # Only works for GP model (not BO)
+        'model_compare': False, # Only works for GP model (not BO)
         'verbosity': {
             'plot': settings.MODE is not settings.MODES.SERVER, # do not plot on server by default.
             'bo_show_iter': 30,
@@ -234,10 +234,28 @@ def create_ex(interactive=False):
                 save_fig(fig, settings.ARTIFACT_GP_FILENAME.format(model_idx=i))
 
             # Transformed model
-            # if isinstance(model, TransformerModel):
-            #     model.transform
-            #     fig = plot_function(f, acquisition_function, title="Acquisition functions", points=X)
-            #     save_fig(fig, settings.ARTIFACT_GP_ACQ_FILENAME.format(model_idx=i))
+            # TODO: Plot sampled
+            if isinstance(model, TransformerModel):
+                try:
+                    subspace_dim = model.transformer.output_dim
+                except:
+                    pass
+                else:
+                    if subspace_dim <= 2:
+                        X_trans = model.transformer.transform(X)
+                        mean, _ = model.prob_model.get_statistics(X_trans)
+
+                        # TODO: move (and include variance)
+                        fig = plt.figure()
+                        if X_trans.shape[-1] == 1:
+                            ax = fig.add_subplot(111)
+                            ax.scatter(X_trans, Y)
+                            ax.scatter(X_trans, mean, marker="1")
+                        if X_trans.shape[-1] == 2:
+                            ax = fig.add_subplot(111, projection='3d')
+                            ax.scatter(X_trans[:, 0], X_trans[:, 1], mean, marker="1", color="red")
+                            ax.scatter(X_trans[:, 0], X_trans[:, 1], Y)
+                        #save_fig(fig, settings.ARTIFACT_.format(model_idx=i))
 
             # Acquisition
             if acquisition_function is not None:
@@ -318,7 +336,7 @@ def create_ex(interactive=False):
         _run.interactive_stash = {
             'f': f,
             'model': models[0],
-            'model2': models[0] if len(models) >= 2 else None,
+            'model2': models[1] if len(models) >= 2 else None,
             'acq': acq,
             'bo': bo,
         }

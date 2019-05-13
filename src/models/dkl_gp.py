@@ -49,7 +49,9 @@ class GPRegressionModel(gpytorch.models.ExactGP):
         #     ),
         #     num_dims=gp_input_dim, grid_size=10, grid_bounds=,
         # )
-        self.covar_module = gpytorch.kernels.RBFKernel(ard_num_dims=gp_input_dim)
+        self.covar_module = gpytorch.kernels.ScaleKernel(
+            gpytorch.kernels.RBFKernel(ard_num_dims=gp_input_dim)
+        )
         self.feature_extractor = feature_extractor
 
     def forward(self, x):
@@ -60,8 +62,8 @@ class GPRegressionModel(gpytorch.models.ExactGP):
 
         # We're scaling the features so that they're nice values
         # TODO: is this not problematic since test time data differs from training data?
-        projected_x = projected_x - projected_x.min(0)[0]
-        projected_x = 2 * (projected_x / projected_x.max(0)[0]) - 1
+        # projected_x = projected_x - projected_x.min(0)[0]
+        # projected_x = 2 * (projected_x / projected_x.max(0)[0]) - 1
 
         mean_x = self.mean_module(projected_x)
         covar_x = self.covar_module(projected_x)
@@ -125,8 +127,8 @@ class DKLGPModel(BaseModel):
             opt_parameter_list.append({'params': self.model.feature_extractor.parameters()})
 
         # Only add noise as hyperparameter if it is not fixed.
-        if self.noise is None:
-            opt_parameter_list.append({'params': self.model.likelihood.parameters()})
+        #if self.noise is None:
+        opt_parameter_list.append({'params': self.model.likelihood.parameters()})
 
         # optimize with Adam
         optimizer = torch.optim.Adam(opt_parameter_list, lr=self.learning_rate)
@@ -187,17 +189,14 @@ class DKLGPModel(BaseModel):
         #with torch.no_grad(), gpytorch.settings.use_toeplitz(True), gpytorch.settings.fast_pred_var():
         with torch.no_grad():
             # Passing through likelihood is not needed if using fixed noise
-            if self.noise is not None:
-                multivariate_normal = self.model(test_x)
-            else:
-                multivariate_normal = self.likelihood(self.model(test_x))
+            multivariate_normal = self.likelihood(self.model(test_x))
 
-            mean = multivariate_normal.mean.numpy()[:cut_tail, None]
+            mean = multivariate_normal.mean.detach().numpy()[:cut_tail, None]
 
             if full_cov:
-                return mean, multivariate_normal.covariance_matrix.numpy()[:cut_tail, None]
+                return mean, multivariate_normal.covariance_matrix.detach().numpy()[:cut_tail, None]
             else:
-                return mean, multivariate_normal.variance.numpy()[:cut_tail, None]
+                return mean, multivariate_normal.variance.detach().numpy()[:cut_tail, None]
 
     def plot_features(self, f):
         if not self.X.shape[-1] in [1, 2]:

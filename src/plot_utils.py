@@ -142,7 +142,7 @@ def plot_model(model: BaseModel, f: BaseEnvironment):
         return None
 
 
-def plot1D(model: BaseModel, f: BaseEnvironment) -> plt.Figure:
+def plot1D(model: BaseModel, f: BaseEnvironment):  # -> plt.Figure:
     X_line = np.linspace(f.bounds[0, 0], f.bounds[0, 1], 100)[:, None]
     Y_line = f(X_line)[:, 0]
 
@@ -153,7 +153,8 @@ def plot1D(model: BaseModel, f: BaseEnvironment) -> plt.Figure:
         mean = np.mean(mean, axis=0)
         var = np.mean(var, axis=0)
 
-    fig, ax = plt.subplots()
+    fig = plt.figure()
+    ax = fig.add_subplot(121)
     ax.scatter(model.X.reshape(-1), model.Y)
     ax.plot(X_line, Y_line)
     ax.plot(X_line, mean)
@@ -161,12 +162,16 @@ def plot1D(model: BaseModel, f: BaseEnvironment) -> plt.Figure:
                     (mean + 2 * np.sqrt(var)).reshape(-1),
                     (mean - 2 * np.sqrt(var)).reshape(-1), alpha=0.5)
     
+    ax = fig.add_subplot(122)
+    ax.set_title('Difference $|f-\hat{f}|$')
+    ax.plot(X_line, np.fabs(Y_line-mean[:,0]))
+    
     plt.tight_layout()
     
     return fig
 
 
-def plot2D(model: BaseModel, f: BaseEnvironment) -> plt.Figure:
+def plot2D(model: BaseModel, f: BaseEnvironment): # -> plt.Figure:
     XY, X, Y = construct_2D_grid(f.bounds)
 
     # remove grid

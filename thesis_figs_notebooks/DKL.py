@@ -242,7 +242,7 @@ config = {
         'name': 'DKLGPModel',
         'kwargs': {
             'learning_rate': 0.01,
-            'n_iter': 1,
+            'n_iter': 100,
             'nn_kwargs': {'layers': None},
             'noise': 0.001
         },
@@ -261,23 +261,255 @@ config = {
             'num_mcmc': 0,
         },
     },
-    'gp_samples': 10,
+    'gp_samples': 100,
     'model_compare': True
 }
 run = execute(config_updates=config)
 
 
+#%% DKL Unstable for Sinc with n=20 and small noise (postprone this problem since we have many samples to begin with. Only becomes problematic when we introduce active sampling.)
+
+#%%
+
+exactGP = {
+    'name': 'GPModel',
+    'kwargs': {
+        'kernel': {
+            'name': 'GPyRBF',
+            'kwargs': {
+                'lengthscale': 1
+            }
+        },
+        'noise_prior': 1e-2,
+        'do_optimize': True,
+        'num_mcmc': 0,
+    },
+}
+
+config = {
+    'tag': 'certify-ExactDKL',
+    'obj_func': {'name': 'Sinc'},
+    'model': {
+        'name': 'DKLGPModel',
+        'kwargs': {
+            'noise': 1e-2,
+            'n_iter': 1000,
+            'learning_rate': 0.01, 
+            'nn_kwargs': {
+                'layers': None, 
+            }
+        }
+    },
+    'model2': exactGP,
+    'gp_samples': 20,
+    'model_compare': True,
+}
+run = execute(config_updates=config)
+model = run.interactive_stash['model']
+model2 = run.interactive_stash['model2']
+print(run.interactive_stash['model'].model.covar_module.lengthscale)
+
+
+#%%
+ 
+# Assuming we know the output_dim so we don't have to learn it...
+# For ActiveSubspaceTest we expect AS-GP to be best (it is tailored to the problem). 
+# But we hope DKL to recover it.
+
+exactGP = {
+    'name': 'GPModel',
+    'kwargs': {
+        'kernel': {
+            'name': 'GPyRBF',
+            'kwargs': {
+                'lengthscale': 1
+            }
+        },
+        'noise_prior': 1e-2,
+        'do_optimize': True,
+        'num_mcmc': 0,
+    },
+}
+
+
+DKLModel = {
+    'name': 'DKLGPModel',
+    'kwargs': {
+        'learning_rate': 0.01,
+        'n_iter': 1000,
+        'nn_kwargs': {'layers': [100, 50, 2]},
+        'noise': 1e-2
+    },
+}
+
+transformer = {
+    'name': 'ActiveSubspace',
+    'kwargs': {
+        'output_dim': 1
+    }
+}
+
+models = [
+    {
+        'name': 'TransformerModel',
+        'kwargs': {
+            'transformer': transformer,
+            'prob_model': exactGP
+        },
+    },
+    {
+        'name': 'TransformerModel',
+        'kwargs': {
+            'transformer': transformer,
+            'prob_model': DKLModel
+        },
+    },
+    DKLModel
+]
+
+# Alpha = TwoKinkDEmbedding.generate_alpha(D=10)
+Alpha = [
+    [0.78695576],
+    [0.70777112],
+    [0.34515641],
+    [0.20288506],
+    [0.52388727],
+    [0.2025096 ],
+    [0.31752746],
+    [0.24497726],
+    [0.89249818],
+    [0.64264009]]
+
+functions = [
+    {'name': 'ActiveSubspaceTest'},
+    {'name': 'TwoKinkDEmbedding', 'kwargs': {'Alpha': Alpha}}
+ ]
+
+# Test that it is indeed active subspace of dim 1:
+f = TwoKinkDEmbedding(Alpha=Alpha)
+X = random_hypercube_samples(100, f.bounds)
+G = f.derivative(X)
+model = ActiveSubspace()
+model.fit(X, f(X), G)
+assert model.W.shape[1] == 1, "Subspace Dimensionality should be 1 since it is assumed by the model."
+
+run = None
+
+for func in functions:
+    for model in models:
+        run = execute(config_updates={
+            'tag': 'embedding',
+            'obj_func': func,
+            'model': model,
+            'gp_use_derivatives': model.get('name') == 'TransformerModel',
+            'gp_samples': 1000,
+        })
+
+# AS-DKL does marginally better. Can we improve DKL?
+# INFO - lions - Result: {'rmse': 0.0030318844621271116, 'max_err': 0.035365403977878795}
+# INFO - lions - Result: {'rmse': 0.0020501404993426885, 'max_err': 0.046368116411571236}
+# INFO - lions - Result: {'rmse': 0.013812136569171652, 'max_err': 0.10482591949789999}
+
+# Note: we do not use derivative information for DKL. Could we somehow?
+
+#%%
+
+# Normalization
+# - To have generically useful hyperparams (noise, lengthscale): rescale somehow
+# - To have metrics match (average performance across function): 
+    # relative RMSE
+
+# Models: A-SG, AS-GP, DKL
+
+# DKL
+######
+# Non-stationarity in low dim:
+# Compare SG, A-SG, GP, DKL
+
+# H1: A-SG breaks down in rotated space => rotate kink
+# H2: AS-GP breaks down when transformation is non-linear
+
+# Scalability
+##############
+# H3: AS-GP needs to scale to more datapoints.
+# H4: more datapoint to DKL through KISS.
+
+
+# Run financial models
+
+
+#%% Non-stationary in low dim
+
+# Compare DKL with GP for low dim non-stationary (see A-SG further down)
+
+config = {
+    'obj_func': {'name': 'TwoKink1D'},
+    'model': {
+        'name': 'DKLGPModel',
+        'kwargs': {
+            'learning_rate': 0.01,
+            'n_iter': 100,
+            'nn_kwargs': {'layers': [100, 50, 1]},
+            'noise': 0.01}
+        },
+    'gp_samples': 1000,
+ }
+run = execute(config_updates=config)
+print(run.result)
+
+#%%
+
+config = {
+    'obj_func': {'name': 'TwoKink1D'},
+    'model': {
+        'name': 'GPModel',
+        'kwargs': {
+            'kernel': {
+                'name': 'GPyRBF',
+                'kwargs': {
+                    'lengthscale': 1
+                }
+            },
+            'noise_prior': 1e-4,
+            'do_optimize': True,
+            'num_mcmc': 0,
+        },
+    },
+    'gp_samples': 1000,
+ }
+run = execute(config_updates=config)
+print(run.result)
+#%%
+
+# Very tricky beating A-SG in low dim... 
+# So only useful to consider DKL because A-SG breaks down in high-dim.
+# (keep as baseline anyway)
+
+
+f = TwoKink1D()
+X_test = random_hypercube_samples(1000, f.bounds)
+N_test = X_test.shape[-1]
+Y_test = f(X_test)
+
+def calc_error(i, model):
+    max_error, L2_err = model.calc_error(X_test, Y_test)
+    print("{0:9d} {1:9d}  Loo={2:1.2e}  L2={3:1.2e}".format(i+1, model.grid.getNumPoints(), max_error, L2_err))
+
+#asg = AdaptiveSparseGrid(f, depth=1, refinement_level=20, f_tol=1e-3, point_tol=1000)
+asg = AdaptiveSparseGrid(f, depth=10, refinement_level=0) # 2^10 = 1024 points
+asg.fit(callback=calc_error)
+fig = asg.plot()
+
+#%%
+
+# In high-dim how does AS-GP, AS-DKL vs DKL compare? (also keep A-SG as baseline)
+
+# Construct AS
+# Non-linear embedding (hypothesis: DKL should shine). (assume known dim)
+# Rotate (failure case for A-SG)
+
+
 #%% 
-
-# Install ASG on server
-# ASG: threshold
-# Test effect of normalization.
-# Add max_error/Loo_err
-# Fix pos def error
-# Understand how #parameters and DKL interacts
-
-# Aggregate RMSE
-# Click to open plot.
 
 # Question::
 # Is DKL model working? DKLGPModel vs GPModel NaN (ensure model works) √
@@ -289,7 +521,6 @@ run = execute(config_updates=config)
 # What if we took a Kink2D that was not bend? Would it learn to stretch the domain?
 # How does it even help on step function?
 
-# Clickable exploration
-
-
 # Define trickier problems (variance is to small across models)
+
+
