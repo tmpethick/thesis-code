@@ -19,15 +19,15 @@ from src.acquisition_functions import *
 from src.algorithms import *
 
 
-#%%
+#%% Run RMSE
 
 obj_funs = [
     {'name': 'Step'},
     {'name': 'Kink1D'},
-    # {'name': 'Kink2D'},
+    {'name': 'Kink2D'},
     {'name': 'TwoKink1D'},
-    # {'name': 'TwoKink2D'},
-    # {'name': 'TwoKinkDEmbedding', 'kwargs': {'D': 2}},
+    {'name': 'TwoKink2D'},
+    {'name': 'TwoKinkDEmbedding', 'kwargs': {'D': 2}},
 ]
 
 # ExactGP: Matern32, RBF
@@ -101,3 +101,59 @@ for obj_fun in obj_funs:
             # except Exception as exc:
             #     print(traceback.format_exc())
             #     print(exc)
+
+
+#%% Test robustness of ExactDKL (how closely does it match ExactGP)
+
+
+obj_funs = [
+    {'name': 'Sinc'},
+    {'name': 'Branin'},
+    {'name': 'TwoKink1D'},
+]
+
+exactGP = {
+    'name': 'GPModel',
+    'kwargs': {
+        'kernel': {
+            'name': 'GPyRBF',
+            'kwargs': {
+                'lengthscale': 1
+            }
+        },
+        'noise_prior': 1e-2,
+        'do_optimize': True,
+        'num_mcmc': 0,
+    },
+}
+
+
+# DKL "ExactGP": RBF
+import itertools
+n_iters = [100, 1000]
+learning_rates = [0.05, 0.01, 0.1]
+parameters = itertools.product(n_iters, learning_rates)
+
+DKL_exact = [{
+    'name': 'DKLGPModel',
+    'kwargs': {
+        'noise': 1e-2,
+        'n_iter': n_iter,
+        'learning_rate': learning_rate,
+        'nn_kwargs': {
+            'layers': None, 
+        }
+    }
+} for (n_iter, learning_rate) in parameters]
+
+for obj_fun in obj_funs:
+    for model in DKL_exact:
+        config = {
+            'tag': 'certify-ExactDKL',
+            'obj_func': obj_fun,
+            'model': model,
+            'model2': exactGP,
+            'gp_samples': 1000,
+            'model_compare': True
+        }
+        execute(config_updates=config)

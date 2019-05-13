@@ -65,6 +65,7 @@ python setup.py install
   pip install ipywidgets
   jupyter nbextension enable --py widgetsnbextension
 
+  pip install addict
   pip install jupyter_contrib_nbextensions
   jupyter contrib nbextension install --user
   pip install jupyter_nbextensions_configurator

@@ -262,10 +262,9 @@ config = {
         },
     },
     'gp_samples': 10,
-    'compare_models': True
+    'model_compare': True
 }
 run = execute(config_updates=config)
-
 
 
 #%% 

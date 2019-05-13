@@ -66,8 +66,9 @@ def create_ex(interactive=False):
         ex.observers.append(MongoObserver.create(url=settings.MONGO_DB_URL, db_name=settings.MONGO_DB_NAME))
 
     ex.add_config({
+        'tag': 'default',
         'gp_use_derivatives': False,
-        'compare_models': True, # Only works for GP model (not ßBO)
+        'model_compare': True, # Only works for GP model (not BO)
         'verbosity': {
             'plot': settings.MODE is not settings.MODES.SERVER, # do not plot on server by default.
             'bo_show_iter': 30,
@@ -153,6 +154,9 @@ def create_ex(interactive=False):
     def log_scalar(name, value, step, _run):
         _run.log_scalar(name, value, step)
 
+        # Mongodb does not allow `.` in the key for a regular entry.
+        name = name.replace(".", ":")
+
         # Update the result dict with the latest value (notice `step` is ignored).
         result = _run.result
         if type(result) is not dict:
@@ -191,7 +195,7 @@ def create_ex(interactive=False):
 
 
     @ex.capture
-    def test_gp_model(f: BaseEnvironment, models: [BaseModel], _run, acquisition_function=None, n_samples=15, use_derivatives=False, compare_models=False):
+    def test_gp_model(f: BaseEnvironment, models: [BaseModel], _run, acquisition_function=None, n_samples=15, use_derivatives=False, model_compare=False):
         bounds = f.bounds
         input_dim = f.input_dim
 
@@ -210,7 +214,7 @@ def create_ex(interactive=False):
             for model in models:
                 model.init(X, Y)
 
-        if compare_models:
+        if model_compare:
             # TODO: For now only supports 2 models
             model1 = models[0]
             model2 = models[1]
@@ -254,8 +258,14 @@ def create_ex(interactive=False):
             # Log
             rmse, max_err = calc_errors(model, f, rand=True)
             log_info('Model{}: {} has RMSE={} max_err={}'.format(i, model, rmse, max_err))
-            log_scalar('model{}.rmse'.format(i), rmse, 0)
-            log_scalar('model{}.max_err'.format(i), max_err, 0)
+
+            # Only store under `model{i}` for additional models to share interface with BO metrics.
+            if i == 0:
+                log_scalar('rmse', rmse, 0)
+                log_scalar('max_err', max_err, 0)
+            else:
+                log_scalar('model{}.rmse'.format(i), rmse, 0)
+                log_scalar('model{}.max_err'.format(i), max_err, 0)
 
 
     @ex.main
