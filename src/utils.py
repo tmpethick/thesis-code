@@ -36,9 +36,8 @@ def _calc_errors(est1, est2, f, rand=False):
         X_line = XY.reshape((-1, 2))
     else:
         # TODO: put down grid instead.
-        N = 100000
+        N = 10000
         X_line = random_hypercube_samples(N, f.bounds)
-        #raise ValueError("Does not support dim above 2.")
 
     Y = est2(X_line)
     Y_hat = est1(X_line)

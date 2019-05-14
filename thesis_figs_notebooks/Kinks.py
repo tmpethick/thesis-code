@@ -105,16 +105,6 @@ run = execute(config_updates={
 })
 print("RMSE: {:1.2e}".format(run.result))
 
-#%%
-print("RMSE: {:1.2e}".format(run.result))
-
-# Test:
-# N = [100, 1000, 10000]
-# Kernels = [RBF, GPyMatern32, GPyMatern52, DKL]
-
-# save: lengthscale, variance, noise, RMSE
-# Images should be accessible...
-
 
 #%%
 # Increase accuracy with RFF, KISS-GP

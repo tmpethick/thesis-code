@@ -277,6 +277,31 @@ class Kink2DStraight(BaseEnvironment):
         return y[..., None]
 
 
+class KinkDCircularEmbedding(BaseEnvironment):
+    # Hack to make it settable in `__init__`.
+    bounds = None
+
+    def __init__(self, D=10):
+        self.bounds = np.array([[0, 1]] * D)
+        self._D = D
+
+    def _transform(self, X):
+        return np.sum(X ** 2, axis=-1)[:,None]
+
+    def __call__(self, X):
+        Z = self._transform(X)
+        Y = 1 / (np.abs(0.5 - Z) + 0.1)
+        return Y
+
+    def derivative(self, X):
+        # a little chain rule..
+        Z = self._transform(X)
+        f_diff = (0.5 - Z) / (np.abs(0.5 - Z) * (np.abs(0.5 - Z) + 0.1) ** 2)
+        Z_diff = 2 * X
+
+        return f_diff * Z_diff
+
+
 class Kink2D(BaseEnvironment):
     """To generate derivative and hessian we use sympy:
 

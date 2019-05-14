@@ -255,7 +255,7 @@ def create_ex(interactive=False):
                             ax = fig.add_subplot(111, projection='3d')
                             ax.scatter(X_trans[:, 0], X_trans[:, 1], mean, marker="1", color="red")
                             ax.scatter(X_trans[:, 0], X_trans[:, 1], Y)
-                        #save_fig(fig, settings.ARTIFACT_.format(model_idx=i))
+                        save_fig(fig, settings.ARTIFACT_AS_FEATURES_FILENAME.format(model_idx=i))
 
             # Acquisition
             if acquisition_function is not None:

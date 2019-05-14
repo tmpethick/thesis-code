@@ -46,6 +46,9 @@ class AdaptiveSparseGrid(object):
         # This will only be able to change if point_tol is set.
         self.early_stopping_level = refinement_level
 
+    @property
+    def total_depth(self):
+        return self.depth + self.early_stopping_level + 1
 
     def fit(self, callback=None):
         X_train = self.grid.getPoints()

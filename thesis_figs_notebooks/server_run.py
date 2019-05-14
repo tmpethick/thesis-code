@@ -75,7 +75,7 @@ for obj_fun in obj_funs:
         execute(config_updates=config)
 
 
-#%% Property tests on discontinous and kinks
+#%% Property tests on discontinous and kinks in Low dim
 
 obj_funs = [
     {'name': 'Step'},
@@ -159,6 +159,118 @@ for obj_fun in obj_funs:
             #     print(traceback.format_exc())
             #     print(exc)
 
+
+
+#%%
+
+#%% Small High-dim
+ 
+# Assuming we know the output_dim so we don't have to learn it...
+# For ActiveSubspaceTest we expect AS-GP to be best (it is tailored to the problem). 
+# But we hope DKL to recover it.
+
+exactGP = {
+    'name': 'GPModel',
+    'kwargs': {
+        'kernel': {
+            'name': 'GPyRBF',
+            'kwargs': {
+                'lengthscale': 1
+            }
+        },
+        'noise_prior': 1e-2,
+        'do_optimize': True,
+        'num_mcmc': 0,
+    },
+}
+
+
+DKLModel = {
+    'name': 'DKLGPModel',
+    'kwargs': {
+        'learning_rate': 0.01,
+        'n_iter': 1000,
+        'nn_kwargs': {'layers': [100, 50, 2]},
+        'noise': 1e-2
+    },
+}
+
+transformer = {
+    'name': 'ActiveSubspace',
+    'kwargs': {
+        'output_dim': 1
+    }
+}
+
+models = [
+    {
+        'name': 'TransformerModel',
+        'kwargs': {
+            'transformer': transformer,
+            'prob_model': exactGP
+        },
+    },
+    {
+        'name': 'TransformerModel',
+        'kwargs': {
+            'transformer': transformer,
+            'prob_model': DKLModel
+        },
+    },
+    DKLModel
+]
+
+# Alpha = TwoKinkDEmbedding.generate_alpha(D=10)
+Alpha = [
+    [0.78695576],
+    [0.70777112],
+    [0.34515641],
+    [0.20288506],
+    [0.52388727],
+    [0.2025096 ],
+    [0.31752746],
+    [0.24497726],
+    [0.89249818],
+    [0.64264009]]
+
+functions = [
+    {'name': 'ActiveSubspaceTest'},
+    {'name': 'TwoKinkDEmbedding', 'kwargs': {'Alpha': Alpha}}
+    {'name': 'Kink2D'},
+    {'name': 'KinkDCircularEmbedding', 'kwargs': {'D': 2}},
+    {'name': 'KinkDCircularEmbedding', 'kwargs': {'D': 5}},
+    {'name': 'KinkDCircularEmbedding', 'kwargs': {'D': 10}},
+ ]
+
+
+# Test that it is indeed active subspace of dim 1:
+f = TwoKinkDEmbedding(Alpha=Alpha)
+#f = KinkDCircularEmbedding(D=10)
+X = random_hypercube_samples(1000, f.bounds)
+G = f.derivative(X)
+model = ActiveSubspace()
+model.fit(X, f(X), G)
+model.W.shape[-1]
+# model.plot()
+# Z = model.transform(X)
+# plt.(Z, f(X))
+
+
+#%%
+
+assert model.W.shape[1] == 1, "Subspace Dimensionality should be 1 since it is assumed by the model."
+
+run = None
+
+for func in functions:
+    for model in models:
+        run = execute(config_updates={
+            'tag': 'embedding',
+            'obj_func': func,
+            'model': model,
+            'gp_use_derivatives': model.get('name') == 'TransformerModel',
+            'gp_samples': 1000,
+        })
 
 
 #%%

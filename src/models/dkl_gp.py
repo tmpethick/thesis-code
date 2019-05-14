@@ -3,7 +3,7 @@ import torch
 import gpytorch
 
 from src.models.models import BaseModel
-from src.utils import construct_2D_grid, call_function_on_grid
+from src.utils import construct_2D_grid, call_function_on_grid, random_hypercube_samples
 import matplotlib.pyplot as plt
 
 
@@ -199,7 +199,8 @@ class DKLGPModel(BaseModel):
                 return mean, multivariate_normal.variance.detach().numpy()[:cut_tail, None]
 
     def plot_features(self, f):
-        if not self.X.shape[-1] in [1, 2]:
+        print("!!!")
+        if not self.feature_extractor.output_dim in [1, 2]:
             return None
 
         if self.X.shape[-1] == 1:
@@ -213,8 +214,6 @@ class DKLGPModel(BaseModel):
             O = f(X_line)
             for j in range(Z.shape[1]):
                 ax.plot(X_line, Z[:,j])
-
-
         elif self.X.shape[-1] == 2:
             XY, X, Y = construct_2D_grid(f.bounds)
             Z = call_function_on_grid(self.get_features, XY)
@@ -227,6 +226,12 @@ class DKLGPModel(BaseModel):
             #palette = itertools.cycle(sns.color_palette(as_cmap=True))
             for j in range(Z.shape[-1]):
                 ax.contourf(X, Y, Z[...,j], 50) #, cmap=next(palette))
+        else:
+            fig = plt.figure()
+            # Base Z on scatter plot with samples randomly drawn from Z as fallback.
+            X = random_hypercube_samples(500, f.bounds)
+            Z = self.get_features(X)
+            O = f(X)
 
         if Z.shape[-1] == 1:
             # 2D->1D case
@@ -237,15 +242,18 @@ class DKLGPModel(BaseModel):
             else:
                 O = np.reshape(O, (-1, 1))
                 ax.scatter(Z.flatten(), O.flatten())
+
         elif Z.shape[-1] == 2:
             # 1D->2D case
-            ax = fig.add_subplot(122)
-            ax.set_title('f in feature space')
-            if self.X.shape[-1] == 1:
+            if self.X.shape[-1] == 2:
+                ax = fig.add_subplot(122)
+                ax.set_title('f in feature space')
+                ax.contourf(Z[...,0], Z[...,1], O[...,0], 50)
+            else:
+                ax = fig.add_subplot(122, projection="3d")
+                ax.set_title('f in feature space')
                 O = np.reshape(O, (-1, 1))
                 ax.scatter(Z[...,0], Z[...,1], O[...,0])
-            elif self.X.shape[-1] == 2:
-                ax.contourf(Z[...,0], Z[...,1], O[...,0], 50)
 
         plt.tight_layout()
         return fig

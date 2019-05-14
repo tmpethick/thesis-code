@@ -1,0 +1,13 @@
+\begin{tabular}{lrrrrr}
+\toprule
+{} & \multicolumn{5}{l}{result.rmse} \\
+f &      Kink1D &    Kink2D & TwoKink1D & TwoKink2D & TwoKinkDEmbedding \\
+name                       &             &           &           &           &                   \\
+\midrule
+((100, 50, 2), 1000, 0.01) &   52.721589 &  0.103437 &  0.002899 &  0.008708 &          0.005417 \\
+GPyMatern32                &    7.548232 &  0.226828 &  0.005441 &  0.016530 &          0.010103 \\
+GPyRBF                     &    8.565553 &  0.313265 &  0.010500 &  0.020283 &          0.016816 \\
+A-SG                       &    0.169221 &  0.297522 &  0.000010 &  0.003848 &          0.001406 \\
+SG                         &    5.350762 &  0.093473 &  0.000009 &  0.001281 &          0.000703 \\
+\bottomrule
+\end{tabular}

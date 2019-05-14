@@ -14,7 +14,7 @@ class MODES(Enum):
 # ----------------- Settings
 # -----------------
 
-MODE = MODES.SERVER
+MODE = MODES.LOCAL
 SAVE = MODE is MODES.SERVER
 
 MONGO_DB_URL = 'mongodb+srv://admin:{}@lions-rbvzc.mongodb.net/test?retryWrites=true'.format(MONGO_DB_PASSWORD)
@@ -33,6 +33,7 @@ ARTIFACT_GP_FILENAME = 'artifacts/gp-{model_idx}.png'
 ARTIFACT_GP_ACQ_FILENAME = 'artifacts/gp-acq-{model_idx}.png'
 ARTIFACT_LLS_GP_LENGTHSCALE_FILENAME = 'artifacts/llsgp-lengthscale-{model_idx}.png'
 ARTIFACT_DKLGP_FEATURES_FILENAME = 'artifacts/dklgp-features-{model_idx}.png'
+ARTIFACT_AS_FEATURES_FILENAME = 'artifacts/AS-features-{model_idx}.png'
 
 SETTINGS_DIR = os.path.dirname(os.path.abspath(__file__))
 THESIS_FIGS_DIR = os.path.join(SETTINGS_DIR, '../thesis_figs/')

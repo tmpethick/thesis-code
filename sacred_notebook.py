@@ -301,7 +301,6 @@ X_test = random_hypercube_samples(1, f.bounds)
 model.transform(X_test)
 
 
-
 #%%
 # ----------------- DKLModel -------------------
 
