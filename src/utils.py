@@ -7,7 +7,7 @@ import numpy as np
 
 def calc_errors(model, f, rand=False, rand_N=2500):
     est1 = lambda X_line: model.get_statistics(X_line, full_cov=False)[0]
-    est2 = lambda X_line: f(X_line)
+    est2 = lambda X_line: f.noiseless(X_line)
     return _calc_errors(est1, est2, f, rand=rand, rand_N=rand_N)
 
 

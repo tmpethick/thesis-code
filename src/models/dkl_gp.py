@@ -223,13 +223,13 @@ class DKLGPModel(BaseModel):
             ax.set_title("Feature mapping")
 
             Z = self.get_features(X_line)
-            O = f(X_line)
+            O = f.noiseless(X_line)
             for j in range(Z.shape[1]):
                 ax.plot(X_line, Z[:,j])
         elif self.X.shape[-1] == 2:
             XY, X, Y = construct_2D_grid(f.bounds)
             Z = call_function_on_grid(self.get_features, XY)
-            O = call_function_on_grid(f, XY)
+            O = call_function_on_grid(f.noiseless, XY)
 
             fig = plt.figure()
             ax = fig.add_subplot(121, projection='3d')
@@ -243,7 +243,7 @@ class DKLGPModel(BaseModel):
             # Base Z on scatter plot with samples randomly drawn from Z as fallback.
             X = random_hypercube_samples(500, f.bounds)
             Z = self.get_features(X)
-            O = f(X)
+            O = f.noiseless(X)
 
         if Z.shape[-1] == 1:
             ax = fig.add_subplot(122)

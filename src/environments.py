@@ -16,6 +16,9 @@ class BaseEnvironment(object):
     def _call(self, x):
         raise NotImplementedError
 
+    def noiseless(self, x):
+        return self._call(x)
+
     def __call__(self, x):
         if self.noise is not None:
             noise = np.random.normal(0, self.noise, size=x.shape[0])[:, None]
@@ -44,7 +47,7 @@ class BaseEnvironment(object):
         raise NotImplementedError
 
     def plot(self, projection=None):
-        return self._plot(self, projection=projection, title="$f$")
+        return self._plot(self.noisefree, projection=projection, title="$f$")
 
     def plot_derivative(self, projection=None):
         return self._plot(self.derivative, projection=projection, title="$\\nabla f$")

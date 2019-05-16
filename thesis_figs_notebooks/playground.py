@@ -240,15 +240,6 @@ run = execute(config_updates={
     'gp_samples': 10000,
 })
 
-# Add noise to functions
-# Normalize (instead of prior)
-# Raise error if gpytorch warning (if log has warning?)
-# sample from manifold
-# Implement Genz function
-
-
-# https://arxiv.org/pdf/1601.02557.pdf (Bayesian subset simulation)
-
 
 #%%
 

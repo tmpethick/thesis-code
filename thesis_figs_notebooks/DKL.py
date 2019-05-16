@@ -182,7 +182,7 @@ ax.set_title('f in feature space')
 
 XY, X, Y = construct_2D_grid(f.bounds)
 Z = call_function_on_grid(model.get_features, XY)
-O = call_function_on_grid(f, XY)
+O = call_function_on_grid(f.noiseless, XY)
 ax.contourf(Z[...,0], Z[...,1], O[...,0], 50)
 
 plt.tight_layout()
@@ -401,7 +401,7 @@ print(model.W.shape[-1])
 model.plot()
 
 XY, X, Y = construct_2D_grid(f.bounds)
-Z = call_function_on_grid(f, XY)[..., 0]
+Z = call_function_on_grid(f.noiseless, XY)[..., 0]
 F = call_function_on_grid(model.transform, XY)
 
 fig = plt.figure()
@@ -581,9 +581,9 @@ plt.plot(RMSEs)
 # linear_cg error when gp_samples=1000
 
 functions = [
-    #{'name': 'IncreasingOscillation', 'kwargs': {'noise': 1e-2}},
+    {'name': 'IncreasingOscillation', 'kwargs': {'noise': 1e-1}},
     #{'name': 'Kink2D', 'kwargs': {'noise': 1e-2}},
-    {'name': 'KinkDCircularEmbedding', 'kwargs': {'D': 2, 'noise': 1e-2}},
+    #{'name': 'KinkDCircularEmbedding', 'kwargs': {'D': 2, 'noise': 1e-1}},
 ]
 run = execute(config_updates={
     'tag': 'embedding',
@@ -594,7 +594,7 @@ run = execute(config_updates={
             'learning_rate': 0.01,
             'n_iter': 100,
             'nn_kwargs': {'layers': [100, 50, 1]},
-            'noise': 1e-2,
+            'noise': 1e-1,
         },
     },
     'gp_use_derivatives': False,
@@ -628,6 +628,7 @@ run = execute(config_updates={
 
 # First rerun models then chat.
 
+
 # What is my problem: 
 # - spend way to much time reimplementing: GP, RFF, QFF (MLE, hessian)
 # - ill-defined problem
@@ -635,11 +636,21 @@ run = execute(config_updates={
     # - Dim reduction: NN. => many sample so fit GP to many samples (tested in isolation).
     # - Inverse mapping to sample fewer samples from manifold.
 # - Active sampling seems overly complicated for what we achieve (compute hessian!)
+# - Big discrepancy between the theory I need to understand and the implementation
 
 # But time limit...
 
 
 #%% 
+
+# TODO: 
+# Add noise to functions
+# Add true_f() to BaseEnv
+# Normalize (instead of prior)
+# Raise error if gpytorch warning (if log has warning?)
+# sample from manifold
+# Implement Genz function
+
 
 # How does learning rate influence DKL?
 # How does iterations influence DKL?

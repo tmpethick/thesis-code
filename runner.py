@@ -243,7 +243,7 @@ def create_ex(interactive=False):
                 else:
                     if subspace_dim <= 2:
                         X_test = random_hypercube_samples(1000, f.bounds)
-                        Y_test = f(X_test)
+                        Y_test = f.noiseless(X_test)
                         X_trans = model.transformer.transform(X_test)
                         mean, _ = model.prob_model.get_statistics(X_trans)
 

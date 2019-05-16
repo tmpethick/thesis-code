@@ -98,7 +98,7 @@ def format_axes(ax):
 def plot_function(f: BaseEnvironment, func, title="Function", points=None):
     if f.input_dim == 1:
         X_line = np.linspace(f.bounds[0, 0], f.bounds[0, 1], 100)[:, None]
-        Y_line = f(X_line)[:, 0]
+        Y_line = f.noiseless(X_line)[:, 0]
 
         fig = plt.figure()
         ax = fig.add_subplot(211)
@@ -113,7 +113,7 @@ def plot_function(f: BaseEnvironment, func, title="Function", points=None):
 
     elif f.input_dim == 2:
         XY, X, Y = construct_2D_grid(f.bounds)
-        Z = call_function_on_grid(f, XY)[..., 0]
+        Z = call_function_on_grid(f.noiseless, XY)[..., 0]
         Z_hat = call_function_on_grid(func, XY)[..., 0]
 
         fig = plt.figure()
@@ -144,7 +144,7 @@ def plot_model(model: BaseModel, f: BaseEnvironment):
 
 def plot1D(model: BaseModel, f: BaseEnvironment):  # -> plt.Figure:
     X_line = np.linspace(f.bounds[0, 0], f.bounds[0, 1], 100)[:, None]
-    Y_line = f(X_line)[:, 0]
+    Y_line = f.noiseless(X_line)[:, 0]
 
     mean, var = model.get_statistics(X_line, full_cov=False)
 
@@ -179,7 +179,7 @@ def plot2D(model: BaseModel, f: BaseEnvironment): # -> plt.Figure:
     XY = XY.reshape((-1, 2))
 
     mean, var = model.get_statistics(XY, full_cov=False)
-    ground_truth = f(XY)
+    ground_truth = f.noiseless(XY)
 
     # aggregate hyperparameters dimension
     if var.ndim == 3:
