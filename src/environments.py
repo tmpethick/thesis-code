@@ -3,16 +3,25 @@ from numpy.core.numeric import where
 
 from src.utils import construct_2D_grid, call_function_on_grid
 
-# TODO: latent Dirichlet allocation
 
 class BaseEnvironment(object):
     x_opt = None
 
+    def __init__(self, noise=None):
+        self.noise = noise
+
     def __repr__(self):
         return "{}".format(type(self).__name__)
 
-    def __call__(self, x):
+    def _call(self, x):
         raise NotImplementedError
+
+    def __call__(self, x):
+        if self.noise is not None:
+            noise = np.random.normal(0, self.noise, size=x.shape[0])[:, None]
+            return self._call(x) + noise
+        else:
+            return self._call(x) 
 
     @property
     def bounds(self):
@@ -76,6 +85,8 @@ class TwoKink1D(BaseEnvironment):
     bounds = np.array([[0,1]])
 
     def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
         self.alpha = 5
         self.beta = 1
         self.x_1 = 0.3
@@ -89,7 +100,7 @@ class TwoKink1D(BaseEnvironment):
         self.c = self.snd(self.x_2)
         self.trd = lambda x: self.beta * np.log(x) + (self.c - self.beta * np.log(self.x_2))
     
-    def __call__(self, X):
+    def _call(self, X):
         return np.piecewise(X, [X < self.x_1, X > self.x_1, X >= self.x_2], [self.fst, self.snd, self.trd])
 
     def derivative(self, X):
@@ -104,7 +115,8 @@ class TwoKink1D(BaseEnvironment):
 class Step(BaseEnvironment):
     bounds = np.array([[0,1]])
     
-    def __init__(self):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         # N_steps = 5
         # X_steps = np.random.uniform(0, 1, size=N_steps)
         # X_steps = np.sort(X_steps)
@@ -112,7 +124,7 @@ class Step(BaseEnvironment):
         self.X_steps = np.array([0.1059391 , 0.23668238, 0.38007559, 0.47764559, 0.62765332, 0.87921645, 0.93967713, 0.98301519])
         self.Y_values = np.array([11.46027201,  9.59505656,  8.71181213, 11.93343655, 13.55133013, 18.15854289, 18.4201603 , 18.78589584])
 
-    def __call__(self, X):
+    def _call(self, X):
         condlist = [X > threshold for threshold in self.X_steps]
         return np.piecewise(X, condlist, self.Y_values)
 
@@ -123,9 +135,9 @@ class TwoKink2D(TwoKink1D):
     def _transform(self, X):
         return (X[...,0]**2 + X[...,1]**2)[..., None]
 
-    def __call__(self, X):
+    def _call(self, X):
         z = self._transform(X)
-        return super(TwoKink2D, self).__call__(z)
+        return super(TwoKink2D, self)._call(z)
 
     def derivative(self, X):
         z = self._transform(X)
@@ -133,8 +145,8 @@ class TwoKink2D(TwoKink1D):
 
 
 class TwoKinkDEmbedding(TwoKink1D):
-    def __init__(self, D=10, Alpha=None):
-        super().__init__()
+    def __init__(self, D=10, Alpha=None, *kwargs):
+        super().__init__(*kwargs)
         if Alpha is not None:
             self.Alpha = np.array(Alpha)
             self.D = self.Alpha.shape[0]
@@ -153,11 +165,11 @@ class TwoKinkDEmbedding(TwoKink1D):
         # Apply elementwise linear transformation
         return X.dot(self.Alpha)
 
-    def __call__(self, X):
+    def _call(self, X):
         assert X.shape[1] == self.D, "X does not match the required input dim."        
         
         z = self._transform(X)
-        return super().__call__(z)
+        return super()._call(z)
 
     def derivative(self, X):
         z = self._transform(X)
@@ -167,14 +179,14 @@ class TwoKinkDEmbedding(TwoKink1D):
 class Jump1D(BaseEnvironment):
     bounds = np.array([[-1, 1]])
 
-    def __call__(self, x):
+    def _call(self, x):
         return np.sin(5*x) + np.sign(x)
 
 
 class Sin(BaseEnvironment):
     bounds = np.array([[0, 1]])
 
-    def __call__(self, x):
+    def _call(self, x):
         import scipy.stats
         return np.sin(30 * x)
 
@@ -182,13 +194,13 @@ class Sin(BaseEnvironment):
 class IncreasingOscillation(BaseEnvironment):
     bounds = np.array([[0, 1]])
 
-    def __call__(self, x):
+    def _call(self, x):
         return np.sin(60 * x ** 4)
 
 class IncreasingAmplitude(BaseEnvironment):
     bounds = np.array([[0, 1]])
 
-    def __call__(self, x):
+    def _call(self, x):
         import scipy.stats
         return np.sin(60 * x) * scipy.stats.norm.pdf(x, 1, 0.3)
 
@@ -196,16 +208,16 @@ class IncreasingAmplitude(BaseEnvironment):
 class IncreasingOscillationDecreasingAmplitude(IncreasingOscillation):
     bounds = np.array([[0, 1]])
 
-    def __call__(self, x):
+    def _call(self, x):
         import scipy.stats
-        return super(IncreasingOscillationDecreasingAmplitude, self).__call__(x) \
+        return super(IncreasingOscillationDecreasingAmplitude, self)._call(x) \
              * scipy.stats.norm.pdf(x, 0.5, 0.3)
 
 
 class Kink1D(BaseEnvironment):
     bounds = np.array([[-2, 2]])
 
-    def __call__(self, x):
+    def _call(self, x):
        return 1 / (10 ** (-4) + x ** 2)
 
     def derivative(self, x):
@@ -216,7 +228,7 @@ class Sinc(BaseEnvironment):
     bounds = np.array([[-20, 20]])
     x_opt = 0
 
-    def __call__(self, x):
+    def _call(self, x):
         x = np.asanyarray(x)
         y = where(x == 0, 1.0e-20, x)
         return np.sin(y)/y
@@ -232,30 +244,30 @@ class Sinc(BaseEnvironment):
 class BigSinc(Sinc):
     bounds = np.array([[-0.2, 0.2]])
 
-    def __call__(self, x):
-        return super().__call__(100 * x)
+    def _call(self, x):
+        return super()._call(100 * x)
 
 
 class NegSinc(Sinc):
-    def __call__(self, x):
-        return -super().__call__(x)
+    def _call(self, x):
+        return -super()._call(x)
 
 
 class Sin2D(BaseEnvironment):
-    def __call__(self, x):
+    def _call(self, x):
         return (0.5 * np.sin(13 * x[..., 0]) * np.sin(27 * x[..., 0]) + 0.5) * (0.5 * np.sin(13 * x[..., 1]) * np.sin(27 * x[..., 1]) + 0.5)
 
 
 class CosProd2D(BaseEnvironment):
     bounds = np.array([[-1,1], [-1,1]])
-    def __call__(self, X):
+    def _call(self, X):
         return (np.cos(0.5 * np.pi * X[..., 0]) * np.cos(0.5 * np.pi * X[..., 1]))[..., None]
 
 
 class Sinc2D(BaseEnvironment):
     bounds = np.array([[-20, 20], [-20, 20]])
 
-    def __call__(self, x):
+    def _call(self, x):
         r = np.sqrt(x[..., 0] ** 2 + x[..., 1] ** 2)
         return (np.sin(r) / r)[..., None]
 
@@ -272,7 +284,7 @@ class Kink2DStraight(BaseEnvironment):
     """
     bounds = np.array([[0, 1], [0, 1]])
 
-    def __call__(self, x):
+    def _call(self, x):
         y = 1 / (np.abs(0.5 - x[..., 0] ** 4) + 0.1)
         return y[..., None]
 
@@ -281,14 +293,18 @@ class KinkDCircularEmbedding(BaseEnvironment):
     # Hack to make it settable in `__init__`.
     bounds = None
 
-    def __init__(self, D=10):
+    def __init__(self, D=10, **kwargs):
+        super().__init__(**kwargs)
         self.bounds = np.array([[0, 1]] * D)
         self._D = D
 
     def _transform(self, X):
+        if X.ndim == 1:
+            return X ** 2
+
         return np.sum(X ** 2, axis=-1)[:,None]
 
-    def __call__(self, X):
+    def _call(self, X):
         Z = self._transform(X)
         Y = 1 / (np.abs(0.5 - Z) + 0.1)
         return Y
@@ -300,6 +316,24 @@ class KinkDCircularEmbedding(BaseEnvironment):
         Z_diff = 2 * X
 
         return f_diff * Z_diff
+    
+    # def uniform_manifold_sample(self, size):
+    #     D = self._D
+
+    #     x = np.empty((size, D))
+    #     z = np.random.uniform(0, 1, (size, 1))
+        
+    #     # Put down on line
+    #     x[:,0] = z
+
+    #     # Random rotation in D dim
+    #     theta = np.random.uniform(0, 1, D)
+
+    #     # Form rotation matrix
+    #     R = scipy.stats.special_ortho_group(D)
+    #     R.dot(x)
+
+    #     # How to project into x?
 
 
 class Kink2D(BaseEnvironment):
@@ -317,7 +351,7 @@ class Kink2D(BaseEnvironment):
     """
     bounds = np.array([[0, 1], [0, 1]])
 
-    def __call__(self, x):
+    def _call(self, x):
         y = 1 / (np.abs(0.5 - x[..., 0] ** 4 - x[..., 1] ** 4) + 0.1)
         return y[..., None]
 
@@ -347,8 +381,8 @@ class Kink2D(BaseEnvironment):
 class Kink2DShifted(Kink2D):
     bounds = np.array([[0, 1], [0, 1]])
 
-    def __call__(self, x):
-        return super().__call__(x) + 20
+    def _call(self, x):
+        return super()._call(x) + 20
 
 
 class ActiveSubspaceTest(BaseEnvironment):
@@ -361,7 +395,7 @@ class ActiveSubspaceTest(BaseEnvironment):
     """
     bounds = np.array([[-1,1]] * 10)
 
-    def __call__(self, X):
+    def _call(self, X):
         y = np.exp(0.01*X[...,0] + 0.7*X[...,1] + 0.02*X[...,2] + 0.03*X[...,3] + 0.04*X[...,4] + 
                     0.05*X[...,5] + 0.06*X[...,6] + 0.08*X[...,7] + 0.09*X[...,8] + 0.1*X[...,9])
         return y[...,None]
@@ -372,39 +406,59 @@ class ActiveSubspaceTest(BaseEnvironment):
         return Y * coefs[None, :]
 
 
-class ActiveSubspaceModifiedTest(BaseEnvironment):
-    bounds = np.array([[-1,1]] * 10)
+# class ActiveSubspaceModifiedTest(BaseEnvironment):
+#     bounds = np.array([[-1,1]] * 10)
 
-    def __init__(self):
-        self._f = ActiveSubspaceTest()
+#     def __init__(self, *args, **kwargs):
+#         super().__init__(*args, **kwargs)
+#         self._f = ActiveSubspaceTest()
     
-    def __call__(self, X):
-        return X[..., 1]*X[..., 2] * self._f(X)
+#     def _call(self, X):
+#         return X[..., 1]*X[..., 2] * self._f(X)
 
-    def derivative(self, X):
-        """Fix derivative
-        """
-        _test_old = self._f.derivative(X)
-        val = np.atleast_1d(X[..., 1] * X[..., 2] * _test_old)
-        coefs = np.array([0.01, 0.7, 0.02, 0.03, 0.04, 0.05, 0.06, 0.08, 0.09, 0.1])
-        out = val[:, None] * coefs[None, :]
-        out[:, 1] += X[..., 2] * _test_old
-        out[:, 2] += X[..., 1] * _test_old
-        return out
+#     def derivative(self, X):
+#         """TODO: Fix derivative
+#         """
+#         _test_old = self._f.derivative(X)
+#         val = np.atleast_1d(X[..., 1] * X[..., 2] * _test_old)
+#         coefs = np.array([0.01, 0.7, 0.02, 0.03, 0.04, 0.05, 0.06, 0.08, 0.09, 0.1])
+#         out = val[:, None] * coefs[None, :]
+#         out[:, 1] += X[..., 2] * _test_old
+#         out[:, 2] += X[..., 1] * _test_old
+#         return out
 
 
-class DynamicBell(BaseEnvironment):
-    def __init__(self, input_dim=10):
-        self.dim = input_dim
+# import growth_model_GPR.nonlinear_solver_initial as solver_initializor
+# import growth_model_GPR.nonlinear_solver_iterate as solver_iterator
 
-    def __call__(self, X):
-        n = x.shape[0]
-        y = np.zeros(n, float)
-        
-        # solve bellman equations at training points
-        for i in range(n):
-            y[i] = solver.initial(X[i], self.dim)[0] 
-        return y[:, None]
+
+# class DynamicBell(BaseEnvironment):
+#     # bounds are np.array([k_bar, k_up] * dim)
+
+#     def __init__(self, input_dim=10):
+#         self.dim = input_dim
+
+#         self._is_initialized = False
+#         self.n_agents = 2
+#         # TODO: consolidate with n_agents in parameters.py
+
+#     def _call(self, X, prob_model):
+#         """OBS: every call will iterate. 
+#         We assume that self.prob_model is updated with new observations (discarding the old.)
+#         """
+#         n = X.shape[0]
+#         y = np.zeros(n, float)
+
+#         if self._is_initialized:
+#             for i in range(n):
+#                 y[i] = solver_iterator.iterate(X[i], self.n_agents, prob_model)[0]
+#         else:
+#             self._is_initialized = True
+#             for i in range(n):
+#                 y[i] = solver_initializor.initial(X[i], self.n_agents)[0]
+
+
+#         return y[:, None]
 
 
 from GPyOpt.objective_examples import experiments2d
@@ -414,9 +468,10 @@ class GPyOptEnvironment(BaseEnvironment):
     Func = None
 
     def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self._gpyopt_func = self.Func(*args, **kwargs)
 
-    def __call__(self, x):
+    def _call(self, x):
         return self._gpyopt_func.f(x)
 
     @property

@@ -5,27 +5,27 @@ import numpy as np
 # from src.models.models import BaseModel
 
 
-def calc_errors(model, f, rand=False):
+def calc_errors(model, f, rand=False, rand_N=2500):
     est1 = lambda X_line: model.get_statistics(X_line, full_cov=False)[0]
     est2 = lambda X_line: f(X_line)
-    return _calc_errors(est1, est2, f, rand=rand)
+    return _calc_errors(est1, est2, f, rand=rand, rand_N=rand_N)
 
 
-def calc_errors_model_compare_mean(model1, model2, f, rand=False):
+def calc_errors_model_compare_mean(model1, model2, f, rand=False, rand_N=2500):
     est1 = lambda X_line: model1.get_statistics(X_line, full_cov=False)[0]
     est2 = lambda X_line: model2.get_statistics(X_line, full_cov=False)[0]
-    return _calc_errors(est1, est2, f, rand=rand)
+    return _calc_errors(est1, est2, f, rand=rand, rand_N=rand_N)
 
 
-def calc_errors_model_compare_var(model1, model2, f, rand=False):
+def calc_errors_model_compare_var(model1, model2, f, rand=False, rand_N=2500):
     est1 = lambda X_line: model1.get_statistics(X_line, full_cov=False)[1]
     est2 = lambda X_line: model2.get_statistics(X_line, full_cov=False)[1]
-    return _calc_errors(est1, est2, f, rand=rand)
+    return _calc_errors(est1, est2, f, rand=rand, rand_N=rand_N)
 
 
-def _calc_errors(est1, est2, f, rand=False):
+def _calc_errors(est1, est2, f, rand=False, rand_N=2500):
     if rand:
-        N = 2500
+        N = rand_N
         X_line = random_hypercube_samples(N, f.bounds)
     elif f.input_dim == 1:
         N = 500

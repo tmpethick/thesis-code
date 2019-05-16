@@ -33,7 +33,7 @@ def calc_error(i, model):
     print("{0:9d} {1:9d}  Loo={2:1.2e}  L2={3:1.2e}".format(i+1, model.grid.getNumPoints(), max_error, L2_err))
 
 #%%
-# SG does backly around kink
+# SG does badly around kink
 
 SG = AdaptiveSparseGrid(f, depth=15, refinement_level=0)
 SG.fit(callback=calc_error)

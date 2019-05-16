@@ -77,7 +77,7 @@ class ActiveSubspace(Transformer):
     where α=5..10, m is actually dim, and k<m.
     """
 
-    def __init__(self, k=10, output_dim=None):
+    def __init__(self, k=10, output_dim=None, threshold_factor=10):
         # How many eigenvalues are considered. We do not consider all 
         # eigenvalues (i.e. k=m) as the samples required increases in k.
         self.k = k
@@ -86,7 +86,7 @@ class ActiveSubspace(Transformer):
         self._output_dim = output_dim
 
         # Used to decide when a big change occurs (eig[i] > thresholds_factor * eig[i+1])
-        self.threshold_factor = 10
+        self.threshold_factor = threshold_factor
         
         self.vals = None
         self.W = None
@@ -143,13 +143,13 @@ class ActiveSubspace(Transformer):
 
     def plot(self):
         fig, ax = plt.subplots(1, 2, figsize=(9, 5))
-        x = np.arange(1, 11)
+        x = np.arange(1, self.vals.shape[0] + 1)
         ax[0].plot(x, self.vals, ".", ms=15)
         ax[0].set_xlabel("Eigenvalues")
         ax[0].set_xticks(x)
         ax[0].set_ylabel("$\lambda$")
 
-        ax[1].plot(x, self.W, ".", ms=15)
+        ax[1].plot(x, np.linalg.norm(self.W, axis=1), ".", ms=15)
         ax[1].set_xlabel("Input dimension")
         ax[1].set_xticks(x)
         ax[1].set_ylabel("Magnitude of W")
@@ -252,7 +252,8 @@ class GPModel(ProbModel):
             step_size=1e-1,
             leapfrog_steps=20,
             normalize_input=False,
-            normalize_output=False):
+            normalize_output=False,
+            mean_prior=None):
         super(GPModel, self).__init__(normalize_input=normalize_input, normalize_output=normalize_output)
 
         self.kernel = kernel
@@ -268,6 +269,7 @@ class GPModel(ProbModel):
         self.gpy_model = None
         self.has_mcmc_warmup = False 
         self.output_dim = None
+        self.mean_prior = mean_prior
 
     def __repr__(self):
         return "ExactGP"
@@ -283,8 +285,14 @@ class GPModel(ProbModel):
 
         self.output_dim = Y.shape[-1]
 
-        if self.gpy_model is None:
-            self.gpy_model = GPy.models.GPRegression(X, Y, self.kernel, normalizer=self._normalize_output)
+        if mean_prior is not None:
+            Y_mean = np.mean(Y)
+            mean_function = GPy.mappings.constant.Constant(X.shape[1], Y.shape[1], Y_mean)
+        else:
+            mean_function = None
+
+        if self.gpy_model is not None:
+            self.gpy_model = GPy.models.GPRegression(X, Y, self.kernel, normalizer=self._normalize_output, mean_function=mean_function)
             if self.noise_prior:
                 if isinstance(self.noise_prior, float) or isinstance(self.noise_prior, int):
                     assert self.noise_prior != 0, "Zero noise is ignored. Use e.g. 1e-10 instead."

@@ -242,19 +242,21 @@ def create_ex(interactive=False):
                     pass
                 else:
                     if subspace_dim <= 2:
-                        X_trans = model.transformer.transform(X)
+                        X_test = random_hypercube_samples(1000, f.bounds)
+                        Y_test = f(X_test)
+                        X_trans = model.transformer.transform(X_test)
                         mean, _ = model.prob_model.get_statistics(X_trans)
 
                         # TODO: move (and include variance)
                         fig = plt.figure()
                         if X_trans.shape[-1] == 1:
                             ax = fig.add_subplot(111)
-                            ax.scatter(X_trans, Y)
-                            ax.scatter(X_trans, mean, marker="1")
+                            ax.scatter(X_trans, Y_test, s=2)
+                            ax.scatter(X_trans, mean, marker="1", s=2)
                         if X_trans.shape[-1] == 2:
                             ax = fig.add_subplot(111, projection='3d')
-                            ax.scatter(X_trans[:, 0], X_trans[:, 1], mean, marker="1", color="red")
-                            ax.scatter(X_trans[:, 0], X_trans[:, 1], Y)
+                            ax.scatter(X_trans[:, 0], X_trans[:, 1], mean, marker="1", color="red", s=2)
+                            ax.scatter(X_trans[:, 0], X_trans[:, 1], Y_test, s=2)
                         save_fig(fig, settings.ARTIFACT_AS_FEATURES_FILENAME.format(model_idx=i))
 
             # Acquisition

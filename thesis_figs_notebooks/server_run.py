@@ -235,7 +235,7 @@ Alpha = [
 
 functions = [
     {'name': 'ActiveSubspaceTest'},
-    {'name': 'TwoKinkDEmbedding', 'kwargs': {'Alpha': Alpha}}
+    {'name': 'TwoKinkDEmbedding', 'kwargs': {'Alpha': Alpha}},
     {'name': 'Kink2D'},
     {'name': 'KinkDCircularEmbedding', 'kwargs': {'D': 2}},
     {'name': 'KinkDCircularEmbedding', 'kwargs': {'D': 5}},
@@ -251,9 +251,10 @@ G = f.derivative(X)
 model = ActiveSubspace()
 model.fit(X, f(X), G)
 model.W.shape[-1]
+
 # model.plot()
 # Z = model.transform(X)
-# plt.(Z, f(X))
+# plt.scatter(Z, f(X))
 
 
 #%%

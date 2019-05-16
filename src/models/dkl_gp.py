@@ -33,25 +33,37 @@ class LargeFeatureExtractor(torch.nn.Sequential):
 
 
 class GPRegressionModel(gpytorch.models.ExactGP):
-    def __init__(self, train_x, train_y, likelihood, feature_extractor=None):
+    def __init__(self, train_x, train_y, likelihood, feature_extractor=None, mean_prior=None, n_grid=None):
         if feature_extractor is not None:
             gp_input_dim = feature_extractor.output_dim
         else:
             gp_input_dim = train_x.shape[-1]
 
         super().__init__(train_x, train_y, likelihood)
-        self.mean_module = gpytorch.means.ConstantMean()
-        # self.covar_module = gpytorch.kernels.GridInterpolationKernel(
-        #     gpytorch.kernels.ScaleKernel(
-        #         gpytorch.kernels.RBFKernel(
-        #             ard_num_dims=gp_input_dim
-        #         )
-        #     ),
-        #     num_dims=gp_input_dim, grid_size=10, grid_bounds=,
-        # )
-        self.covar_module = gpytorch.kernels.ScaleKernel(
-            gpytorch.kernels.RBFKernel(ard_num_dims=gp_input_dim)
-        )
+
+        if mean_prior is not None:
+            #mean = torch.mean(train_y)
+            raise NotImplementedError
+        else:
+            mean = None
+        
+        self.mean_module = gpytorch.means.ConstantMean(mean)
+
+        self.uses_grid_interpolation = n_grid is not None
+        if n_grid is not None:
+            self.covar_module = gpytorch.kernels.GridInterpolationKernel(
+                gpytorch.kernels.ScaleKernel(
+                    gpytorch.kernels.RBFKernel(
+                        ard_num_dims=gp_input_dim
+                    )
+                ),
+                num_dims=gp_input_dim, grid_size=n_grid, 
+                grid_bounds=None, # TODO: should we set grid bounds?
+            )
+        else:
+            self.covar_module = gpytorch.kernels.ScaleKernel(
+                gpytorch.kernels.RBFKernel(ard_num_dims=gp_input_dim)
+            )
         self.feature_extractor = feature_extractor
 
     def forward(self, x):
@@ -106,7 +118,8 @@ class DKLGPModel(BaseModel):
             self.feature_extractor = LargeFeatureExtractor(d, **self.nn_kwargs).to(device)
 
         if self.noise is not None:
-            self.likelihood = gpytorch.likelihoods.FixedNoiseGaussianLikelihood(torch.ones(self.X_torch.shape[0]) * self.noise)
+            noise = torch.ones(self.X_torch.shape[0]) * self.noise
+            self.likelihood = gpytorch.likelihoods.FixedNoiseGaussianLikelihood(noise=noise)
         else:
             self.likelihood = gpytorch.likelihoods.GaussianLikelihood().to(device)
 
@@ -149,9 +162,8 @@ class DKLGPModel(BaseModel):
                 self.training_callback(self, i, loss.item())
                 optimizer.step()
 
-        #with gpytorch.settings.use_toeplitz(True):
-        #    _train()
-        _train()
+        with gpytorch.settings.use_toeplitz(self.model.uses_grid_interpolation):
+            _train()
 
     def get_features(self, X):
         if not self.has_feature_map:
@@ -187,9 +199,10 @@ class DKLGPModel(BaseModel):
 
         # Use LOVE
         #with torch.no_grad(), gpytorch.settings.use_toeplitz(True), gpytorch.settings.fast_pred_var():
-        with torch.no_grad():
+        with torch.no_grad(), gpytorch.settings.use_toeplitz(self.model.uses_grid_interpolation), gpytorch.settings.fast_pred_var(self.model.uses_grid_interpolation):
             # Passing through likelihood is not needed if using fixed noise
-            multivariate_normal = self.likelihood(self.model(test_x))
+            noise = torch.ones(test_x.shape[0]) * self.noise
+            multivariate_normal = self.likelihood(self.model(test_x), noise=noise)
 
             mean = multivariate_normal.mean.detach().numpy()[:cut_tail, None]
 
@@ -199,8 +212,7 @@ class DKLGPModel(BaseModel):
                 return mean, multivariate_normal.variance.detach().numpy()[:cut_tail, None]
 
     def plot_features(self, f):
-        print("!!!")
-        if not self.feature_extractor.output_dim in [1, 2]:
+        if self.feature_extractor is None or not self.feature_extractor.output_dim in [1, 2]:
             return None
 
         if self.X.shape[-1] == 1:
@@ -234,7 +246,6 @@ class DKLGPModel(BaseModel):
             O = f(X)
 
         if Z.shape[-1] == 1:
-            # 2D->1D case
             ax = fig.add_subplot(122)
             ax.set_title('f in feature space')
             if self.X.shape[-1] == 1:
@@ -244,7 +255,6 @@ class DKLGPModel(BaseModel):
                 ax.scatter(Z.flatten(), O.flatten())
 
         elif Z.shape[-1] == 2:
-            # 1D->2D case
             if self.X.shape[-1] == 2:
                 ax = fig.add_subplot(122)
                 ax.set_title('f in feature space')
