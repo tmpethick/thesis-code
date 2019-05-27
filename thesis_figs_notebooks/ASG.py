@@ -44,6 +44,25 @@ fig = asg.plot()
 
 # I should be able to get good performance with non-adaptive SG with 3e5 points.
 
+#%%
+f = KinkDCircularEmbedding(D=2)
+asg = AdaptiveSparseGrid(f, depth=1, refinement_level=20, f_tol=1e-3)
+asg.fit(callback=calc_error)
+
+X_train = asg.grid.getLoadedPoints()
+
+fig = plt.figure()
+XY, X, Y = construct_2D_grid(f.bounds)
+ax = fig.add_subplot(222)
+Z2 = call_function_on_grid(asg.evaluate, XY)[...,0]
+cont = ax.contourf(X,Y,Z2, 50)
+ax.set_xlabel("$X_1$")
+ax.set_ylabel("$X_2$")
+fig.colorbar(cont)
+sns.scatterplot(X_train[...,0], X_train[...,1], ax=ax, s=2, alpha=0.5, linewidth=0.4, legend=False)
+
+savefig(fig, 'DKL/A-SG-failure.pdf')
+
 
 #%%
 
@@ -80,19 +99,20 @@ def test_depth_to_error(ASG_creator, max_points=4e5):
     return N[:i], Loo_err[:i], L2_err[:i]
 
 N, Loo_err, L2_err = test_depth_to_error(lambda i: AdaptiveSparseGrid(f, depth=i, refinement_level=0, f_tol=f_tol))
-plt.plot(N, Loo_err, label="$L_\infty$ error - SG", marker='*', c='black')
-plt.plot(N, L2_err, label="$L_2$ error - SG", marker=11, c='black')
+fig, ax = plt.subplots()
+ax.plot(N, Loo_err, label="$L_\infty$ error - SG", marker='*', c='black')
+ax.plot(N, L2_err, label="$L_2$ error - SG", marker=11, c='black')
 
 N, Loo_err, L2_err = test_depth_to_error(lambda i: AdaptiveSparseGrid(f, depth=1, refinement_level=i, f_tol=f_tol))
-plt.plot(N, Loo_err, label="$L_\infty$ error - ASG", marker='*', dashes=[2,2], c='black')
-plt.plot(N, L2_err, label="$L_2$ error - ASG", marker=11,  dashes=[2,2], c='black')
+ax.plot(N, Loo_err, label="$L_\infty$ error - ASG", marker='*', dashes=[2,2], c='black')
+ax.plot(N, L2_err, label="$L_2$ error - ASG", marker=11,  dashes=[2,2], c='black')
 
-plt.xlabel('\#Points N')
-plt.ylabel('Error')
-plt.yscale('log')
-plt.xscale('log')
+ax.set_xlabel('\#Points N')
+ax.set_ylabel('Error')
+ax.set_yscale('log')
+ax.set_xscale('log')
 plt.legend()
-savefig(fig, 'ASG/depth_to_error.pgf')
+savefig(fig, 'ASG/depth_to_error.pdf')
 
 
 #%%
@@ -115,18 +135,19 @@ def test_depth_to_error(ASG_creator, max_points=4e5):
 
 
 Loo_err, L2_err = test_depth_to_error(lambda threshold: AdaptiveSparseGrid(f, depth=15, refinement_level=0, f_tol=threshold))
-plt.plot(thresholds, Loo_err, label="$L_\infty$ error - SG", marker='*')
-plt.plot(thresholds, L2_err, label="$L_2$ error - SG", marker=11)
+fig, ax = plt.subplots()
+ax.plot(thresholds, Loo_err, label="$L_\infty$ error - SG", marker='*')
+ax.plot(thresholds, L2_err, label="$L_2$ error - SG", marker=11)
 
 Loo_err, L2_err = test_depth_to_error(lambda threshold: AdaptiveSparseGrid(f, depth=30, refinement_level=1, f_tol=threshold))
-plt.plot(thresholds, Loo_err, label="$L_\infty$ error - ASG", marker='*')
-plt.plot(thresholds, L2_err, label="$L_2$ error - ASG", marker=11)
+ax.plot(thresholds, Loo_err, label="$L_\infty$ error - ASG", marker='*')
+ax.plot(thresholds, L2_err, label="$L_2$ error - ASG", marker=11)
 
-plt.xlabel('Thresholds')
-plt.ylabel('Error')
-plt.yscale('log')
+ax.set_xlabel('Thresholds')
+ax.set_ylabel('Error')
+ax.set_yscale('log')
 plt.legend()
-savefig(fig, 'ASG/threshold_to_error.pgf')
+savefig(fig, 'ASG/threshold_to_error.pdf')
 
 #%% Adaptivity breaks down completely for "circular" embeddings
 

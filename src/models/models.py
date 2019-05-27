@@ -285,13 +285,13 @@ class GPModel(ProbModel):
 
         self.output_dim = Y.shape[-1]
 
-        if mean_prior is not None:
+        if self.mean_prior is not None:
             Y_mean = np.mean(Y)
             mean_function = GPy.mappings.constant.Constant(X.shape[1], Y.shape[1], Y_mean)
         else:
             mean_function = None
 
-        if self.gpy_model is not None:
+        if self.gpy_model is None:
             self.gpy_model = GPy.models.GPRegression(X, Y, self.kernel, normalizer=self._normalize_output, mean_function=mean_function)
             if self.noise_prior:
                 if isinstance(self.noise_prior, float) or isinstance(self.noise_prior, int):

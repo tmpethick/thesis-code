@@ -6,6 +6,7 @@ from runner import notebook_run, notebook_run_CLI, notebook_run_server, execute
 
 import matplotlib.pyplot as plt
 import seaborn as sns
+sns.set_style('white')
 
 from src.utils import *
 from src.plot_utils import *
@@ -425,6 +426,23 @@ plt.scatter(Z, f(X), s=0.4)
 plt.tight_layout()
 savefig(fig, 'DKL/AS-circular5D-feature.pdf')
 
+#%%
+D = 2
+f = KinkDCircularEmbedding(D=D, bounds=np.array([[-1, 1]] * D))
+X = random_hypercube_samples(1000, f.bounds)
+G = f.derivative(X)
+model = ActiveSubspace(threshold_factor=4)
+model.fit(X, f(X), G)
+Z = model.transform(X)
+
+
+fig = plt.figure()
+plt.ylabel("$Y$")
+plt.xlabel("$\Phi(X)$")
+plt.scatter(Z, f(X), s=0.4)
+plt.tight_layout()
+
+
 #%% Investigating Embeddings
 
 exactGP = {
@@ -577,7 +595,7 @@ plt.plot(RMSEs)
 
 #%% Why do we not learn to smooth out the kink? (but it works for IncreasingOscillation)
 
-# Sensitive to hyperparams: gp_samples=100, lr=0.1 fails (not pos.def.) for Kink2D while lr=0.01 works.
+# Sensitive to hyperparams: gp_samples=100, lr=0.1 fails (not pos.def.) for Kink2D while lr=0.01 works. (Only a problem if noiseless it seems)
 # linear_cg error when gp_samples=1000
 
 functions = [
@@ -598,7 +616,7 @@ run = execute(config_updates={
         },
     },
     'gp_use_derivatives': False,
-    'gp_samples': 1000,
+    'gp_samples': 100,
 })
 
 #%%
@@ -626,19 +644,6 @@ run = execute(config_updates={
     'gp_samples': 5000,
 })
 
-# First rerun models then chat.
-
-
-# What is my problem: 
-# - spend way to much time reimplementing: GP, RFF, QFF (MLE, hessian)
-# - ill-defined problem
-# - don't want to just compare existing methods (but existing methods seem to cover the use case). Solely industry application.
-    # - Dim reduction: NN. => many sample so fit GP to many samples (tested in isolation).
-    # - Inverse mapping to sample fewer samples from manifold.
-# - Active sampling seems overly complicated for what we achieve (compute hessian!)
-# - Big discrepancy between the theory I need to understand and the implementation
-
-# But time limit...
 
 
 #%% 
@@ -661,3 +666,13 @@ run = execute(config_updates={
 
 # Define trickier problems (variance is to small across models)
 
+#%%
+# Plot all genz
+from src.environments import *
+
+GenzContinuous(D=2).plot(projection="3d")
+GenzCornerPeak(D=2).plot(projection="3d")
+GenzDiscontinuous(D=2).plot(projection="3d")
+GenzGaussianPeak(D=2).plot(projection="3d")
+GenzOscillatory(D=2).plot(projection="3d")
+GenzProductPeak(D=2).plot(projection="3d")

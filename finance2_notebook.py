@@ -115,6 +115,24 @@ run = execute(config_updates={
     'gp_samples': 100
 })
 
+#%% SSGP
+
+run = execute(config_updates={
+    'obj_func': {
+        'name': 'TwoKink1D',
+    },
+    'model': {
+        'name': 'SSGPModel',
+        'kwargs': {
+            'noise': 0.01,
+            'n_features': 10,
+            'do_optimize': True,
+        }
+    },
+    'gp_samples': 1000
+})
+
+
 #%% ------------------ Testing High-dim ----------------------------
 
 run = execute(config_updates={

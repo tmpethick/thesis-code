@@ -264,3 +264,37 @@ run = execute(config_updates={
 # X = np.tensordot(R, x, axes=0)
 
 # plt.scatter(X[:,0], X[:,1])
+
+#%% Decide reasonable noise level (a factor 1e-3)
+# remember to uncomment line in environments
+
+Alpha = [
+    [0.78695576],
+    [0.70777112],
+    [0.34515641],
+    [0.20288506],
+    [0.52388727],
+    [0.2025096 ],
+    [0.31752746],
+    [0.24497726],
+    [0.89249818],
+    [0.64264009]]
+
+functions = [
+    Step(noise=1),
+    Kink1D(noise=100),
+    Kink2D(noise=1e-2),
+    TwoKink1D(noise=1e-2),
+    TwoKink2D(noise=1e-2),
+    TwoKinkDEmbedding(noise=1e-2, D=2),
+    Sinc(noise=1e-2),
+    Branin(noise=1e-1),
+    KinkDCircularEmbedding(noise=1e-2, D=2),
+    #KinkDCircularEmbedding(noise=1e-2, D=5),
+    #KinkDCircularEmbedding(noise=1e-2, D=10),
+    #ActiveSubspaceTest(noise=1e-2),
+    #TwoKinkDEmbedding(noise=1e-2, Alpha=Alpha),
+]
+
+for function in functions:
+    function.plot()

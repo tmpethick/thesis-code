@@ -18,6 +18,32 @@ from src.environments import *
 from src.acquisition_functions import *
 from src.algorithms import *
 
+NOISE_LEVELS = {
+    'Step':                   1e-2,
+    'Kink1D':                 10,
+    'Kink2D':                 1e-2,
+    'TwoKink1D':              1e-2,
+    'TwoKink2D':              1e-2,
+    'TwoKinkDEmbedding':      1e-2,
+    'Sinc':                   1e-2,
+    'Branin':                 1e-1,
+    'KinkDCircularEmbedding': 1e-2,
+    'KinkDCircularEmbedding': 1e-2,
+    'KinkDCircularEmbedding': 1e-2,
+    'ActiveSubspaceTest':     1e-2,
+    'TwoKinkDEmbedding':      1e-2,
+}
+
+def add_noiselevels(obj_funs):
+    for obj_fun in obj_funs:
+        level = NOISE_LEVELS.get(obj_fun['name'])
+        kwargs = obj_fun.get('kwargs', {})
+
+        # Only add it if its not been set
+        if 'noise' not in kwargs:
+            kwargs['noise'] = level
+        obj_fun['kwargs'] = kwargs
+
 
 #%% Test robustness of ExactDKL (how closely does it match ExactGP)
 
@@ -27,6 +53,7 @@ obj_funs = [
     {'name': 'Branin'},
     {'name': 'TwoKink1D'},
 ]
+add_noiselevels(obj_funs)
 
 exactGP = {
     'name': 'GPModel',
@@ -85,6 +112,7 @@ obj_funs = [
     {'name': 'TwoKink2D'},
     {'name': 'TwoKinkDEmbedding', 'kwargs': {'D': 2}},
 ]
+add_noiselevels(obj_funs)
 
 # ExactGP: Matern32, RBF
 exactGP = [{
@@ -161,7 +189,6 @@ for obj_fun in obj_funs:
 
 
 
-#%%
 
 #%% Small High-dim
  
@@ -241,7 +268,7 @@ functions = [
     {'name': 'KinkDCircularEmbedding', 'kwargs': {'D': 5}},
     {'name': 'KinkDCircularEmbedding', 'kwargs': {'D': 10}},
  ]
-
+add_noiselevels(functions)
 
 # Test that it is indeed active subspace of dim 1:
 f = TwoKinkDEmbedding(Alpha=Alpha)
@@ -274,4 +301,69 @@ for func in functions:
         })
 
 
+#%% Scalability
+
+# DKL, RFF, SparseGP
+# TwoKink1D, Kink1D, Sinc
+
+# In 1D will more points improve accuracy? (and what number of inducing points are necessary)
+# Try for different number of inducing points
+
+
+
 #%%
+
+
+RFF = [{
+    'name': 'GPModel',
+    'kwargs': {
+        'kernel': {
+            'name': 'GPyRBF',
+            'kwargs': {
+                'lengthscale': 1
+            }
+        },
+        'noise_prior': 1e-2,
+        'do_optimize': True,
+        'num_mcmc': 0,
+    },
+}]
+
+grid_sizes = [100, 1000, 10000]
+DKLModel = [{
+    'name': 'DKLGPModel',
+    'kwargs': {
+        'learning_rate': 0.01,
+        'n_iter': 1000,
+        'nn_kwargs': {'layers': [100, 50, 2]},
+        'noise': 1e-2,
+        'n_grid': n_grid,
+    },
+}, ]
+
+functions = [
+    {'name': 'TwoKink1D'},
+    {'name': 'Kink1D'},
+    {'name': 'Sinc'},
+ ]
+add_noiselevels(functions)
+
+
+#%%
+
+models = RFF + DKLModel
+sample_sizes = [100, 1000, 10000, 1000000]
+
+run = None
+
+
+for sample_size in sample_sizes:
+    for func in functions:
+        for model in models:
+            run = execute(config_updates={
+                'tag': 'embedding',
+                'obj_func': func,
+                'model': model,
+                'gp_use_derivatives': model.get('name') == 'TransformerModel',
+                'gp_samples': sample_size,
+            })

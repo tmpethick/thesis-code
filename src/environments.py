@@ -47,7 +47,7 @@ class BaseEnvironment(object):
         raise NotImplementedError
 
     def plot(self, projection=None):
-        return self._plot(self.noisefree, projection=projection, title="$f$")
+        return self._plot(self.noiseless, projection=projection, title="$f$")
 
     def plot_derivative(self, projection=None):
         return self._plot(self.derivative, projection=projection, title="$\\nabla f$")
@@ -70,7 +70,12 @@ class BaseEnvironment(object):
             X = np.linspace(self.bounds[0,0], self.bounds[0,1], 1000)
             if title is not None:
                 ax.set_title(title)
-            ax.plot(X, func(X))
+            Y = func(X)
+            ax.plot(X, Y)
+
+            # Show the 2*std for the noice
+            #plt.fill_between(X, Y - 2 * self.noise, Y + 2 * self.noise, alpha=0.2)
+            
             return fig
 
         elif self.bounds.shape[0] == 2:
@@ -148,8 +153,8 @@ class TwoKink2D(TwoKink1D):
 
 
 class TwoKinkDEmbedding(TwoKink1D):
-    def __init__(self, D=10, Alpha=None, *kwargs):
-        super().__init__(*kwargs)
+    def __init__(self, D=10, Alpha=None, **kwargs):
+        super().__init__(**kwargs)
         if Alpha is not None:
             self.Alpha = np.array(Alpha)
             self.D = self.Alpha.shape[0]
@@ -296,9 +301,12 @@ class KinkDCircularEmbedding(BaseEnvironment):
     # Hack to make it settable in `__init__`.
     bounds = None
 
-    def __init__(self, D=10, **kwargs):
+    def __init__(self, D=10, bounds=None, **kwargs):
         super().__init__(**kwargs)
-        self.bounds = np.array([[0, 1]] * D)
+        if bounds is None:
+            self.bounds = np.array([[0, 1]] * D)
+        else:
+            self.bounds = bounds
         self._D = D
 
     def _transform(self, X):
@@ -379,6 +387,11 @@ class Kink2D(BaseEnvironment):
         hess = np.array([[h11, h12],
                          [h21, h22]])
         return np.moveaxis(hess, -1, 0)
+
+
+class Kink1DShifted(Kink1D):
+    def _call(self, x):
+        return super()._call(x) + 1000
 
 
 class Kink2DShifted(Kink2D):
@@ -470,8 +483,8 @@ from GPyOpt.objective_examples import experiments2d
 class GPyOptEnvironment(BaseEnvironment):
     Func = None
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self, *args, noise=None, **kwargs):
+        super().__init__(*args, noise=noise, **kwargs)
         self._gpyopt_func = self.Func(*args, **kwargs)
 
     def _call(self, x):
@@ -496,3 +509,150 @@ class Sixhumpcamel(GPyOptEnvironment): Func = experiments2d.sixhumpcamel
 
 def to_gpyopt_bounds(bounds):
     return [{'name': 'var_{}'.format(i), 'type': 'continuous', 'domain': bounds[i]} for i in range(bounds.shape[0])]
+
+
+class GenzContinuous(BaseEnvironment):
+    bounds = None
+
+    def __init__(self, u=None, a=None, D=10):
+        self.bounds = np.array([[0,1]] * D)
+        self.D = D
+
+        if u is not None:
+            self.u = u
+        else:
+            self.u = np.ones((1, D)) * 0.5
+
+        if a is not None:
+            self.a = a
+        else:
+            self.a = np.ones(D) * 5
+        
+        assert self.a.shape[0] == D
+        assert self.u.shape[1] == D
+
+    def _call(self, X):
+        Z = np.abs(X - self.u)
+        return np.exp(-np.einsum("i,ji->j", self.a, Z))[:, None]
+
+
+class GenzCornerPeak(BaseEnvironment):
+    bounds = None
+
+    def __init__(self, a=None, D=10):
+        self.bounds = np.array([[0,1]] * D)
+        self.D = D
+
+        if a is not None:
+            self.a = a
+        else:
+            self.a = np.ones(D) * 5
+        
+        assert self.a.shape[0] == D
+
+    def _call(self, X):
+        return np.power(1 + np.einsum("i,ji->j", self.a, X), -(self.D + 1))[:, None]
+
+
+class GenzDiscontinuous(BaseEnvironment):
+    bounds = None
+
+    def __init__(self, u=None, a=None, D=10):
+        self.bounds = np.array([[0,1]] * D)
+        self.D = D
+
+        if u is not None:
+            self.u = u
+        else:
+            self.u = np.array([0.5, 0.5])
+
+
+        if a is not None:
+            self.a = a
+        else:
+            self.a = np.ones(D) * 5
+
+        assert self.a.shape[0] == D
+
+    def _call(self, X):
+        Z = np.exp(np.einsum("i,ji->j", self.a, X))
+        zero = np.zeros(X.shape[0])
+        return np.where((X[..., 0] > self.u[0]) | (X[..., 1] > self.u[1]), zero, Z)[:, None]
+
+
+class GenzGaussianPeak(BaseEnvironment):
+    bounds = None
+
+    def __init__(self, u=None, a=None, D=10):
+        self.bounds = np.array([[0,1]] * D)
+        self.D = D
+
+        if u is not None:
+            self.u = u
+        else:
+            self.u = np.ones((1, D)) * 0.5
+
+        if a is not None:
+            self.a = a
+        else:
+            self.a = np.ones(D) * 5
+        
+        assert self.a.shape[0] == D
+        assert self.u.shape[1] == D
+
+
+    def _call(self, X):
+        Z = np.power(X - self.u, 2)
+        return np.exp(-np.einsum("i,ji->j", self.a ** 2, Z))[:, None]
+
+
+class GenzOscillatory(BaseEnvironment):
+    bounds = None
+
+    def __init__(self, u=None, a=None, D=10):
+        self.bounds = np.array([[0,1]] * D)
+        self.D = D
+
+        if u is not None:
+            self.u = u
+        else:
+            self.u = np.array([0.5])
+
+        if a is not None:
+            self.a = a
+        else:
+            self.a = np.ones(D) * 5
+        
+        assert self.a.shape[0] == D
+        assert self.u.shape[0] == 1
+
+
+    def _call(self, X):
+        return np.cos(2 * np.pi * self.u[0] + np.einsum("i,ji->j", self.a, X))[:, None]
+
+
+class GenzProductPeak(BaseEnvironment):
+    bounds = None
+
+    def __init__(self, u=None, a=None, D=10):
+        self.bounds = np.array([[0,1]] * D)
+        self.D = D
+
+        if u is not None:
+            self.u = u
+        else:
+            self.u = np.ones((1, D)) * 0.5
+
+        if a is not None:
+            self.a = a
+        else:
+            self.a = np.ones(D) * 5
+        
+        assert self.a.shape[0] == D
+        assert self.u.shape[1] == D
+
+    def _call(self, X):
+        # Introduce new axis so addition with X works.
+        a_pow = np.power(self.a, -2)[None, :]
+
+        return np.product(1 / (a_pow + np.power(X - self.u, 2)), axis=-1)[:,None]
