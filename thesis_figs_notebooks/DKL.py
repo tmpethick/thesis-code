@@ -386,15 +386,15 @@ print(run.result)
 
 # We first need LinearFromFeatureExtractor to train
 
-# Normalize the data..
-
 config = {
     'obj_func': {'name': 'Step', 'kwargs': {'noise': 0.01}},
     'model': {
         'name': 'LinearFromFeatureExtractor',
         'kwargs': {
-            'learning_rate': 0.1,
-            'n_iter': 10000,
+            'normalize_input': True,
+            'normalize_output': True,
+            'learning_rate': 0.01,
+            'n_iter': 1000,
             'layers': [50, 5],
             'data_dim': 1,
             }

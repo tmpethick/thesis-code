@@ -265,7 +265,7 @@ class DuckTypeModel(object):
     def __init__(self, model):
         self.model = model
 
-    def get_statistics(self, X, full_cov=True):
+    def _get_statistics(self, X, full_cov=True):
         mean, var = self.model.predict(X, full_cov=False)
         return mean, var
 

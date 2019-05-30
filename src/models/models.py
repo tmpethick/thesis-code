@@ -26,38 +26,31 @@ def zero_mean_unit_var_unnormalization(X_normalized, mean, std):
 
 
 class Normalizer(object):
-    def __init__(self, X, Y, normalize_input=True, normalize_output=True):
-        self._X_mean = None
-        self._X_std = None
-        self.normalize_input = normalize_input
+    def __init__(self, X_train):
+        self.X, self._X_mean, self._X_std = zero_mean_unit_var_normalization(X_train)
 
-        self._y_mean = None
-        self._y_std = None
-        self.normalize_output = normalize_output
+    def get_transformed(self):
+        return self.X
 
-        self.X = None
-        self.Y = None
-
-        if self.normalize_input:
-            self.X, self._X_mean, self._X_std = zero_mean_unit_var_normalization(X)
-        else:
-            self.X = X
-
-        if self.normalize_output:
-            self.Y, self._y_mean, self._y_std = zero_mean_unit_var_normalization(Y)
-        else:
-            self.Y = Y
-
-    def normalize_X(self, X):
-        if self.normalize_input:
-            X, _, _ = zero_mean_unit_var_normalization(X, mean=self._X_mean, std=self._X_std)
+    def normalize(self, X):
+        """Transform new X into rescaling constructed by X_train.
+        """
+        X, _, _ = zero_mean_unit_var_normalization(X, mean=self._X_mean, std=self._X_std)
         return X
 
-    def denormalize_Y(self, Y):
-        if self.normalize_output:
-            Y = zero_mean_unit_var_unnormalization(Y, self._y_mean, self._y_std)
-            # var = var * self._y_std ** 2
-        return Y
+    def denormalize(self, X):
+        """Take normalized X and turn back into unnormalized version.
+        (used for turning predicted output trained on normalized version into original domain.)
+        """
+        X = zero_mean_unit_var_unnormalization(X, self._X_mean, self._X_std)
+        return X
+
+    def denormalize_variance(self, X_var):
+        return (X_var*(self._X_std**2))
+
+    def denormalize_covariance(self, covariance):
+        return (covariance[..., None]*(self._X_std**2))
+
 
 class Transformer(object):
     @property
@@ -160,44 +153,90 @@ class ActiveSubspace(Transformer):
 
 class BaseModel(object):
     def __init__(self, normalize_input=False, normalize_output=False):
-        self.normalizer = None
+        self.X_normalizer = None
+        self.Y_normalizer = None
         self._normalize_input = normalize_input
         self._normalize_output = normalize_output
+
+        self._X = None
+        self._Y = None
 
     def __repr__(self):
         return "{}".format(type(self).__name__)
 
     def get_incumbent(self):
-        i = np.argmax(self.Y)
-        return self.X[i], self.Y[i]
+        i = np.argmax(self._Y)
+        return self._X[i], self._Y[i]
+
+    @property
+    def X(self):
+        return self._X
+
+    @property
+    def Y(self):
+        return self._Y
 
     def init(self, X, Y, Y_dir=None, train=True):
-        self.X = X
-        self.Y = Y
+        self._X = X
+        self._Y = Y
         self.Y_dir = Y_dir
 
-        self.normalizer = Normalizer(self.X, self.Y, normalize_input=self._normalize_input, normalize_output=self._normalize_output)
+        if self._normalize_input:
+            self.X_normalizer = Normalizer(X)
+            X = self.X_normalizer.get_transformed()
+
+        if self._normalize_output:
+            self.Y_normalizer = Normalizer(Y)
+            Y = self.Y_normalizer.get_transformed()
+
+        # TODO: currently we do not normalize Y_dir.
 
         if train:
-            self._fit(self.X, self.Y, Y_dir=self.Y_dir, is_initial=True)
+            self._fit(X, Y, Y_dir=self.Y_dir, is_initial=True)
 
     def add_observations(self, X_new, Y_new, Y_dir_new=None):
-        # Update data
-        self.X = np.concatenate([self.X, X_new])
-        self.Y = np.concatenate([self.Y, Y_new])
+        assert self._X is not None, "Call init first"
 
-        self.normalizer = Normalizer(self.X, self.Y, normalize_input=self._normalize_input, normalize_output=self._normalize_output)
+        # Update data
+        self._X = np.concatenate([self._X, X_new])
+        self._Y = np.concatenate([self._Y, Y_new])
+        X = self._X
+        Y = self._Y
+
+        if self._normalize_input:
+            self.X_normalizer = Normalizer(X)
+            X = self.X_normalizer.get_transformed()
+
+        if self._normalize_output:
+            self.Y_normalizer = Normalizer(Y)
+            Y = self.Y_normalizer.get_transformed()
 
         if self.Y_dir is not None:
             self.Y_dir = np.concatenate([self.Y_dir, Y_dir_new])
-        
-        self._fit(self.X, self.Y, Y_dir=self.Y_dir, is_initial=False)
+
+        self._fit(X, Y, Y_dir=self.Y_dir, is_initial=False)
 
     def _fit(self, X, Y, Y_dir=None, is_initial=True):
+        # TODO: get rid of this dirty hack.
+        raise NotImplementedError
+
+    def _get_statistics(self, X, full_cov=True):
+        # TODO: get rid of this dirty hack.
         raise NotImplementedError
 
     def get_statistics(self, X, full_cov=True):
-        raise NotImplementedError
+        if self._normalize_input:
+            X = self.X_normalizer.normalize(X)
+
+        mean, covar = self._get_statistics(X, full_cov=full_cov)
+
+        if self._normalize_output:
+            mean = self.Y_normalizer.denormalize(mean)
+            if full_cov:
+                covar = self.Y_normalizer.denormalize_covariance(covar)
+            else:
+                covar = self.Y_normalizer.denormalize_variance(covar)
+        return mean, covar
 
     def get_mean(self, X):
         return self.get_statistics(X, full_cov=False)[0]
@@ -219,16 +258,18 @@ class BaseModel(object):
         # TODO: MULTIOBJ Plot only first objective for now
 
         # Iterate stats under different hyperparameters
-        ax.scatter(self.X, self.Y)
+        ax.scatter(self._X, self._Y)
         for (mean, var) in ((mean[i], var[i]) for i in range(n_hparams)):
             ax.plot(X_line, mean)
             ax.fill_between(X_line.reshape(-1), 
                             (mean + np.sqrt(var)).reshape(-1), 
                             (mean - np.sqrt(var)).reshape(-1), alpha=.2)
 
+        X_line
+
 
 class ProbModel(BaseModel):
-    def get_statistics(self, X, full_cov=True):
+    def _get_statistics(self, X, full_cov=True):
         raise NotImplementedError
 
 
@@ -236,7 +277,7 @@ class LinearInterpolateModel(ProbModel):
     def _fit(self, X, Y, Y_dir=None, is_initial=True):
         pass
 
-    def get_statistics(self, X, full_cov=True):
+    def _get_statistics(self, X, full_cov=True):
         assert X.shape[1] == 1, "LinearInterpolateModel only works in 1D."
 
         from scipy.interpolate import interp1d
@@ -278,11 +319,6 @@ class GPModel(ProbModel):
         return "ExactGP"
 
     def _fit(self, X, Y, Y_dir=None, is_initial=True):
-        # Use the normalized X,Y which we know has been updated.
-        # For now let the GPModel take care of normalizing the output.
-        X = self.normalizer.X
-        # Y = self.normalizer.Y
-
         assert X.shape[0] == Y.shape[0], \
             "X and Y has to match size. It was {} and {} respectively".format(X.shape[0], Y.shape[0])
 
@@ -295,7 +331,7 @@ class GPModel(ProbModel):
             mean_function = None
 
         if self.gpy_model is None:
-            self.gpy_model = GPy.models.GPRegression(X, Y, self.kernel, normalizer=self._normalize_output, mean_function=mean_function)
+            self.gpy_model = GPy.models.GPRegression(X, Y, self.kernel, mean_function=mean_function)
             if self.noise_prior:
                 if isinstance(self.noise_prior, float) or isinstance(self.noise_prior, int):
                     assert self.noise_prior != 0, "Zero noise is ignored. Use e.g. 1e-10 instead."
@@ -367,7 +403,7 @@ class GPModel(ProbModel):
         else:
             return mean, var
 
-    def get_statistics(self, X, full_cov=True):
+    def _get_statistics(self, X, full_cov=True):
         return self._predict(X, self.gpy_model.predict, full_cov=full_cov)
 
     # def predict_jacobian_1sample(self, X, full_cov=True):
@@ -530,7 +566,7 @@ class TransformerModel(ProbModel):
         self.prob_model.init(X, self.Y, Y_dir=self.Y_dir, train=True)
         # self.prob_model.add_observations(X_new, Y_new, Y_dir_new=Y_dir_new)
   
-    def get_statistics(self, X, full_cov=True):
+    def _get_statistics(self, X, full_cov=True):
         X = self.transformer.transform(X)
         mean, covar = self.prob_model.get_statistics(X, full_cov=full_cov)
         return mean, covar
@@ -556,7 +592,7 @@ class GPVanillaModel(ProbModel):
         K = np.exp(-pairwise_sq_dists / self.lengthscale ** 2)
         return K
     
-    def get_statistics(self, X, full_cov=True):
+    def _get_statistics(self, X, full_cov=True):
         assert self.K_noisy_inv is not None, "`self.fit` needs to be called first."
 
         # Compute over multiple rounds
@@ -712,7 +748,7 @@ class LowRankGPModel(ProbModel):
             Q2 = self.feature_map(X2)
             return Q1.dot(Q2.T)
 
-    def get_statistics(self, X, full_cov=True):
+    def _get_statistics(self, X, full_cov=True):
         assert self.K_noisy_inv is not None, "`self.fit` needs to be called first."
 
         # TODO: solve linear system instead of precomputing inverse.

@@ -3,6 +3,7 @@ from numpy.core.numeric import where
 
 from src.utils import construct_2D_grid, call_function_on_grid
 
+# TODO: Compose environment (Transformation such as Rescale, Shift / embeddings)
 
 class BaseEnvironment(object):
     x_opt = None

@@ -298,6 +298,6 @@ class SSGPModel(BaseModel):
         self.model.noise = self.noise
         self.model.optimize()
 
-    def get_statistics(self, X, full_cov=False):
+    def _get_statistics(self, X, full_cov=False):
         assert full_cov != True, "full_cov=True not supported."
         return self.model.predict(X)

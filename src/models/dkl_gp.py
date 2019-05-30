@@ -87,7 +87,7 @@ class LinearFromFeatureExtractor(BaseModel):
             
             self.training_callback(self, i, loss.item())
 
-    def get_statistics(self, X, full_cov=True):
+    def _get_statistics(self, X, full_cov=True):
         self.model.eval()
 
         X = torch.from_numpy(X).float()
@@ -261,7 +261,7 @@ class DKLGPModel(BaseModel):
         Z = Z.detach().numpy()
         return Z
 
-    def get_statistics(self, X, full_cov=True):
+    def _get_statistics(self, X, full_cov=True):
         assert self.model is not None, "Call `self.fit` before predicting."
 
         # Go into prediction mode

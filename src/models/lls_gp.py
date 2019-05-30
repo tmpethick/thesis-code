@@ -39,7 +39,7 @@ class LocalLengthScaleGPModel(BaseModel):
         print("Log-marginal-likelihood LLS: %s" \
               % gp_lls.log_marginal_likelihood(gp_lls.kernel_.theta))
 
-    def get_statistics(self, X, full_cov=True):
+    def _get_statistics(self, X, full_cov=True):
         assert full_cov is not True, "Full covariance is not supported yet."
         assert self.model is not None, "Call `self.fit` before predicting."
 
@@ -69,7 +69,7 @@ class LocalLengthScaleGPBaselineModel(BaseModel):
         print("Log-marginal-likelihood Matern: %s" \
               % gp_matern.log_marginal_likelihood(gp_matern.kernel_.theta))
 
-    def get_statistics(self, X, full_cov=True):
+    def _get_statistics(self, X, full_cov=True):
         assert full_cov is not True, "Full covariance is not supported yet."
         assert self.model is not None, "Call `self.fit` before predicting."
 
