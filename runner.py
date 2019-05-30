@@ -52,8 +52,11 @@ def create_kernel(name, kwargs, input_dim):
         return Class(**kwargs)
 
 def hash_subdict(d, keys=None):
+    """Create unique based on subdict of a dict.
+    If keys is None full dict is used.
+    """
     if keys is None:
-        keys = []
+        keys = d.keys()
 
     d = {k: d.get(k, {}) for k in keys}
     return hashlib.sha1(json.dumps(d, sort_keys=True).encode()).hexdigest()

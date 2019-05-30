@@ -12,6 +12,12 @@ if torch.cuda.is_available():
 else:
     device = torch.device("cpu")
 
+from torch import nn
+
+def default_training_callback(model, i, loss):
+    if i % 20 == 0:
+        print('Iter %d/%d - Loss: %.3f' % (i + 1, model.n_iter, loss))
+
 
 class LargeFeatureExtractor(torch.nn.Sequential):
     def __init__(self, data_dim, layers=(50, 25, 10, 2)):
@@ -20,16 +26,83 @@ class LargeFeatureExtractor(torch.nn.Sequential):
         assert len(layers) >= 1, "You need to specify at least and output layer size."
         layers = (data_dim,) + tuple(layers)
 
-        i = 0
-        self.add_module('linear{}'.format(i), torch.nn.Linear(layers[i], layers[i + 1]))
-
-        for i in range(1, len(layers) - 1):
+        for i in range(0, len(layers) - 1):
             in_ = layers[i]
             out = layers[i + 1]
-            self.add_module('relu{}'.format(i - 1), torch.nn.ReLU())
             self.add_module('linear{}'.format(i), torch.nn.Linear(in_, out))
+            self.add_module('relu{}'.format(i), torch.nn.ReLU())
 
         self.output_dim = layers[-1]
+
+
+class LinearFromFeatureExtractor(BaseModel):
+    """Not really DNGO as it does not use a bayesian linear regressor.
+    """
+    def __init__(self, 
+        feature_extractor=None, 
+        data_dim=None,
+        layers=(50, 25, 10, 2),
+        n_iter=50,
+        learning_rate=0.1, 
+        training_callback=default_training_callback,
+        **kwargs):
+        super().__init__(**kwargs)
+
+        self.n_iter = n_iter
+
+        if feature_extractor is not None:
+            self.feature_extractor = feature_extractor
+        else:
+            assert layers is not None and data_dim is not None, "DNGO should either have feature_extrator passed or `data_dim` and `layers`."
+            self.feature_extractor = LargeFeatureExtractor(data_dim, layers)
+
+        self.model = nn.Sequential(
+            self.feature_extractor, 
+            nn.Linear(in_features=self.feature_extractor.output_dim, out_features=1, bias=True)
+        )
+
+        self.loss = nn.MSELoss()
+        self.optimizer = torch.optim.Adam(self.model.parameters(), lr=learning_rate)
+        
+        self.training_callback = training_callback
+
+
+    def _fit(self, X, Y, Y_dir=None, is_initial=True):
+        self.model.train()
+
+        # Move tensors to the configured device
+        X_torch = torch.Tensor(X).contiguous().to(device)
+        Y_torch = torch.Tensor(Y).contiguous().to(device)
+
+        # Train the model
+        for i in range(self.n_iter):
+            # Forward pass
+            Y_pred = self.model(X_torch)
+            loss = self.loss(Y_pred, Y_torch)
+            
+            # Backward and optimize
+            self.optimizer.zero_grad()
+            loss.backward()
+            self.optimizer.step()
+            
+            self.training_callback(self, i, loss.item())
+
+    def get_statistics(self, X, full_cov=True):
+        self.model.eval()
+
+        X = torch.from_numpy(X).float()
+        X = X.to(device)
+
+        with torch.no_grad():
+            # add .cpu() before .numpy() if using GPU
+            mean = self.model(X).numpy()
+
+        N = mean.shape[0]
+
+        if full_cov:
+            return mean, np.zeros((N, N, 1))
+        else:
+            return mean, np.zeros((N, 1))
 
 
 class GPRegressionModel(gpytorch.models.ExactGP):
@@ -82,14 +155,21 @@ class GPRegressionModel(gpytorch.models.ExactGP):
         return gpytorch.distributions.MultivariateNormal(mean_x, covar_x)
 
 
-def default_training_callback(model, i, loss):
-    if i % 20 == 0:
-        print('Iter %d/%d - Loss: %.3f' % (i + 1, model.n_iter, loss))
-
-
 class DKLGPModel(BaseModel):
-    def __init__(self, n_iter=50, noise=None, learning_rate=0.1, gp_kwargs=None, nn_kwargs=None, training_callback=default_training_callback, **kwargs):
+    def __init__(self, 
+        n_iter=50, 
+        noise=None, 
+        learning_rate=0.1, 
+        gp_kwargs=None, 
+        nn_kwargs=None, 
+        do_pretrain=False,
+        pretrain_n_iter=10000,
+        training_callback=default_training_callback, 
+        **kwargs):
+
         super().__init__(**kwargs)
+        self.do_pretrain = do_pretrain
+        self.pretrain_n_iter = pretrain_n_iter
 
         self.gp_kwargs = gp_kwargs if gp_kwargs is not None else {}
         self.nn_kwargs = nn_kwargs if nn_kwargs is not None else {}
@@ -149,6 +229,11 @@ class DKLGPModel(BaseModel):
         # "Loss" for GPs - the marginal log likelihood
         mll = gpytorch.mlls.ExactMarginalLogLikelihood(self.likelihood, self.model)
 
+        # Greedily do_pretrain using MSE with an additional layer to output domain
+        if self.do_pretrain:
+            pretrain_feature_extrator = LinearFromFeatureExtractor(feature_extractor=self.feature_extractor, learning_rate=self.learning_rate, n_iter=self.pretrain_n_iter)
+            pretrain_feature_extrator.init(X, Y)
+
         def _train():
             for i in range(self.n_iter):
                 # Zero backprop gradients
@@ -200,9 +285,11 @@ class DKLGPModel(BaseModel):
         # Use LOVE
         #with torch.no_grad(), gpytorch.settings.use_toeplitz(True), gpytorch.settings.fast_pred_var():
         with torch.no_grad(), gpytorch.settings.use_toeplitz(self.model.uses_grid_interpolation), gpytorch.settings.fast_pred_var(self.model.uses_grid_interpolation):
-            # Passing through likelihood is not needed if using fixed noise
-            noise = torch.ones(test_x.shape[0]) * self.noise
-            multivariate_normal = self.likelihood(self.model(test_x), noise=noise)
+            if self.noise is not None:
+                noise = torch.ones(test_x.shape[0]) * self.noise
+                multivariate_normal = self.likelihood(self.model(test_x), noise=noise)
+            else:
+                multivariate_normal = self.likelihood(self.model(test_x))
 
             mean = multivariate_normal.mean.detach().numpy()[:cut_tail, None]
 
@@ -224,6 +311,7 @@ class DKLGPModel(BaseModel):
 
             Z = self.get_features(X_line)
             O = f.noiseless(X_line)
+            O_hat = self.get_mean(X_line)
             for j in range(Z.shape[1]):
                 ax.plot(X_line, Z[:,j])
         elif self.X.shape[-1] == 2:
@@ -249,7 +337,8 @@ class DKLGPModel(BaseModel):
             ax = fig.add_subplot(122)
             ax.set_title('f in feature space')
             if self.X.shape[-1] == 1:
-                ax.plot(Z.flatten(), O.flatten())
+                ax.scatter(Z.flatten(), O.flatten(), label="ground truth")
+                ax.scatter(Z.flatten(), O_hat.flatten(), label="prediction")
             else:
                 O = np.reshape(O, (-1, 1))
                 ax.scatter(Z.flatten(), O.flatten())

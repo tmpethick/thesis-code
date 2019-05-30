@@ -22,9 +22,11 @@ class BaseEnvironment(object):
     def __call__(self, x):
         if self.noise is not None:
             noise = np.random.normal(0, self.noise, size=x.shape[0])[:, None]
-            return self._call(x) + noise
+            y = self._call(x) + noise
         else:
-            return self._call(x) 
+            y = self._call(x) 
+
+        return y
 
     @property
     def bounds(self):
@@ -67,14 +69,15 @@ class BaseEnvironment(object):
         if self.bounds.shape[0] == 1:
             import matplotlib.pyplot as plt
             fig, ax = plt.subplots()
-            X = np.linspace(self.bounds[0,0], self.bounds[0,1], 1000)
+            X = np.linspace(self.bounds[0,0], self.bounds[0,1], 1000)[:, None]
             if title is not None:
                 ax.set_title(title)
             Y = func(X)
             ax.plot(X, Y)
 
             # Show the 2*std for the noice
-            #plt.fill_between(X, Y - 2 * self.noise, Y + 2 * self.noise, alpha=0.2)
+            # if self.noise is not None:
+            #     plt.fill_between(X, Y - 2 * self.noise, Y + 2 * self.noise, alpha=0.2)
             
             return fig
 
@@ -118,6 +121,17 @@ class TwoKink1D(BaseEnvironment):
         return np.piecewise(X, [X < self.x_1, X > self.x_1, X >= self.x_2], [fst, snd, trd])
 
 
+class SingleStep(BaseEnvironment):
+    bounds = np.array([[0,1]])
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.X_steps = np.array([0.0, 0.5])
+        self.Y_values = np.array([-1, 1])
+
+    def _call(self, X):
+        condlist = [X >= threshold for threshold in self.X_steps]
+        return np.piecewise(X, condlist, self.Y_values)
 
 
 class Step(BaseEnvironment):
@@ -196,7 +210,7 @@ class Sin(BaseEnvironment):
 
     def _call(self, x):
         import scipy.stats
-        return np.sin(30 * x)
+        return np.sin(30 * x) + np.sin(60 * x)
 
 
 class IncreasingOscillation(BaseEnvironment):
@@ -514,7 +528,8 @@ def to_gpyopt_bounds(bounds):
 class GenzContinuous(BaseEnvironment):
     bounds = None
 
-    def __init__(self, u=None, a=None, D=10):
+    def __init__(self, u=None, a=None, D=10, **kwargs):
+        super().__init__(**kwargs)
         self.bounds = np.array([[0,1]] * D)
         self.D = D
 
@@ -539,7 +554,8 @@ class GenzContinuous(BaseEnvironment):
 class GenzCornerPeak(BaseEnvironment):
     bounds = None
 
-    def __init__(self, a=None, D=10):
+    def __init__(self, a=None, D=10, **kwargs):
+        super().__init__(**kwargs)
         self.bounds = np.array([[0,1]] * D)
         self.D = D
 
@@ -557,7 +573,8 @@ class GenzCornerPeak(BaseEnvironment):
 class GenzDiscontinuous(BaseEnvironment):
     bounds = None
 
-    def __init__(self, u=None, a=None, D=10):
+    def __init__(self, u=None, a=None, D=10, **kwargs):
+        super().__init__(**kwargs)
         self.bounds = np.array([[0,1]] * D)
         self.D = D
 
@@ -583,7 +600,8 @@ class GenzDiscontinuous(BaseEnvironment):
 class GenzGaussianPeak(BaseEnvironment):
     bounds = None
 
-    def __init__(self, u=None, a=None, D=10):
+    def __init__(self, u=None, a=None, D=10, **kwargs):
+        super().__init__(**kwargs)
         self.bounds = np.array([[0,1]] * D)
         self.D = D
 
@@ -609,7 +627,8 @@ class GenzGaussianPeak(BaseEnvironment):
 class GenzOscillatory(BaseEnvironment):
     bounds = None
 
-    def __init__(self, u=None, a=None, D=10):
+    def __init__(self, u=None, a=None, D=10, **kwargs):
+        super().__init__(**kwargs)
         self.bounds = np.array([[0,1]] * D)
         self.D = D
 
@@ -634,7 +653,8 @@ class GenzOscillatory(BaseEnvironment):
 class GenzProductPeak(BaseEnvironment):
     bounds = None
 
-    def __init__(self, u=None, a=None, D=10):
+    def __init__(self, u=None, a=None, D=10, **kwargs):
+        super().__init__(**kwargs)
         self.bounds = np.array([[0,1]] * D)
         self.D = D
 

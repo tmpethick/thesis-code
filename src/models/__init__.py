@@ -21,5 +21,6 @@ from .lls_gp import \
 from .dkl_gp import \
     LargeFeatureExtractor, \
     GPRegressionModel, \
-    DKLGPModel
+    DKLGPModel, \
+    LinearFromFeatureExtractor
 from .ssgp import SSGPModel

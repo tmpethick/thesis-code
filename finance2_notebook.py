@@ -7,7 +7,7 @@ from runner import notebook_run, notebook_run_CLI, notebook_run_server, execute
 
 import matplotlib.pyplot as plt
 import seaborn as sns
-sns.set_style("darkgrid")
+sns.set_style("white")
 
 from src.utils import *
 from src.plot_utils import *
@@ -109,7 +109,7 @@ run = execute(config_updates={
             },
             'noise': 0.001,
             'do_optimize': False,
-            'n_features': 50,
+            'n_features': 500,
         }
     },
     'gp_samples': 100

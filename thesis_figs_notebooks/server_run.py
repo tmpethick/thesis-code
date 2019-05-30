@@ -44,6 +44,35 @@ def add_noiselevels(obj_funs):
             kwargs['noise'] = level
         obj_fun['kwargs'] = kwargs
 
+#%% Non-stationarity (Step)
+
+
+import itertools
+n_iters = [1000]
+learning_rates = [0.005, 0.01]
+parameters = itertools.product(n_iters, learning_rates)
+models = [{
+    'name': 'DKLGPModel',
+    'kwargs': {
+        'noise': None,
+        'learning_rate': learning_rate,
+        'n_iter': n_iter,
+        'nn_kwargs': {
+            'layers': [5,5,2],
+        }
+    }
+} for (n_iter, learning_rate) in parameters]
+
+for function_name in ['Step', 'SingleStep']:
+    for model in models:
+        config = {
+            'tag': 'step',
+            'obj_func': {'name': function_name, 'kwargs': {'noise': 0.01}},
+            'model': model,
+            'gp_samples': 1000,
+        }
+        run = execute(config_updates=config)
+
 
 #%% Test robustness of ExactDKL (how closely does it match ExactGP)
 
@@ -301,6 +330,60 @@ for func in functions:
         })
 
 
+#%% Genz1984!
+from src.environments import *
+
+# Plot all genz
+# GenzContinuous(D=2).plot(projection="3d")
+# GenzCornerPeak(D=2).plot(projection="3d")
+# GenzDiscontinuous(D=2).plot(projection="3d")
+# GenzGaussianPeak(D=2).plot(projection="3d")
+# GenzOscillatory(D=2).plot(projection="3d")
+# GenzProductPeak(D=2).plot(projection="3d")
+
+Ds = [2,5,10,50]
+functions = ['GenzContinuous', 'GenzCornerPeak', 'GenzDiscontinuous', 'GenzGaussianPeak', 'GenzOscillatory', 'GenzProductPeak']
+
+for func in functions:
+    for D in Ds:
+        run = execute(config_updates={
+            'tag': 'genz',
+            'obj_func': {'name': func, 'kwargs': {'D': D}},
+            'model': {
+                'name': 'DKLGPModel',
+                'kwargs': {
+                    'learning_rate': 0.01,
+                    'n_iter': 1000,
+                    'nn_kwargs': {'layers': [100, 50, 1]},
+                    'noise': 1e-1,
+                },
+            },
+            'gp_samples': 1000,
+        })
+
+#%% Genz now with 2D embedding
+
+Ds = [2,5,10,50]
+functions = ['GenzContinuous', 'GenzCornerPeak', 'GenzDiscontinuous', 'GenzGaussianPeak', 'GenzOscillatory', 'GenzProductPeak']
+
+for func in functions:
+    for D in Ds:
+        run = execute(config_updates={
+            'tag': 'genz',
+            'obj_func': {'name': func, 'kwargs': {'D': D}},
+            'model': {
+                'name': 'DKLGPModel',
+                'kwargs': {
+                    'learning_rate': 0.01,
+                    'n_iter': 1000,
+                    'nn_kwargs': {'layers': [100, 50, 2]},
+                    'noise': 1e-1,
+                },
+            },
+            'gp_samples': 1000,
+        })
+
+
 #%% Scalability
 
 # DKL, RFF, SparseGP
@@ -367,3 +450,5 @@ for sample_size in sample_sizes:
                 'gp_use_derivatives': model.get('name') == 'TransformerModel',
                 'gp_samples': sample_size,
             })
+
+

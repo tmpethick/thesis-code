@@ -199,6 +199,9 @@ class BaseModel(object):
     def get_statistics(self, X, full_cov=True):
         raise NotImplementedError
 
+    def get_mean(self, X):
+        return self.get_statistics(X, full_cov=False)[0]
+
     def plot(self, X_line, ax=None):
         import matplotlib.pyplot as plt
         ax = ax if ax is not None else plt
