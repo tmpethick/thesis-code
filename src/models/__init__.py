@@ -4,6 +4,7 @@ from .models import \
     ActiveSubspace, \
     BaseModel, \
     ProbModel, \
+    NormalizerModel, \
     LinearInterpolateModel, \
     GPModel, \
     DerivativeGPModel, \

@@ -159,3 +159,37 @@ for i in [0, -0.5, -0.8]:
     asg.fit(callback=calc_error)
     fig = asg.plot()
     plt.show()
+
+#%%
+# SG does badly around kink
+
+SG = AdaptiveSparseGrid(f, depth=15, refinement_level=0)
+SG.fit(callback=calc_error)
+fig = SG.plot()
+SG_Loo_err, SG_L2_err = SG.calc_error(X_test, Y_test)
+
+print("{0} points: Loo={1:1.2e}  L2={2:1.2e}".format(SG.grid.getNumPoints(), SG_Loo_err, SG_L2_err))
+print("{0} points: Loo={1:1.2e}  L2={2:1.2e}".format(ASG.grid.getNumPoints(), ASG_Loo_err, ASG_L2_err))
+
+#%%
+
+# A-SG Will correctly sample around Kinks and do better.
+
+def hyperparam_test(f_tol=0.001):
+    ASG = AdaptiveSparseGrid(f, depth=1, refinement_level=30, f_tol=f_tol, point_tol=1e5)
+    ASG.fit(callback=calc_error)
+    fig = ASG.plot()
+    ASG_Loo_err, ASG_L2_err = ASG.calc_error(X_test, Y_test)
+    return ASG_L2_err
+
+# f_tols = 10 ** (-np.linspace(1, 4, 15))
+# V = np.empty(f_tols.shape)
+# for i, f_tol in enumerate(f_tols):
+#     print(f_tol)
+#     V[i] = hyperparam_test(f_tol)
+
+# idx = np.nanargmin(V)
+# print(V[idx], f_tols[idx])
+
+# 0.0001 best candidate yielding L2≈0.001617 (using 25k points but not significantly better than just using 11k)
+hyperparam_test(0.0001)

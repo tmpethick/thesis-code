@@ -1,11 +1,12 @@
 import sys
 import subprocess
+import time
 
-from src.environments import BaseEnvironment
-from src.models.models import BaseModel, TransformerModel
+from src.environments import BaseEnvironment, EnvironmentNormalizer
+from src.models.models import BaseModel, TransformerModel, NormalizerModel, GPModel
 from src.models.lls_gp import LocalLengthScaleGPModel
 from src.models.dkl_gp import DKLGPModel
-from src.plot_utils import plot1D, plot2D, plot_function, plot_model
+from src.plot_utils import plot1D, plot2D, plot_function, plot_model, plot_model_unknown_bounds
 
 # For some reason it breaks without TkAgg when running from CLI.
 # from src import settings
@@ -44,7 +45,6 @@ def unpack(config_obj):
 
 
 def create_kernel(name, kwargs, input_dim):
-    print(name, kwargs, input_dim)
     Class = getattr(kernels_module, name)
     if issubclass(Class, Kern):
         return Class(input_dim, **kwargs)
@@ -81,18 +81,24 @@ def create_ex(interactive=False):
 
     @ex.capture
     def dklgpmodel_training_callback(model, i, loss, _log, _run):
+        # TODO: save model
         if i % 30 == 0:
-            # TODO: save model
             # Log
             _log.info('Iter %d/%d - Loss: %.3f' % (i + 1, model.n_iter, loss))
-
+        
+        if i % 5 == 0:  
             # Metrics
             _run.log_scalar('DKLGPModel.training.loss', loss, i)
 
 
     def create_model(name, kwargs, input_dim=None):
         # TODO: avoid this ad-hoc case...
-        if name == 'TransformerModel':
+        if name == 'NormalizerModel':
+            model = kwargs['model']
+            kwargs2 = kwargs.copy()
+            kwargs2['model'] = create_model(model['name'], model['kwargs'], input_dim=input_dim)
+
+        elif name == 'TransformerModel':
             transformer = kwargs['transformer']
             prob_model = kwargs['prob_model']
             transformer = create_model(transformer['name'], transformer['kwargs'])
@@ -209,13 +215,17 @@ def create_ex(interactive=False):
 
         Y = f(X)
 
+        training_time = np.empty(len(models))
+
         if use_derivatives:
             Y_dir = f.derivative(X)
             for model in models:
                 model.init(X, Y, Y_dir=Y_dir)
         else:
-            for model in models:
+            for i, model in enumerate(models):
+                start_time = time.clock()
                 model.init(X, Y)
+                training_time[i] = time.clock() - start_time                              
 
         if model_compare:
             # TODO: For now only supports 2 models
@@ -238,17 +248,26 @@ def create_ex(interactive=False):
 
             # Transformed model
             # TODO: Plot sampled
-            if isinstance(model, TransformerModel):
+            if isinstance(model, NormalizerModel):
+                true_model = model.model
+                fig = plot_model_unknown_bounds(true_model)
+                save_fig(fig, settings.ARTIFACT_UNNORMALIZED_FILENAME.format(model_idx=i))
+                normalized_f = EnvironmentNormalizer(f, model.X_normalizer, model.Y_normalizer)
+            else:
+                true_model = model
+                normalized_f = f
+
+            if isinstance(true_model, TransformerModel):
                 try:
-                    subspace_dim = model.transformer.output_dim
+                    subspace_dim = true_model.transformer.output_dim
                 except:
                     pass
                 else:
                     if subspace_dim <= 2:
-                        X_test = random_hypercube_samples(1000, f.bounds)
-                        Y_test = f.noiseless(X_test)
-                        X_trans = model.transformer.transform(X_test)
-                        mean, _ = model.prob_model.get_statistics(X_trans)
+                        X_test = random_hypercube_samples(1000, normalized_f.bounds)
+                        Y_test = normalized_f.noiseless(X_test)
+                        X_trans = true_model.transformer.transform(X_test)
+                        mean, _ = true_model.prob_model.get_statistics(X_trans)
 
                         # TODO: move (and include variance)
                         fig = plt.figure()
@@ -264,17 +283,17 @@ def create_ex(interactive=False):
 
             # Acquisition
             if acquisition_function is not None:
-                fig = plot_function(f, acquisition_function, title="Acquisition functions", points=X)
+                fig = plot_function(normalized_f, acquisition_function, title="Acquisition functions", points=X)
                 save_fig(fig, settings.ARTIFACT_GP_ACQ_FILENAME.format(model_idx=i))
 
             # Length scale
-            if isinstance(model, LocalLengthScaleGPModel):
-                fig = plot_function(f, lambda x: 1 / model.get_lengthscale(x)[:,None], title="1/Lengthscale", points=X)
+            if isinstance(true_model, LocalLengthScaleGPModel):
+                fig = plot_function(normalized_f, lambda x: 1 / true_model.get_lengthscale(x)[:,None], title="1/Lengthscale", points=X)
                 save_fig(fig, settings.ARTIFACT_LLS_GP_LENGTHSCALE_FILENAME.format(model_idx=i))
-            
+
             # Plot feature space for DKLGP
-            elif isinstance(model, DKLGPModel):
-                fig = model.plot_features(f)
+            elif isinstance(true_model, DKLGPModel):
+                fig = true_model.plot_features(normalized_f)
                 if fig is not None:
                     save_fig(fig, settings.ARTIFACT_DKLGP_FEATURES_FILENAME.format(model_idx=i))
 
@@ -282,14 +301,19 @@ def create_ex(interactive=False):
             rmse, max_err = calc_errors(model, f, rand=True)
             log_info('Model{}: {} has RMSE={} max_err={}'.format(i, model, rmse, max_err))
 
+            if isinstance(true_model, DKLGPModel) or isinstance(true_model, GPModel):
+                log_info('Model{} has parameters: {}'.format(i, true_model.get_common_hyperparameters()))
+
             # Only store under `model{i}` for additional models to share interface with BO metrics.
             if i == 0:
                 log_scalar('rmse', rmse, 0)
                 log_scalar('max_err', max_err, 0)
+                log_scalar('time.training', training_time[i], 0)
             else:
                 log_scalar('model{}.rmse'.format(i), rmse, 0)
                 log_scalar('model{}.max_err'.format(i), max_err, 0)
-
+                log_scalar('model{}.time.training'.format(i), training_time[i], 0)
+        
 
     @ex.main
     def main(_config, _run, _log):

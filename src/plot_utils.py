@@ -133,6 +133,31 @@ def plot_function(f: BaseEnvironment, func, title="Function", points=None):
     
     return fig
 
+def plot_model_unknown_bounds(model: BaseModel):
+    X_min = np.min(model.X)
+    X_max = np.max(model.X)
+    X_line = np.linspace(X_min, X_max, 100)[:, None]
+
+    mean, var = model.get_statistics(X_line, full_cov=False)
+
+    # aggregate hyperparameters dimension
+    if var.ndim == 3:
+        mean = np.mean(mean, axis=0)
+        var = np.mean(var, axis=0)
+
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+    ax.scatter(model.X.reshape(-1), model.Y)
+    ax.plot(X_line, mean)
+    ax.fill_between(X_line.reshape(-1),
+                    (mean + 2 * np.sqrt(var)).reshape(-1),
+                    (mean - 2 * np.sqrt(var)).reshape(-1), alpha=0.5)    
+    plt.tight_layout()
+    
+    return fig
+
+
+
 def plot_model(model: BaseModel, f: BaseEnvironment):
     if f.bounds.shape[0] == 1:
         return plot1D(model, f)

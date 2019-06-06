@@ -32,7 +32,6 @@ latexify(columns=3)
 
 #%% Lengthscales
 
-
 for lengthscale in [0.1, 0.5, 1]:
     kernel = GPy.kern.RBF(1)
     kernel.lengthscale = lengthscale

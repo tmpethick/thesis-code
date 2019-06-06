@@ -2,6 +2,7 @@ import numpy as np
 from numpy.core.numeric import where
 
 from src.utils import construct_2D_grid, call_function_on_grid
+from src.models.models import Normalizer
 
 # TODO: Compose environment (Transformation such as Rescale, Shift / embeddings)
 
@@ -122,6 +123,40 @@ class TwoKink1D(BaseEnvironment):
         return np.piecewise(X, [X < self.x_1, X > self.x_1, X >= self.x_2], [fst, snd, trd])
 
 
+class EnvironmentNormalizer(BaseEnvironment):
+    """Wrap an function so it takes input from a normalized domain and produces a normalized output.
+    """
+    def __init__(self, env: BaseEnvironment, input_normalizer: Normalizer=None, output_normalizer: Normalizer=None):
+        self._env = env
+        self.input_normalizer = input_normalizer
+        self.output_normalizer = output_normalizer
+
+    def __repr__(self):
+        return "{}<{}>".format(type(self).__name__, self._env)
+
+    @property
+    def bounds(self):
+        # Swap axes so we have (2, D)
+        bounds = np.moveaxis(self._env.bounds, -1, 0)
+
+        # Change them into bounds in the normalized space
+        bounds = self.input_normalizer.normalize(bounds)
+
+        # Swap back the axes
+        return np.moveaxis(bounds, -1, 0)
+
+    def _call(self, X):
+        if self.input_normalizer is not None:
+            X = self.input_normalizer.denormalize(X)
+        
+        Y = self._env(X)
+        
+        if self.output_normalizer is not None:
+            Y = self.output_normalizer.normalize(Y)
+
+        return Y
+
+
 class SingleStep(BaseEnvironment):
     bounds = np.array([[0,1]])
     
@@ -211,7 +246,7 @@ class Sin(BaseEnvironment):
 
     def _call(self, x):
         import scipy.stats
-        return np.sin(30 * x) + np.sin(60 * x)
+        return np.sin(30 * x) #+ np.sin(60 * x)
 
 
 class IncreasingOscillation(BaseEnvironment):

@@ -152,12 +152,7 @@ class ActiveSubspace(Transformer):
 
 
 class BaseModel(object):
-    def __init__(self, normalize_input=False, normalize_output=False):
-        self.X_normalizer = None
-        self.Y_normalizer = None
-        self._normalize_input = normalize_input
-        self._normalize_output = normalize_output
-
+    def __init__(self):
         self._X = None
         self._Y = None
 
@@ -176,47 +171,26 @@ class BaseModel(object):
     def Y(self):
         return self._Y
 
-    def init(self, X, Y, Y_dir=None, train=True):
+    def init(self, X, Y, Y_dir=None):
         self._X = X
         self._Y = Y
         self.Y_dir = Y_dir
 
-        if self._normalize_input:
-            self.X_normalizer = Normalizer(X)
-            X = self.X_normalizer.get_transformed()
-
-        if self._normalize_output:
-            self.Y_normalizer = Normalizer(Y)
-            Y = self.Y_normalizer.get_transformed()
-
-        # TODO: currently we do not normalize Y_dir.
-
-        if train:
-            self._fit(X, Y, Y_dir=self.Y_dir, is_initial=True)
+        self._fit(X, Y, Y_dir=self.Y_dir)
 
     def add_observations(self, X_new, Y_new, Y_dir_new=None):
         assert self._X is not None, "Call init first"
 
         # Update data
-        self._X = np.concatenate([self._X, X_new])
-        self._Y = np.concatenate([self._Y, Y_new])
-        X = self._X
-        Y = self._Y
-
-        if self._normalize_input:
-            self.X_normalizer = Normalizer(X)
-            X = self.X_normalizer.get_transformed()
-
-        if self._normalize_output:
-            self.Y_normalizer = Normalizer(Y)
-            Y = self.Y_normalizer.get_transformed()
+        X = np.concatenate([self._X, X_new])
+        Y = np.concatenate([self._Y, Y_new])
 
         if self.Y_dir is not None:
-            self.Y_dir = np.concatenate([self.Y_dir, Y_dir_new])
+            Y_dir = np.concatenate([self.Y_dir, Y_dir_new])
 
-        self._fit(X, Y, Y_dir=self.Y_dir, is_initial=False)
+        self.init(X, Y, Y_dir)
 
-    def _fit(self, X, Y, Y_dir=None, is_initial=True):
+    def _fit(self, X, Y, Y_dir=None):
         # TODO: get rid of this dirty hack.
         raise NotImplementedError
 
@@ -225,18 +199,7 @@ class BaseModel(object):
         raise NotImplementedError
 
     def get_statistics(self, X, full_cov=True):
-        if self._normalize_input:
-            X = self.X_normalizer.normalize(X)
-
-        mean, covar = self._get_statistics(X, full_cov=full_cov)
-
-        if self._normalize_output:
-            mean = self.Y_normalizer.denormalize(mean)
-            if full_cov:
-                covar = self.Y_normalizer.denormalize_covariance(covar)
-            else:
-                covar = self.Y_normalizer.denormalize_variance(covar)
-        return mean, covar
+        return self._get_statistics(X, full_cov=full_cov)
 
     def get_mean(self, X):
         return self.get_statistics(X, full_cov=False)[0]
@@ -264,8 +227,65 @@ class BaseModel(object):
             ax.fill_between(X_line.reshape(-1), 
                             (mean + np.sqrt(var)).reshape(-1), 
                             (mean - np.sqrt(var)).reshape(-1), alpha=.2)
-
         X_line
+
+
+class NormalizerModel(BaseModel):
+        def __init__(self, model, normalize_input=True, normalize_output=True):
+            super().__init__()
+            self.model = model
+            self.X_normalizer = None
+            self.Y_normalizer = None
+            self._normalize_input = normalize_input
+            self._normalize_output = normalize_output
+
+        def _normalize(self, X, Y):
+            if self._normalize_input:
+                self.X_normalizer = Normalizer(X)
+                X = self.X_normalizer.get_transformed()
+
+            if self._normalize_output:
+                self.Y_normalizer = Normalizer(Y)
+                Y = self.Y_normalizer.get_transformed()
+
+            return X, Y
+
+        def init(self, X, Y, Y_dir=None):
+            # TODO: do not "copy/paste" behaviour from BaseModel.
+            self._X = X
+            self._Y = Y
+            self.Y_dir = Y_dir
+
+            X, Y = self._normalize(X, Y)
+            self.model.init(X, Y, Y_dir)
+
+        def add_observations(self, X_new, Y_new, Y_dir_new=None):
+            # TODO: do not "copy/paste" behaviour from BaseModel.
+            assert self._X is not None, "Call init first"
+
+            # Update data
+            X = np.concatenate([self._X, X_new])
+            Y = np.concatenate([self._Y, Y_new])
+
+            if self.Y_dir is not None:
+                Y_dir = np.concatenate([self.Y_dir, Y_dir_new])
+
+            self.init(X, Y, Y_dir)
+
+        def get_statistics(self, X, full_cov=True):
+            if self._normalize_input:
+                X = self.X_normalizer.normalize(X)
+
+            mean, covar = self.model.get_statistics(X, full_cov=full_cov)
+
+            if self._normalize_output:
+                mean = self.Y_normalizer.denormalize(mean)
+                if full_cov:
+                    covar = self.Y_normalizer.denormalize_covariance(covar)
+                else:
+                    covar = self.Y_normalizer.denormalize_variance(covar)
+            return mean, covar
+
 
 
 class ProbModel(BaseModel):
@@ -274,7 +294,7 @@ class ProbModel(BaseModel):
 
 
 class LinearInterpolateModel(ProbModel):
-    def _fit(self, X, Y, Y_dir=None, is_initial=True):
+    def _fit(self, X, Y, Y_dir=None):
         pass
 
     def _get_statistics(self, X, full_cov=True):
@@ -295,10 +315,8 @@ class GPModel(ProbModel):
             subsample_interval=10,
             step_size=1e-1,
             leapfrog_steps=20,
-            normalize_input=False,
-            normalize_output=False,
             mean_prior=None):
-        super(GPModel, self).__init__(normalize_input=normalize_input, normalize_output=normalize_output)
+        super().__init__()
 
         self.kernel = kernel
         self.noise_prior = noise_prior
@@ -318,7 +336,13 @@ class GPModel(ProbModel):
     def __repr__(self):
         return "ExactGP"
 
-    def _fit(self, X, Y, Y_dir=None, is_initial=True):
+    def get_common_hyperparameters(self):
+        return {
+            'lengthscale': self.kernel.lengthscale,
+            'noise': self.gpy_model.Gaussian_noise.variance,
+        }
+
+    def _fit(self, X, Y, Y_dir=None):
         assert X.shape[0] == Y.shape[0], \
             "X and Y has to match size. It was {} and {} respectively".format(X.shape[0], Y.shape[0])
 
@@ -366,9 +390,6 @@ class GPModel(ProbModel):
         Returns:
             numpy.array -- shape (hyperparams, stats, obs, obj_dim)
         """
-
-        # Normalize the input (normalization of output is dealt with by GPy)
-        X = self.normalizer.normalize_X(X)
 
         num_X = X.shape[0]
         num_obj = self.output_dim
@@ -522,7 +543,7 @@ class DerivativeGPModel(GPModel):
     Exists only to easy integration into the current configuration setup.
     """
 
-    def _fit(self, X, Y, Y_dir=None, is_initial=True):
+    def _fit(self, X, Y, Y_dir=None):
         return super(DerivativeGPModel, self)._fit(X, Y_dir, Y_dir=None, is_initial=is_initial)
 
 
@@ -573,13 +594,13 @@ class TransformerModel(ProbModel):
 
 
 class GPVanillaModel(ProbModel):
-    def __init__(self, lengthscale=0.1, noise=0.01, normalize_input=False, normalize_output=False):
-        super(GPVanillaModel, self).__init__(normalize_input=normalize_input, normalize_output=normalize_output)
+    def __init__(self, lengthscale=0.1, noise=0.01):
+        super(GPVanillaModel, self).__init__()
         self.K_noisy_inv = None
         self.lengthscale = lengthscale
         self.noise = noise
 
-    def _fit(self, X, Y, Y_dir=None, is_initial=True):
+    def _fit(self, X, Y, Y_dir=None):
         n, d = X.shape
         kern = self.kernel(X,X) + self.noise * np.identity(n)
         
@@ -621,8 +642,8 @@ class GPVanillaLinearModel(GPVanillaModel):
 
 
 class LowRankGPModel(ProbModel):
-    def __init__(self, kernel, noise = 0.01, n_features=10, do_optimize=False, normalize_input=False, normalize_output=False, n_restarts_optimizer=10):
-        super(LowRankGPModel, self).__init__(normalize_input=normalize_input, normalize_output=normalize_output)
+    def __init__(self, kernel, noise = 0.01, n_features=10, do_optimize=False, n_restarts_optimizer=10):
+        super(LowRankGPModel, self).__init__()
         self.noise = noise
         self.m = n_features
         self.kernel_ = kernel
@@ -707,7 +728,7 @@ class LowRankGPModel(ProbModel):
 
         return Phi, A, chol, L
 
-    def _fit(self, X, Y, Y_dir=None, is_initial=True):
+    def _fit(self, X, Y, Y_dir=None):
         # Hack
         self.X = X
         if self.do_optimize:
@@ -770,11 +791,11 @@ class RandomFourierFeaturesModel(LowRankGPModel):
     [1]: https://www.cs.cmu.edu/~dsutherl/papers/rff_uai15.pdf
     """
 
-    def __init__(self, kernel, noise=0.01, n_features=10, do_optimize=False, normalize_input=False, normalize_output=False):
+    def __init__(self, kernel, noise=0.01, n_features=10, do_optimize=False):
         assert n_features % 2 == 0, "`n_features` has to be even."
         
         super(RandomFourierFeaturesModel, self).__init__(kernel, noise=noise, n_features=n_features, 
-        do_optimize=do_optimize, normalize_input=normalize_input, normalize_output=normalize_output)
+        do_optimize=do_optimize)
 
         # `self.kernel` is already reserved by LowRankGPModel
         self.kernel_ = kernel
@@ -810,8 +831,8 @@ class RandomFourierFeaturesModel(LowRankGPModel):
 
 
 class EfficientLinearModel(LowRankGPModel):
-    def __init__(self, noise=0.01, n_features=None, normalize_input=False, normalize_output=False):
-        super(EfficientLinearModel, self).__init__(noise=noise, n_features=n_features, normalize_input=normalize_input, normalize_output=normalize_output)
+    def __init__(self, noise=0.01, n_features=None):
+        super(EfficientLinearModel, self).__init__(noise=noise, n_features=n_features)
 
     def feature_map(self, X):
         n, d = X.shape
@@ -835,10 +856,10 @@ def cartesian_product(*arrays):
 
 class QuadratureFourierFeaturesModel(LowRankGPModel):
 
-    def __init__(self, lengthscale=0.1, noise=0.01, n_features=100, normalize_input=False, normalize_output=False):
+    def __init__(self, lengthscale=0.1, noise=0.01, n_features=100):
         assert n_features % 2 == 0, "`n_features` has to be even."
 
-        super(QuadratureFourierFeaturesModel, self).__init__(noise=noise, n_features=n_features, normalize_input=normalize_input, normalize_output=normalize_output)
+        super(QuadratureFourierFeaturesModel, self).__init__(noise=noise, n_features=n_features)
         
         # Not used since the structure is implicit in the particular use of the Gauss-Hermite Scheme.
         self.lengthscale = lengthscale
