@@ -250,9 +250,11 @@ def create_ex(interactive=False):
             # TODO: Plot sampled
             if isinstance(model, NormalizerModel):
                 true_model = model.model
-                fig = plot_model_unknown_bounds(true_model)
-                save_fig(fig, settings.ARTIFACT_UNNORMALIZED_FILENAME.format(model_idx=i))
                 normalized_f = EnvironmentNormalizer(f, model.X_normalizer, model.Y_normalizer)
+                
+                if f.input_dim == 1:
+                    fig = plot_model_unknown_bounds(true_model)
+                    save_fig(fig, settings.ARTIFACT_UNNORMALIZED_FILENAME.format(model_idx=i))
             else:
                 true_model = model
                 normalized_f = f

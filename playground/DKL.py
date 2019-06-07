@@ -754,12 +754,6 @@ run = execute(config_updates={
 
 #%% 
 
-# Normalize (instead of prior)
-# Raise error if gpytorch warning (if log has warning?)
-
-# What if we took a Kink2D that was not bend? Would it learn to stretch the domain?
-# How does it even help on step function?
-
 #######################################################
 # DKL - Scalability
 #######################################################

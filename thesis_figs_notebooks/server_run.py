@@ -452,3 +452,29 @@ for sample_size in sample_sizes:
             })
 
 
+#%%
+functions = ['GenzContinuous', 'GenzCornerPeak', 'GenzDiscontinuous', 'GenzGaussianPeak', 'GenzOscillatory', 'GenzProductPeak']
+
+for normalize in [True, False]:
+    for function in functions:
+        config = {
+            'tag': 'genz-dkl-normalize',
+            'obj_func': {'name': function, 'kwargs': {'D': 2, 'noise': 0.01}},
+            'model': {
+                'name': 'DKLGPModel',
+                'kwargs': {
+                    'learning_rate': 0.01,
+                    'n_iter': 300,
+                    'do_pretrain': False,
+                    'nn_kwargs': {'layers': [100, 50, 2],
+                                'normalize_output': normalize},
+                    'use_cg': True,
+                    'precond_size': 100,
+                    'noise': 0.01,
+                    'use_double_precision': True,
+                },
+            },
+            'gp_samples': 1000,
+        }
+        normalize_config(config)
+        run = execute(config_updates=config)

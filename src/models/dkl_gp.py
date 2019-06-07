@@ -245,49 +245,43 @@ class GPRegressionModel(gpytorch.models.ExactGP):
         self.uses_grid_interpolation = n_grid is not None
         self.n_grid = n_grid
                 
-        scale_kernel = gpytorch.kernels.ScaleKernel(
-            gpytorch.kernels.RBFKernel(
-                lengthscale_prior=lengthscale_prior
-            ),
-            outputscale_prior=outputscale_prior
-        )
+        self.rbf_kernel = gpytorch.kernels.RBFKernel(lengthscale_prior=lengthscale_prior)
+        # , ard_num_dims=train_x.shape[-1]
+        kernel = self.rbf_kernel
         
         if n_grid is not None:
-            self.covar_module = gpytorch.kernels.GridInterpolationKernel(
-                scale_kernel,
+            kernel = gpytorch.kernels.GridInterpolationKernel(
+                self.rbf_kernel,
                 num_dims=gp_input_dim, 
                 grid_size=n_grid, 
                 grid_bounds=None, # TODO: should we set grid bounds?
             )
-        else:
-            self.covar_module = scale_kernel
+        
+        self.covar_module = gpytorch.kernels.ScaleKernel(kernel, outputscale_prior=outputscale_prior)
 
         # Initialize lengthscale and outputscale to mean of priors
         if lengthscale_prior is not None:
-            scale_kernel.base_kernel.lengthscale = lengthscale_prior.mean
+            self.rbf_kernel.lengthscale = lengthscale_prior.mean
         if outputscale_prior is not None:
-            scale_kernel.outputscale = outputscale_prior.mean
+            self.covar_module.outputscale = outputscale_prior.mean
 
-    def initialize_proxy(self, **inits):
-        """Prefix SKI kernel if used.
-        """
-        def modify(k):
-            prefix = 'covar_module.'
-            if k.startswith(prefix):
-                return '{}base_kernel.{}'.format(prefix, k[len(prefix):])
-            else:
-                return k  
-  
-        if self.n_grid is not None:
-            inits = {modify(k):v for k,v in inits.items()}
-        return self.initialize(**inits)
+    def initialize_proxy(self, lengthscale=None, outputscale=None, noise=None):
+        if isinstance(self.likelihood, gpytorch.likelihoods.FixedNoiseGaussianLikelihood):
+            assert noise is None, "Only init noise if not fixed."
 
-    def get_scale_kernel(self):
-        if self.n_grid is not None:
-            scale_kernel = self.covar_module.base_kernel
-        else:
-            scale_kernel = self.covar_module
-        return scale_kernel
+        if lengthscale is not None:
+            self.rbf_kernel.lengthscale = lengthscale
+        if outputscale is not None:
+            self.covar_module.outputscale = outputscale
+        if noise is not None:
+            self.likelihood.noise = noise
+        return self
+
+    def get_lengthscale(self):
+        return self.rbf_kernel.lengthscale
+
+    def get_outputscale(self):
+        return self.covar_module.outputscale
 
     def forward(self, x):
         if self.feature_extractor is not None:
@@ -332,17 +326,7 @@ class DKLGPModel(FeatureModel):
         #     'outputscale_prior': gpytorch.priors.GammaPrior(2.0, 0.15),
         # })
         
-        # Init parameters (`model.initialize_proxy` will take care of the optional SKI kernel nesting.)
-        INIT_PARAM_MAP = {
-            'lengthscale': 'covar_module.base_kernel.lengthscale',
-            'outputscale': 'covar_module.outputscale',
-            'noise': 'likelihood.noise',
-        }
-
-        if initial_parameters is not None:
-            self.initial_parameters = {INIT_PARAM_MAP.get(k, k): v for k,v in initial_parameters.items()}
-        else:
-            self.initial_parameters = None
+        self.initial_parameters = initial_parameters
 
         self.learning_rate = learning_rate
         self.noise = noise
@@ -360,14 +344,19 @@ class DKLGPModel(FeatureModel):
         self.training_callback = training_callback
 
     def get_common_hyperparameters(self):
-        scale_kernel = self.model.get_scale_kernel()
         return {
-            'outputscale': scale_kernel.outputscale.item(),
-            'lengthscale': scale_kernel.base_kernel.lengthscale.item(),
+            'outputscale': self.model.get_outputscale(),
+            'lengthscale': self.model.get_lengthscale(),
             'noise': self.noise if self.noise is not None else self.likelihood.noise.item(),
         }
 
     def _fit(self, X, Y, Y_dir=None):
+        # catch warning, save and stop (runner should store this warning)
+        if self.do_pretrain:
+            self._train(X, Y, fix_gp_params=True)
+        self._train(X, Y, fix_gp_params=False)
+
+    def _train(self, X, Y, fix_gp_params=False):
         n, d = X.shape
 
         self.X_torch = torch.Tensor(X)
@@ -408,19 +397,18 @@ class DKLGPModel(FeatureModel):
         self.model.train()
         self.likelihood.train()
 
-        opt_parameter_list = [
-            {'params': self.model.covar_module.parameters()},
-            {'params': self.model.mean_module.parameters()},
-        ]
+        opt_parameter_list = []
+
+        if not fix_gp_params:
+            opt_parameter_list.append({'params': self.model.covar_module.parameters()})
+            opt_parameter_list.append({'params': self.model.mean_module.parameters()})
+            # Only add noise as hyperparameter if it is not fixed.
+            #if self.noise is None:
+            opt_parameter_list.append({'params': self.model.likelihood.parameters()})
 
         if self.has_feature_map:
             self.feature_extractor.train()
-
             opt_parameter_list.append({'params': self.model.feature_extractor.parameters()})
-
-        # Only add noise as hyperparameter if it is not fixed.
-        #if self.noise is None:
-        opt_parameter_list.append({'params': self.model.likelihood.parameters()})
 
         # optimize with Adam
         optimizer = torch.optim.Adam(opt_parameter_list, lr=self.learning_rate)
@@ -428,10 +416,11 @@ class DKLGPModel(FeatureModel):
         # "Loss" for GPs - the marginal log likelihood
         mll = gpytorch.mlls.ExactMarginalLogLikelihood(self.likelihood, self.model)
 
-        # Greedily do_pretrain using MSE with an additional layer to output domain
-        if self.do_pretrain:
-            pretrain_feature_extrator = LinearFromFeatureExtractor(feature_extractor=self.feature_extractor, learning_rate=self.learning_rate, n_iter=self.pretrain_n_iter)
-            pretrain_feature_extrator.init(X, Y)
+        #if self.do_pretrain:
+            # Greedily do_pretrain using MSE with an additional layer to output domain
+            # pretrain_feature_extrator = LinearFromFeatureExtractor(feature_extractor=self.feature_extractor, learning_rate=self.learning_rate, n_iter=self.pretrain_n_iter)
+            # pretrain_feature_extrator.init(X, Y)
+
 
 
         def _train():
@@ -447,6 +436,8 @@ class DKLGPModel(FeatureModel):
                 loss.backward()
 
                 training_loss = loss.item()
+                if i % 30 == 0:
+                    print('Current hyperparameters:', self.get_common_hyperparameters())
                 self.training_loss[i] = training_loss
                 self.training_callback(self, i, training_loss)
                 optimizer.step()
@@ -496,6 +487,7 @@ class DKLGPModel(FeatureModel):
                 noise = torch.ones(test_x.shape[0]) * self.noise
                 if self.use_double_precision:
                     noise = noise.double()
+
                 multivariate_normal = self.likelihood(self.model(test_x), noise=noise)
             else:
                 multivariate_normal = self.likelihood(self.model(test_x))

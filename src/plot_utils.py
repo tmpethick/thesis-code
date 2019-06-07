@@ -211,8 +211,6 @@ def plot2D(model: BaseModel, f: BaseEnvironment): # -> plt.Figure:
         mean = np.mean(mean, axis=0)
         var = np.mean(var, axis=0)
 
-    print(XY.shape)
-    print(ground_truth.shape)
     # recreate grid
     mean = mean.reshape((original_grid_size, original_grid_size))
     var = var.reshape((original_grid_size, original_grid_size))

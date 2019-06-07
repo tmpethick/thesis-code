@@ -67,7 +67,7 @@ f = run.interactive_stash['f']
 
 latexify(columns=2)
 fig = f.plot()
-savefig(fig, 'DKL/dkl-kink2D-manifold-f.pdf')
+#savefig(fig, 'DKL/dkl-kink2D-manifold-f.pdf')
 plt.show()
 
 fig, ax = plt.subplots()
@@ -80,7 +80,7 @@ ax.contourf(Z[...,0], Z[...,1], O[...,0], 50)
 
 plt.tight_layout()
 
-savefig(fig, 'DKL/dkl-kink2D-manifold-features.pdf')
+#savefig(fig, 'DKL/dkl-kink2D-manifold-features.pdf')
     
 
 #%% IncreasingOscillation lengthscale change
