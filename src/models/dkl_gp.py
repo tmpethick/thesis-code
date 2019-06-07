@@ -74,7 +74,14 @@ class FeatureModel(BaseModel):
 
         self.feature_extractor.eval()
         
-        test_x = torch.Tensor(X).contiguous().to(device)
+        test_x = torch.Tensor(X)
+
+        # TODO: don't use attr that only subclass assigns.
+        if hasattr(self, 'use_double_precision') and self.use_double_precision:
+            test_x = test_x.double()
+
+        test_x = test_x.contiguous().to(device)
+        
         Z = self.feature_extractor(test_x)
         Z = Z.detach().numpy()
         return Z
@@ -237,7 +244,7 @@ class GPRegressionModel(gpytorch.models.ExactGP):
 
         self.uses_grid_interpolation = n_grid is not None
         self.n_grid = n_grid
-        
+                
         scale_kernel = gpytorch.kernels.ScaleKernel(
             gpytorch.kernels.RBFKernel(
                 lengthscale_prior=lengthscale_prior
@@ -305,10 +312,14 @@ class DKLGPModel(FeatureModel):
         training_callback=default_training_callback, 
         initial_parameters=None,
         use_double_precision=False,
+        use_cg=False,
+        precond_size=10,
         **kwargs):
 
         super().__init__(**kwargs)
         self.use_double_precision = use_double_precision
+        self.use_cg = use_cg
+        self.precond_size = precond_size
 
         self.do_pretrain = do_pretrain
         self.pretrain_n_iter = pretrain_n_iter
@@ -328,7 +339,10 @@ class DKLGPModel(FeatureModel):
             'noise': 'likelihood.noise',
         }
 
-        self.initial_parameters = {INIT_PARAM_MAP.get(k, k): v for k,v in initial_parameters.items()}
+        if initial_parameters is not None:
+            self.initial_parameters = {INIT_PARAM_MAP.get(k, k): v for k,v in initial_parameters.items()}
+        else:
+            self.initial_parameters = None
 
         self.learning_rate = learning_rate
         self.noise = noise
@@ -371,9 +385,15 @@ class DKLGPModel(FeatureModel):
 
         if self.noise is not None:
             noise = torch.ones(self.X_torch.shape[0]) * self.noise
+            if self.use_double_precision:
+                noise = noise.double()
             self.likelihood = gpytorch.likelihoods.FixedNoiseGaussianLikelihood(noise=noise)
         else:
             self.likelihood = gpytorch.likelihoods.GaussianLikelihood().to(device)
+
+        if self.use_double_precision:
+            self.feature_extractor = self.feature_extractor.double()
+            self.likelihood = self.likelihood.double()
 
         self.model = GPRegressionModel(self.X_torch, self.Y_torch, self.likelihood, self.feature_extractor, **self.gp_kwargs).to(device)
 
@@ -381,7 +401,6 @@ class DKLGPModel(FeatureModel):
             self.model = self.model.double()
 
         if self.initial_parameters is not None:
-            # 'covar_module.base_kernel.lengthscale': 0.1
             print(self.initial_parameters)
             self.model.initialize_proxy(**self.initial_parameters)
 
@@ -432,7 +451,10 @@ class DKLGPModel(FeatureModel):
                 self.training_callback(self, i, training_loss)
                 optimizer.step()
 
-        with gpytorch.settings.use_toeplitz(self.model.uses_grid_interpolation):
+        with gpytorch.settings.use_toeplitz(self.model.uses_grid_interpolation), \
+            gpytorch.settings.fast_computations(covar_root_decomposition=True, log_prob=self.use_cg, solves=self.use_cg),\
+            gpytorch.settings.max_cg_iterations(1000),\
+                gpytorch.settings.max_preconditioner_size(self.precond_size):
             _train()
 
     def plot_loss(self):
@@ -466,11 +488,14 @@ class DKLGPModel(FeatureModel):
 
         test_x = test_x.contiguous().to(device)
 
-        # Use LOVE
-        #with torch.no_grad(), gpytorch.settings.use_toeplitz(True), gpytorch.settings.fast_pred_var():
-        with torch.no_grad(), gpytorch.settings.use_toeplitz(self.model.uses_grid_interpolation), gpytorch.settings.fast_pred_var(self.model.uses_grid_interpolation):
+        with torch.no_grad(), \
+            gpytorch.settings.fast_computations(covar_root_decomposition=True, log_prob=self.use_cg, solves=self.use_cg), \
+            gpytorch.settings.use_toeplitz(self.model.uses_grid_interpolation), \
+            gpytorch.settings.fast_pred_var(self.use_cg):
             if self.noise is not None:
                 noise = torch.ones(test_x.shape[0]) * self.noise
+                if self.use_double_precision:
+                    noise = noise.double()
                 multivariate_normal = self.likelihood(self.model(test_x), noise=noise)
             else:
                 multivariate_normal = self.likelihood(self.model(test_x))

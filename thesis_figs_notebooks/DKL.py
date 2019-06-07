@@ -302,3 +302,30 @@ for i, init in enumerate(distinct_inits):
 
 savefig(fig, 'DKL/lml(lengthscale)-b.pdf')
 
+
+#%%
+# Working DKL model for IncreasingOscillation
+config = {
+    'obj_func': {'name': 'IncreasingOscillation'},
+    'model': {
+        'name': 'DKLGPModel',
+        'kwargs': {
+            'learning_rate': 0.1,
+            'n_iter': 100,
+            'nn_kwargs': {'layers': [500, 100, 1],
+                          'normalize_output': True},
+            'use_cg': True,
+            'initial_parameters': {
+                'lengthscale': 0.1,
+                'noise': 0.1,
+                'outputscale': 1
+            },
+            'noise': None,
+        },
+    },
+    'gp_samples': 1000,
+}
+normalize_config(config)
+run = execute(config_updates=config)
+
+model = run.interactive_stash['model']

@@ -340,7 +340,7 @@ from src.environments import *
 # GenzGaussianPeak(D=2).plot(projection="3d")
 # GenzOscillatory(D=2).plot(projection="3d")
 # GenzProductPeak(D=2).plot(projection="3d")
-
+#%%
 Ds = [2,5,10,50]
 functions = ['GenzContinuous', 'GenzCornerPeak', 'GenzDiscontinuous', 'GenzGaussianPeak', 'GenzOscillatory', 'GenzProductPeak']
 

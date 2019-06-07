@@ -331,7 +331,9 @@ config = {
             'learning_rate': 0.01,
             'n_iter': 100,
             'nn_kwargs': {'layers': [100, 50, 1]},
-            'noise': None
+            'noise': None,
+            'use_double_precision': True,
+            'use_cg': False,
         },
     },
     'gp_samples': 1000,
@@ -397,7 +399,6 @@ run = execute(config_updates=config)
 print(run.result)
 
 #%% DNGO without BLR is even unstable...
-
 
 model = {
         'name': 'LinearFromFeatureExtractor',

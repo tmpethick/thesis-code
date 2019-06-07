@@ -125,7 +125,7 @@ def plot_function(f: BaseEnvironment, func, title="Function", points=None):
         ax.set_title(title)
         ax.contourf(X, Y, Z_hat, 50)
         if points is not None:
-            sns.scatterplot(points[:, 0], points[:, 1], ax=ax)
+            sns.scatterplot(points[:, 0], points[:, 1], size=2, ax=ax)
     else:
         raise ValueError("Cannot plot in input dim above 2.")
 
@@ -223,7 +223,7 @@ def plot2D(model: BaseModel, f: BaseEnvironment): # -> plt.Figure:
     ax.set_title('Ground truth $f$')
     cont = ax.contourf(X, Y, ground_truth, 50)
     fig.colorbar(cont)
-    ax.plot(model.X[:, 0], model.X[:, 1], '.', markersize=10)
+    ax.plot(model.X[:, 0], model.X[:, 1], '.', markersize=2)
 
     ax = fig.add_subplot(222)
     ax.set_title('Mean estimate $m$')
