@@ -1,6 +1,7 @@
 import numpy as np
 import torch
 import gpytorch
+import warnings
 
 from src.models.models import BaseModel
 from src.utils import construct_2D_grid, call_function_on_grid, random_hypercube_samples
@@ -48,7 +49,7 @@ def default_training_callback(model, i, loss):
 
 
 class LargeFeatureExtractor(torch.nn.Sequential):
-    def __init__(self, data_dim, layers=(50, 25, 10, 2), normalize_output=True):
+    def __init__(self, data_dim, layers=(50, 25, 10, 2), normalize_output=True, relu_output=False):
         super().__init__()
 
         assert len(layers) >= 1, "You need to specify at least an output layer size."
@@ -62,6 +63,8 @@ class LargeFeatureExtractor(torch.nn.Sequential):
         
         self.output_dim = layers[-1]
         self.add_module('linear{}'.format(i+1), torch.nn.Linear(layers[-2], self.output_dim))
+        if relu_output:
+            self.add_module('relu{}'.format(i+1), torch.nn.ReLU())
         if normalize_output:
             self.add_module('normalization', nn.BatchNorm1d(self.output_dim, affine=False, momentum=1))
 
@@ -252,7 +255,7 @@ class GPRegressionModel(gpytorch.models.ExactGP):
         if n_grid is not None:
             kernel = gpytorch.kernels.GridInterpolationKernel(
                 self.rbf_kernel,
-                num_dims=gp_input_dim, 
+                num_dims=gp_input_dim,
                 grid_size=n_grid, 
                 grid_bounds=None, # TODO: should we set grid bounds?
             )
@@ -307,12 +310,14 @@ class DKLGPModel(FeatureModel):
         initial_parameters=None,
         use_double_precision=False,
         use_cg=False,
+        max_cg_iter=1000,
         precond_size=10,
         **kwargs):
 
         super().__init__(**kwargs)
         self.use_double_precision = use_double_precision
         self.use_cg = use_cg
+        self.max_cg_iter = max_cg_iter
         self.precond_size = precond_size
 
         self.do_pretrain = do_pretrain
@@ -342,6 +347,8 @@ class DKLGPModel(FeatureModel):
         self.has_feature_map = self.nn_kwargs['layers'] is not None
 
         self.training_callback = training_callback
+
+        self.warnings = {}
 
     def get_common_hyperparameters(self):
         return {
@@ -444,9 +451,26 @@ class DKLGPModel(FeatureModel):
 
         with gpytorch.settings.use_toeplitz(self.model.uses_grid_interpolation), \
             gpytorch.settings.fast_computations(covar_root_decomposition=True, log_prob=self.use_cg, solves=self.use_cg),\
-            gpytorch.settings.max_cg_iterations(1000),\
-                gpytorch.settings.max_preconditioner_size(self.precond_size):
-            _train()
+            gpytorch.settings.max_cg_iterations(self.max_cg_iter),\
+            gpytorch.settings.max_preconditioner_size(self.precond_size):
+
+            # Catch CG warning
+            with warnings.catch_warnings(record=True) as w:
+                warnings.simplefilter("always")
+
+                _train()
+
+                self.store_CG_warning('training', w)
+
+    def store_CG_warning(self, key, warnings):
+        for w in warnings:
+            print(w, w.category, w.message, w.message.args)
+            if issubclass(w.category, UserWarning) \
+                and hasattr(w.message, 'args') \
+                and len(w.message.args) >= 1 \
+                and "CG terminated in " in str(w.message.args[0]):
+
+                self.warnings.update({key: True})
 
     def plot_loss(self):
         fig, ax = plt.subplots()
@@ -483,18 +507,26 @@ class DKLGPModel(FeatureModel):
             gpytorch.settings.fast_computations(covar_root_decomposition=True, log_prob=self.use_cg, solves=self.use_cg), \
             gpytorch.settings.use_toeplitz(self.model.uses_grid_interpolation), \
             gpytorch.settings.fast_pred_var(self.use_cg):
-            if self.noise is not None:
-                noise = torch.ones(test_x.shape[0]) * self.noise
-                if self.use_double_precision:
-                    noise = noise.double()
 
-                multivariate_normal = self.likelihood(self.model(test_x), noise=noise)
-            else:
-                multivariate_normal = self.likelihood(self.model(test_x))
+            # Catch CG warning
+            with warnings.catch_warnings(record=True) as w:
+                warnings.simplefilter("always")
 
-            mean = multivariate_normal.mean.detach().numpy()[:cut_tail, None]
+                if self.noise is not None:
+                    noise = torch.ones(test_x.shape[0]) * self.noise
+                    if self.use_double_precision:
+                        noise = noise.double()
+
+                    multivariate_normal = self.likelihood(self.model(test_x), noise=noise)
+                else:
+                    multivariate_normal = self.likelihood(self.model(test_x))
+
+                mean = multivariate_normal.mean.detach().numpy()[:cut_tail, None]
+
+                self.store_CG_warning('pred', w)
 
             if full_cov:
                 return mean, multivariate_normal.covariance_matrix.detach().numpy()[:cut_tail, :cut_tail, None]
             else:
                 return mean, multivariate_normal.variance.detach().numpy()[:cut_tail, None]
+

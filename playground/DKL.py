@@ -751,28 +751,12 @@ run = execute(config_updates={
 })
 
 
-
 #%% 
 
 #######################################################
 # DKL - Scalability
 #######################################################
 
-#%% Scalability (take hardest problems of Ganz1984)
-
-# Do this with fixed hyperparameters... (which one to choose?)
-# First function that can comes from the kernel (to avoid approximation error from other factors)
-# Also let it be low dimensional.
-
-# Then function that does not (model mis-match). (still in low dim)
-
-# Move to higher dimensions where many points are actually needed. (Genz1984)
-    # effect of m
-    # effect of n
-
-# scale exact
-# scale DKL
-# (see performance difference and when exact breaks)
 
 
 #%% 

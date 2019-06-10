@@ -2,11 +2,10 @@ import numpy as np
 import matplotlib as mpl
 import itertools
 from cycler import cycler
-import seaborn as sns
 
 MARKER = itertools.cycle(('o', 's', '^', '*', '>', '<', '8', 'p'))
 LINES = itertools.cycle(("-", "--", ":", "-", "-."))
-COLORS = sns.set_palette("husl")
+#COLORS = sns.set_palette("husl")
 
 # get font size from latex with: `\the\textwidth` \the\textwidth
 
@@ -90,7 +89,7 @@ def use_config(width_scale=1.0, height_scale=None, aspect=None, text_width=437.4
         # Figure
         'figure.figsize': fig_size,
         # Colors
-        'axes.prop_cycle': cycler('color', COLORS) + cycler('linestyle', LINES),
+        'axes.prop_cycle': cycler('linestyle', LINES),
         'image.cmap': 'viridis',
         'lines.markersize': np.sqrt(20),
     }

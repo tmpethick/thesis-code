@@ -50,20 +50,20 @@ class BaseEnvironment(object):
     def hessian(self, x):
         raise NotImplementedError
 
-    def plot(self, projection=None):
-        return self._plot(self.noiseless, projection=projection, title="$f$")
+    def plot(self, projection=None, title="$f$"):
+        return self._plot(self.noiseless, projection=projection, title=title)
 
-    def plot_derivative(self, projection=None):
-        return self._plot(self.derivative, projection=projection, title="$\\nabla f$")
+    def plot_derivative(self, projection=None, title="$\\nabla f$"):
+        return self._plot(self.derivative, projection=projection, title=title)
 
-    def plot_curvature(self, norm="fro", projection=None):
+    def plot_curvature(self, norm="fro", projection=None, title="$\\nabla^2 f$"):
         if self.bounds.shape[0] != 1:
             def hess(x):
                 H = self.hessian(x)
                 return np.linalg.norm(H, ord=norm, axis=(-2, -1))[...,None]
         else:
             hess = self.hessian
-        return self._plot(hess, projection=projection, title="$\\nabla^2 f$")
+        return self._plot(hess, projection=projection, title=title)
 
     def _plot(self, func, projection=None, title=None):
         assert self.bounds.shape[0] in [1,2], "Only support 1D/2D plots."

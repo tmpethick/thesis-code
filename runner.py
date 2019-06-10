@@ -1,6 +1,7 @@
 import sys
 import subprocess
 import time
+import warnings
 
 from src.environments import BaseEnvironment, EnvironmentNormalizer
 from src.models.models import BaseModel, TransformerModel, NormalizerModel, GPModel
@@ -158,14 +159,8 @@ def create_ex(interactive=False):
             plt.show()
         _run.add_artifact(filename)
 
-
     @ex.capture
-    def log_scalar(name, value, step, _run):
-        _run.log_scalar(name, value, step)
-
-        # Mongodb does not allow `.` in the key for a regular entry.
-        name = name.replace(".", ":")
-
+    def update_result(name, value, _run):
         # Update the result dict with the latest value (notice `step` is ignored).
         result = _run.result
         if type(result) is not dict:
@@ -173,6 +168,13 @@ def create_ex(interactive=False):
         result[name] = value
         _run.result = result
 
+    @ex.capture
+    def log_scalar(name, value, step, _run):
+        _run.log_scalar(name, value, step)
+
+        # Mongodb does not allow `.` in the key for a regular entry.
+        name = name.replace(".", ":")
+        update_result(name, value)
 
     @ex.capture
     def plot(algorithm: AcquisitionAlgorithm, i, _run, _log):
@@ -225,7 +227,7 @@ def create_ex(interactive=False):
             for i, model in enumerate(models):
                 start_time = time.clock()
                 model.init(X, Y)
-                training_time[i] = time.clock() - start_time                              
+                training_time[i] = time.clock() - start_time
 
         if model_compare:
             # TODO: For now only supports 2 models
@@ -300,21 +302,29 @@ def create_ex(interactive=False):
                     save_fig(fig, settings.ARTIFACT_DKLGP_FEATURES_FILENAME.format(model_idx=i))
 
             # Log
+            start_time = time.clock()
             rmse, max_err = calc_errors(model, f, rand=True)
+            pred_time = time.clock() - start_time
+            
             log_info('Model{}: {} has RMSE={} max_err={}'.format(i, model, rmse, max_err))
 
             if isinstance(true_model, DKLGPModel) or isinstance(true_model, GPModel):
                 log_info('Model{} has parameters: {}'.format(i, true_model.get_common_hyperparameters()))
+
+            if hasattr(true_model, 'warnings') and len(true_model.warnings) > 0:
+              update_result('WARNING', true_model.warnings)
 
             # Only store under `model{i}` for additional models to share interface with BO metrics.
             if i == 0:
                 log_scalar('rmse', rmse, 0)
                 log_scalar('max_err', max_err, 0)
                 log_scalar('time.training', training_time[i], 0)
+                log_scalar('time.pred', pred_time, 0)
             else:
                 log_scalar('model{}.rmse'.format(i), rmse, 0)
                 log_scalar('model{}.max_err'.format(i), max_err, 0)
                 log_scalar('model{}.time.training'.format(i), training_time[i], 0)
+                log_scalar('model{}.time.pred'.format(i), pred_time, 0)
         
 
     @ex.main

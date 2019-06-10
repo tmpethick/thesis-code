@@ -1,6 +1,8 @@
 import math
 import os
 import pathlib
+import itertools 
+from cycler import cycler
 
 import matplotlib
 import numpy as np
@@ -13,11 +15,16 @@ from src.models.models import BaseModel
 from src.utils import call_function_on_grid, construct_2D_grid
 
 
+MARKER = itertools.cycle(('o', 's', '^', '*', '>', '<', '8', 'p'))
+CMAP = 'viridis'
+COLORS = sns.color_palette('colorblind').as_hex()
+
+
 def savefig(fig, filepath):
     filepath = os.path.join(settings.THESIS_FIGS_DIR, filepath)
     dir_name = os.path.dirname(filepath)
     pathlib.Path(dir_name).mkdir(parents=True, exist_ok=True) 
-    fig.savefig(filepath)
+    fig.savefig(filepath, transparent=False)
 
 
 def latexify(fig_width=None, fig_height=None, columns=3):
@@ -35,9 +42,6 @@ def latexify(fig_width=None, fig_height=None, columns=3):
 
     # Width and max height in inches for IEEE journals taken from
     # computer.org/cms/Computer.org/Journal%20templates/transactions_art_guide.pdf
-
-    sns.set_style("whitegrid")
-    sns.set_palette(sns.color_palette('colorblind'))
 
     assert(columns in [1,2,3])
 
@@ -60,20 +64,73 @@ def latexify(fig_width=None, fig_height=None, columns=3):
               "so will reduce to" + MAX_HEIGHT_INCHES + "inches.")
         fig_height = MAX_HEIGHT_INCHES
 
-    params = {'backend': 'pgf',
-              'pgf.preamble': ['\\usepackage{gensymb}'],
-              'axes.labelsize': 8, # fontsize for x and y labels (was 10)
-              'axes.titlesize': 8,
-              #'font.fontsize': 8, # was 10
-              'legend.fontsize': 8, # was 10
-              'xtick.labelsize': 8,
-              'ytick.labelsize': 8,
-              'text.usetex': True,
-              'figure.figsize': [fig_width,fig_height],
-              'font.family': 'serif'
+    fig_size = [fig_width,fig_height]
+
+    params = {
+            'backend': 'pgf',
+            'pgf.preamble': [
+                r'\usepackage[utf8x]{inputenc}',
+                r'\usepackage[T1]{fontenc}',
+                r'\usepackage{gensymb}',
+            ],
+            'axes.labelsize': 8, # fontsize for x and y labels (was 10)
+            'axes.titlesize': 8,
+            #'font.fontsize': 8, # was 10
+            'legend.fontsize': 8, # was 10
+            'xtick.labelsize': 8,
+            'ytick.labelsize': 8,
+            'text.usetex': True,
+            'figure.figsize': fig_size,
+            'font.family': 'serif',
+        
+            'legend.markerscale': .9,
+            'legend.numpoints': 1,
+            'legend.handlelength': 2,
+            'legend.scatterpoints': 1,
+            'legend.labelspacing': 0.5,
+            'legend.facecolor': '#eff0f1',
+            # 'legend.edgecolor': 'none',
+            'legend.handletextpad': 0.5,  # pad between handle and text
+            'legend.borderaxespad': 0.5,  # pad between legend and axes
+            'legend.borderpad': 0.5,  # pad between legend and legend content
+            'legend.columnspacing': 1,  # pad between each legend column
+            'axes.spines.left': True,
+            'axes.spines.top': True,
+            'axes.titlesize': 'medium',
+            'axes.spines.bottom': True,
+            'axes.spines.right': True,
+            'axes.axisbelow': True,
+            'axes.grid': True,
+            'grid.linewidth': 0.5,
+            'grid.linestyle': '-',
+            'grid.alpha': .6,
+            'lines.linewidth': 1,
+            'lines.markersize': 4,
+            'lines.markeredgewidth': 1,
+
+            # Force white to avoid transparent turning into black in latex.
+            'axes.facecolor': 'white',
+            'savefig.facecolor': 'white',
+
+            # 'axes.prop_cycle': cycler('linestyle', LINES),
+
+        # 'path.simplify': True,
+        # 'path.simplify_threshold': 0.1,
+        # 'pgf.preamble': [
+        #     r'\usepackage[utf8x]{inputenc}',
+        #     r'\usepackage[T1]{fontenc}',
+        #     #rf'\usepackage{{{typeface}}}'
+        # ],
+        # Colors
     }
 
     matplotlib.rcParams.update(params)
+
+    sns.set_style("whitegrid")
+    sns.set_palette(COLORS)
+
+    matplotlib.rcParams.update({'image.cmap': CMAP})
+
 
 SPINE_COLOR = 'gray'
 
