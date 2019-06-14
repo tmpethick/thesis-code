@@ -180,7 +180,22 @@ class Step(BaseEnvironment):
         # X_steps = np.sort(X_steps)
         # Y_values = 10*np.cos(2.5*X_steps-4) + 20 + np.random.uniform(-2, 2, size=N_steps)
         self.X_steps = np.array([0.1059391 , 0.23668238, 0.38007559, 0.47764559, 0.62765332, 0.87921645, 0.93967713, 0.98301519])
-        self.Y_values = np.array([11.46027201,  9.59505656,  8.71181213, 11.93343655, 13.55133013, 18.15854289, 18.4201603 , 18.78589584])
+        self.Y_values = np.array([11.46027201,  9.59505656,  8.71181213, 11.93343655, 15.55133013, 18.15854289, 18.4201603 , 18.78589584]) / 17
+
+    def _call(self, X):
+        condlist = [X > threshold for threshold in self.X_steps]
+        return np.piecewise(X, condlist, self.Y_values)
+
+
+class StepConcave(BaseEnvironment):
+    bounds = np.array([[0,1]])
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # x = np.sort(np.random.uniform(0, 1, 8))
+        # plt.plot(x, np.sin(np.pi*x))
+        self.X_steps = np.array([0.1, 0.33, 0.5 , 0.7, 0.8, 0.9, 0.95 ])
+        self.Y_values = np.sin(np.pi*self.X_steps)
 
     def _call(self, X):
         condlist = [X > threshold for threshold in self.X_steps]
@@ -312,8 +327,17 @@ class NegSinc(Sinc):
 
 
 class Sin2D(BaseEnvironment):
+    bounds = np.array([[0,1], [0,1]])
+
     def _call(self, x):
-        return (0.5 * np.sin(13 * x[..., 0]) * np.sin(27 * x[..., 0]) + 0.5) * (0.5 * np.sin(13 * x[..., 1]) * np.sin(27 * x[..., 1]) + 0.5)
+        return (0.5 * np.sin(13 * x[..., 0]) * np.sin(27 * x[..., 0]) + 0.5) * (0.5 * np.sin(13 * x[..., 1]) * np.sin(27 * x[..., 1]) + 0.5)[..., None]
+
+
+class Sin2DRotated(BaseEnvironment):
+    bounds = np.array([[0,1], [0,1]])
+
+    def _call(self, x):
+        return np.sin( 2*np.pi*(x[...,0]+x[...,1]))[..., None]
 
 
 class CosProd2D(BaseEnvironment):

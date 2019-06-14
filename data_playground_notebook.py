@@ -38,3 +38,4 @@ df
 
 #%%
 
+df.shape

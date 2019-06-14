@@ -154,7 +154,7 @@ from GPy.models import GPRegression
 
 kernels = {
     'RBF': GPy.kern.RBF(1),
-    #'Linear': GPy.kern.Linear(1),
+    'Linear': GPy.kern.Linear(1),
 }
 
 N = 100
@@ -178,5 +178,113 @@ for name, kernel in kernels.items():
 
 
 
+
+#%%
+
+def matshow(K):
+    fig = plt.figure()
+    ax = fig.add_axes([0,0,1,1])
+    m = ax.matshow(K)
+    ax.axis('off')
+    fig.colorbar(m)
+    plt.tight_layout()
+    return fig
+
+latexify(columns=3)
+kernel = GPy.kern.RBF(1, lengthscale=1)
+X = np.random.normal(0, 1, size=1000)[:,None]
+X = np.sort(X, axis=0)
+K = kernel.K(X,X)
+fig = matshow(K)
+savefig(fig, 'DKL/kernel-rbf.pdf')
+
+#%%
+# RFF
+kernel = RFFRBF(lengthscale=1, variance=1)
+model = RandomFourierFeaturesModel(kernel, n_features=40)
+K_ssgp = model.kernel(X, X)
+fig, ax = plt.subplots()
+plt.matshow(K_ssgp)
+fig = matshow(K_ssgp)
+savefig(fig, 'DKL/kernel-rff.pdf')
+fig = matshow(np.abs(K - K_ssgp))
+savefig(fig, 'DKL/kernel-rff-diff.pdf')
+
+
+#%%
+# SKI
+kernel = gpytorch.kernels.GridInterpolationKernel(gpytorch.kernels.RBFKernel(), grid_size=40, num_dims=1)
+X_torch = torch.Tensor(X)
+K = gpytorch.kernels.RBFKernel()(X_torch, X_torch).numpy()
+K_ski = kernel(X_torch, X_torch).numpy()
+fig = matshow(K_ski)
+savefig(fig, 'DKL/kernel-ski.pdf')
+fig = matshow(np.abs(K - K_ski))
+savefig(fig, 'DKL/kernel-ski-diff.pdf')
+
+
+#%% Error
+
+# SKI
+tests = range(10, 25, 2)
+error = np.empty(len(tests))
+
+fig, ax = plt.subplots()
+
+MARKER = cycle_markers()
+
+for i, M in enumerate(tests):
+    aver_err = np.empty(1)
+    for j in range(len(aver_err)):
+        kernel = gpytorch.kernels.GridInterpolationKernel(gpytorch.kernels.RBFKernel(), grid_size=M, num_dims=1)
+        X_torch = torch.Tensor(X)
+        K = gpytorch.kernels.RBFKernel()(X_torch, X_torch).numpy()
+        K_ski = kernel(X_torch, X_torch).numpy()
+        aver_err[j] = np.linalg.norm(K - K_ski) / K.size
+    error[i] = np.mean(aver_err)
+ax.plot(tests, error, label="SKI", marker=next(MARKER))
+
+#RFF error
+tests = range(10, 25, 2)
+error = np.empty(len(tests))
+
+kernel = GPy.kern.RBF(1, lengthscale=1)
+K = kernel.K(X,X)
+
+# kernel = RFFRBF(lengthscale=1, variance=1)
+# model = RandomFourierFeaturesModel(kernel, n_features=100000)
+# K = model.kernel(X, X)
+
+for i, M in enumerate(tests):
+    aver_err = np.empty(10)
+    for j in range(len(aver_err)):
+        kernel = RFFRBF(lengthscale=1, variance=1)
+        model = RandomFourierFeaturesModel(kernel, noise=0, n_features=M)
+        K_ssgp = model.kernel(X, X)
+        aver_err[j] = np.linalg.norm(K - K_ssgp) / K.size
+    error[i] = np.mean(aver_err)
+
+ax.plot(tests, error, label="RFF", marker=next(MARKER))
+plt.legend(loc='upper right')
+plt.xlabel("m")
+plt.ylabel("Error")
+plt.tight_layout()
+savefig(fig, "DKL/kernel-err-vs-m.pdf")
+
+#%% Active subspace
+
+latexify(columns=2)
+def f(X):
+    return np.exp(0.7 * X[..., 0] + 0.3 * X[...,1])
+
+bounds = np.array([[-1,1], [-1,1]])
+XY, X, Y = construct_2D_grid(bounds, N=1000)
+Z = call_function_on_grid(f, XY)
+
+fig, ax = plt.subplots()
+m = ax.imshow(Z, extent=list(bounds.flatten()), origin='lower')
+fig.colorbar(m)
+ax.axis(aspect='image')
+savefig(fig, "AS/AS-example.pdf")
 
 #%%

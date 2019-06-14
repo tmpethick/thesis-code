@@ -92,5 +92,4 @@ with torch.no_grad():
     #ax.set_ylim([-20])
     ax.legend(['Observed Data', 'Mean', 'Confidence'])
 
-
 #%%

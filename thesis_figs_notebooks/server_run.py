@@ -480,3 +480,176 @@ for D in Ds:
         }
         normalize_config(config)
         run = execute(config_updates=config)
+
+#%% Scalability
+
+noise = 0.0001
+
+RFF = [{
+    'name': 'RandomFourierFeaturesModel',
+    'kwargs': {
+        'kernel': {
+            'name': 'RFFRBF',
+            'kwargs': {
+                'lengthscale': 1.0,
+                'variance': 0.5
+            }
+        },
+        'noise': noise,
+        'do_optimize': False,
+        'n_features': 500,
+    }
+}]
+
+exactGP = [{
+    'name': 'GPModel',
+    'kwargs': {
+        'kernel': {
+            'name': 'GPyRBF',
+            'kwargs': {
+                'lengthscale': 1
+            }
+        },
+        'noise_prior': noise,
+        'do_optimize': True,
+        'num_mcmc': 0,
+    },
+}]
+
+
+Ms = [None, int(np.sqrt(1000)), int(np.sqrt(10000))]
+DKLModel = [{
+    'name': 'DKLGPModel',
+    'kwargs': {
+        'learning_rate': 0.1,
+        'n_iter': 150,
+        'nn_kwargs': {'layers': None, 
+                      'normalize_output': False},
+        'gp_kwargs': {'n_grid': M},
+        'use_cg': True,
+        'precond_size': 50,
+        'max_cg_iter': 2000,
+        'use_double_precision': False, 
+        'noise': noise,
+    }
+} for M in Ms]
+
+
+transformer_model = {
+        'name': 'TransformerModel',
+        'kwargs': {
+            'transformer': {
+                'name': 'ActiveSubspace',
+                'kwargs': {
+                'output_dim': 1
+            },
+            'prob_model': exactGP,
+        },
+    },
+}
+
+#%% Find a good test function
+
+#models = exactGP + RFF + DKLModel
+models = exactGP + [DKLModel[0]]
+Ns = [100, 500, 1000, 2000, 3000, 4000]
+
+for N in Ns:
+    for model in models:
+        for function in [{'name': 'Branin'}, {'name': 'Kink2D'}, {'name': 'GenzContinuous', 'kwargs': {'D': 2}}, {'name': 'Sin2DRotated'}, {'name': 'Sin2D'}]:
+            config = {
+                'tag': 'scalability-finding-functionsM',
+                'obj_func': function,
+                'model': model,
+                'gp_samples': N,
+            }
+            normalize_config(config)
+            run = execute(config_updates=config)
+
+#%% Scalability in N (fixed M)
+
+#models = exactGP + RFF + DKLModel
+models = exactGP + DKLModel
+Ns = [1000, 3000, 5000, 10000]
+
+for N in Ns:
+    for model in models:
+        for function in [{'name': 'GenzContinuous', 'kwargs': {'D': 2}}]:
+            config = {
+                'tag': 'scalability-fixed-M',
+                'obj_func': function,
+                'model': model,
+                'gp_samples': N,
+            }
+            normalize_config(config)
+            run = execute(config_updates=config)
+
+#%% Scalability in M (fixed N)
+
+#Ms = range(500, 2001, 150)
+Ms = [100, 200, 500, 1000, 2000, 3000]
+
+DKLModel = [{
+    'name': 'DKLGPModel',
+    'kwargs': {
+        'learning_rate': 0.1,
+        'n_iter': 200,
+        'nn_kwargs': {'layers': None,
+                      'normalize_output': False},
+        'gp_kwargs': {'n_grid': int(np.sqrt(M))},
+        'use_cg': True,
+        'precond_size': 50,
+        'max_cg_iter': 2000,
+        'use_double_precision': False, 
+        'noise': noise,
+    }
+} for M in Ms]
+
+models = DKLModel
+
+for model in models:
+    #for function in [{'name': 'GenzDiscontinuous', 'kwargs': {'D': 2}}, {'name': 'GenzContinuous', 'kwargs': {'D': 2}}, {'name': 'Branin'}, {'name': 'Kink2D'}]:
+    for function in [{'name': 'Branin'}]:
+        config = {
+            'tag': 'scalability-fixed-N',
+            'obj_func': function,
+            'model': model,
+            'gp_samples': 1000,
+        }
+        normalize_config(config)
+        run = execute(config_updates=config)
+
+
+#%%
+
+# noise = 0.001
+
+# DKLModel = [{
+#     'name': 'DKLGPModel',
+#     'kwargs': {
+#         'learning_rate': 0.1,
+#         'n_iter': 200,
+#         'nn_kwargs': {'layers': [100, 500, 1],
+#                       'normalize_output': False},
+#         'use_cg': True,
+#         'precond_size': 50,
+#         'max_cg_iter': 2000,
+#         'use_double_precision': False, 
+#         'noise': noise,
+#     }
+# }]
+
+# models = DKLModel
+
+# for model in models:
+#     for function in [{'name': 'Branin'}, {'name': 'Kink2D'}, {'name': 'Step'}, {'name': 'StepConcave'}]:
+#     for function in [{'name': 'Step'}]:
+#         config = {
+#             'tag': 'discont',
+#             'obj_func': function,
+#             'model': model,
+#             'gp_samples': 1000,
+#         }
+#         normalize_config(config)
+#         run = execute(config_updates=config)
+

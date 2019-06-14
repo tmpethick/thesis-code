@@ -141,7 +141,7 @@ def create_ex(interactive=False):
         model_hash = hash_subdict(config, keys=model_hash_keys)
 
         # Experiment hash (used for one model + obj function pair)
-        exp_hash_key = ['mode', 'obj_func', 'model', 'model2', 'acquisition_function', 'bo']
+        exp_hash_key = ['mode', 'obj_func', 'model', 'model2', 'acquisition_function', 'bo', 'gp_samples']
         exp_hash = hash_subdict(config, keys=exp_hash_key)
 
         return {'model_hash': model_hash, 'exp_hash': exp_hash}

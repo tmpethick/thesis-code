@@ -15,16 +15,20 @@ from src.models.models import BaseModel
 from src.utils import call_function_on_grid, construct_2D_grid
 
 
-MARKER = itertools.cycle(('o', 's', '^', '*', '>', '<', '8', 'p'))
+MARKER = ('o', 's', '^', '*', '>', '<', '8', 'p')
 CMAP = 'viridis'
 COLORS = sns.color_palette('colorblind').as_hex()
 
 
-def savefig(fig, filepath):
+def cycle_markers():
+    return itertools.cycle(MARKER)
+
+
+def savefig(fig, filepath, **kwargs):
     filepath = os.path.join(settings.THESIS_FIGS_DIR, filepath)
     dir_name = os.path.dirname(filepath)
     pathlib.Path(dir_name).mkdir(parents=True, exist_ok=True) 
-    fig.savefig(filepath, transparent=False)
+    fig.savefig(filepath, transparent=False, **kwargs)
 
 
 def latexify(fig_width=None, fig_height=None, columns=3):

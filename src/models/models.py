@@ -643,7 +643,7 @@ class GPVanillaLinearModel(GPVanillaModel):
 
 class LowRankGPModel(ProbModel):
     def __init__(self, kernel, noise = 0.01, n_features=10, do_optimize=False, n_restarts_optimizer=10):
-        super(LowRankGPModel, self).__init__()
+        super().__init__()
         self.noise = noise
         self.m = n_features
         self.kernel_ = kernel
@@ -652,8 +652,8 @@ class LowRankGPModel(ProbModel):
 
         self.do_optimize = do_optimize
         self.K_noisy_inv = None
-        self.X = None
-        self.Y = None
+        self._X = None
+        self._Y = None
 
         self.n_restarts_optimizer = n_restarts_optimizer
 
@@ -730,7 +730,7 @@ class LowRankGPModel(ProbModel):
 
     def _fit(self, X, Y, Y_dir=None):
         # Hack
-        self.X = X
+        self._X = X
         if self.do_optimize:
             self.kernel_.theta = self.max_log_marginal_likelihood()
             self._recalc_spectral_kernel = True
@@ -794,7 +794,7 @@ class RandomFourierFeaturesModel(LowRankGPModel):
     def __init__(self, kernel, noise=0.01, n_features=10, do_optimize=False):
         assert n_features % 2 == 0, "`n_features` has to be even."
         
-        super(RandomFourierFeaturesModel, self).__init__(kernel, noise=noise, n_features=n_features, 
+        super().__init__(kernel, noise=noise, n_features=n_features, 
         do_optimize=do_optimize)
 
         # `self.kernel` is already reserved by LowRankGPModel
