@@ -6,6 +6,7 @@ import warnings
 from src.models.models import BaseModel
 from src.utils import construct_2D_grid, call_function_on_grid, random_hypercube_samples
 import matplotlib.pyplot as plt
+from .lazy_constructor import LazyConstructor
 
 
 if torch.cuda.is_available():
@@ -49,12 +50,12 @@ def default_training_callback(model, i, loss):
 
 
 class LargeFeatureExtractor(torch.nn.Sequential):
-    def __init__(self, data_dim=None, layers=(50, 25, 10, 2), normalize_output=True, relu_output=False):
+    def __init__(self, D=None, layers=(50, 25, 10, 2), normalize_output=True, relu_output=False):
         super().__init__()
 
-        assert data_dim is not None, "data_dim needs to be specified"
+        assert D is not None, "Dimensionality D has to be specified."
         assert len(layers) >= 1, "You need to specify at least an output layer size."
-        layers = (data_dim,) + tuple(layers)
+        layers = (D,) + tuple(layers)
 
         for i in range(0, len(layers) - 2):
             in_ = layers[i]
@@ -229,8 +230,15 @@ class LinearFromFeatureExtractor(FeatureModel):
 
 
 class GPRegressionModel(gpytorch.models.ExactGP):
-    def __init__(self, train_x, train_y, likelihood, feature_extractor=None, mean_prior=None, lengthscale_prior=None, outputscale_prior=None, n_grid=None,
-    kernel='RBF'):
+    def __init__(self, 
+        train_x,
+        train_y,
+        likelihood,
+        feature_extractor=None, 
+        n_grid=None,
+        kernel=LazyConstructor(gpytorch.kernels.RBFKernel, lengthscale_prior=None),
+        has_scale_kernel=True):
+
         if feature_extractor is not None:
             gp_input_dim = feature_extractor.output_dim
         else:
@@ -238,28 +246,22 @@ class GPRegressionModel(gpytorch.models.ExactGP):
 
         super().__init__(train_x, train_y, likelihood)
 
-        if mean_prior is not None:
-            #mean = torch.mean(train_y)
-            raise NotImplementedError
-        else:
-            mean = None
-        
         self.feature_extractor = feature_extractor
         self.mean_module = gpytorch.means.ZeroMean()
 
         self.uses_grid_interpolation = n_grid is not None
         self.n_grid = n_grid
 
-        if kernel == 'RBF':
-            self.rbf_kernel = gpytorch.kernels.RBFKernel(lengthscale_prior=lengthscale_prior, ard_num_dims=gp_input_dim)
-        elif kernel == 'Linear':
-            self.rbf_kernel = gpytorch.kernels.RBFKernel(lengthscale_prior=lengthscale_prior, ard_num_dims=gp_input_dim)
+        self.rbf_kernel = kernel(ard_num_dims=gp_input_dim)
         #self.rbf_kernel = gpytorch.kernels.SpectralMixtureKernel(num_mixtures=4, ard_num_dims=gp_input_dim)
         kernel = self.rbf_kernel
 
-        self.scale_kernel = gpytorch.kernels.ScaleKernel(kernel, outputscale_prior=outputscale_prior)
+        if has_scale_kernel:
+            self.scale_kernel = gpytorch.kernels.ScaleKernel(kernel)
+        else:
+            self.scale_kernel = self.rbf_kernel
         kernel = self.scale_kernel
-        
+
         if n_grid is not None:
             kernel = gpytorch.kernels.GridInterpolationKernel(
                 kernel,
@@ -271,10 +273,10 @@ class GPRegressionModel(gpytorch.models.ExactGP):
         self.covar_module = kernel
 
         # Initialize lengthscale and outputscale to mean of priors
-        if lengthscale_prior is not None:
-            self.rbf_kernel.lengthscale = lengthscale_prior.mean
-        if outputscale_prior is not None:
-            self.scale_kernel.outputscale = outputscale_prior.mean
+        # if lengthscale_prior is not None:
+        #     self.rbf_kernel.lengthscale = lengthscale_prior.mean
+        # if outputscale_prior is not None:
+        #     self.scale_kernel.outputscale = outputscale_prior.mean
 
     def initialize_proxy(self, lengthscale=None, outputscale=None, noise=None):
         if isinstance(self.likelihood, gpytorch.likelihoods.FixedNoiseGaussianLikelihood):
@@ -289,10 +291,10 @@ class GPRegressionModel(gpytorch.models.ExactGP):
         return self
 
     def get_lengthscale(self):
-        return self.rbf_kernel.lengthscale
+        return getattr(self.rbf_kernel, 'lengthscale', None)
 
     def get_outputscale(self):
-        return self.scale_kernel.outputscale
+        return getattr(self.scale_kernel, 'outputscale', None)
 
     def forward(self, x):
         if self.feature_extractor is not None:
@@ -308,20 +310,23 @@ class GPRegressionModel(gpytorch.models.ExactGP):
 class DKLGPModel(FeatureModel):
     def __init__(self, 
         n_iter=50,
-        noise=None,
         learning_rate=0.1, 
-        gp_kwargs=None, 
-        nn_kwargs=None, 
+        noise=None,
+        initial_parameters=None,
+        
         do_pretrain=False,
         pretrain_n_iter=10000,
-        training_callback=default_training_callback, 
-        feature_extractor_constructor=LargeFeatureExtractor,
-        initial_parameters=None,
+        
+        feature_extractor_constructor=LazyConstructor(LargeFeatureExtractor),
+        gp_constructor=LazyConstructor(GPRegressionModel),
+        
         use_double_precision=False,
         covar_root_decomposition=True,
         use_cg=False,
         max_cg_iter=1000,
         precond_size=10,
+        
+        training_callback=default_training_callback, 
         **kwargs):
 
         super().__init__(**kwargs)
@@ -331,19 +336,12 @@ class DKLGPModel(FeatureModel):
         self.max_cg_iter = max_cg_iter
         self.precond_size = precond_size
 
+        self.has_feature_map = feature_extractor_constructor is not None
         self.feature_extractor_constructor = feature_extractor_constructor
+        self.gp_constructor = gp_constructor
 
         self.do_pretrain = do_pretrain
-        self.pretrain_n_iter = pretrain_n_iter
-
-        self.gp_kwargs = gp_kwargs if gp_kwargs is not None else {}
-        self.nn_kwargs = nn_kwargs if nn_kwargs is not None else {}
-
-        # self.gp_kwargs.update({
-        #     'lengthscale_prior': gpytorch.priors.GammaPrior(3.0, 6.0),
-        #     'outputscale_prior': gpytorch.priors.GammaPrior(2.0, 0.15),
-        # })
-        
+        self.pretrain_n_iter = pretrain_n_iter        
         self.initial_parameters = initial_parameters
 
         self.learning_rate = learning_rate
@@ -356,8 +354,6 @@ class DKLGPModel(FeatureModel):
 
         self.X_torch = None
         self.Y_torch = None
-
-        self.has_feature_map = self.nn_kwargs.get('layers') is not None
 
         self.training_callback = training_callback
 
@@ -376,40 +372,38 @@ class DKLGPModel(FeatureModel):
             self._train(X, Y, fix_gp_params=True)
         self._train(X, Y, fix_gp_params=False)
 
+    def make_double(self, tensor):
+        if self.use_double_precision:
+            return tensor.double()
+        else:
+            return tensor
+
     def _train(self, X, Y, fix_gp_params=False):
         n, d = X.shape
 
         self.X_torch = torch.Tensor(X)
         self.Y_torch = torch.Tensor(Y[:, 0])
-
-        if self.use_double_precision:
-            self.X_torch = self.X_torch.double()
-            self.Y_torch = self.Y_torch.double()
-
+        self.X_torch = self.make_double(self.X_torch)
+        self.Y_torch = self.make_double(self.Y_torch)
         self.X_torch = self.X_torch.contiguous().to(device)
         self.Y_torch = self.Y_torch.contiguous().to(device)
 
         if self.has_feature_map:
-            self.feature_extractor = LargeFeatureExtractor(d, **self.nn_kwargs).to(device)
-
-            if self.use_double_precision:
-                self.feature_extractor = self.feature_extractor.double()
+            self.feature_extractor = self.feature_extractor_constructor(D=d).to(device)
+            self.feature_extractor = self.make_double(self.feature_extractor)
 
         if self.noise is not None:
             noise = torch.ones(self.X_torch.shape[0]) * self.noise
-            if self.use_double_precision:
-                noise = noise.double()
+            noise = self.make_double(noise)
             self.likelihood = gpytorch.likelihoods.FixedNoiseGaussianLikelihood(noise=noise)
         else:
             self.likelihood = gpytorch.likelihoods.GaussianLikelihood().to(device)
 
-        if self.use_double_precision:
-            self.likelihood = self.likelihood.double()
+        self.likelihood = self.make_double(self.likelihood)
 
-        self.model = GPRegressionModel(self.X_torch, self.Y_torch, self.likelihood, self.feature_extractor, **self.gp_kwargs).to(device)
+        self.model = self.gp_constructor(self.X_torch, self.Y_torch, self.likelihood, self.feature_extractor).to(device)
 
-        if self.use_double_precision:
-            self.model = self.model.double()
+        self.model = self.make_double(self.model)
 
         if self.initial_parameters is not None:
             print(self.initial_parameters)
@@ -546,3 +540,67 @@ class DKLGPModel(FeatureModel):
             else:
                 return mean, multivariate_normal.variance.detach().numpy()[:cut_tail, None]
 
+
+# Test DNGO and SSGP
+# Then modify all usage:
+    # priors, feature
+# Then introduce config (unit test)
+
+import torch
+
+class RFFEmbedding(nn.Module):
+    def __init__(self, D, M):
+        super().__init__()
+        self.D = D
+        self.M = M
+        self.output_dim = M
+
+        assert M % 2 == 0, "M has to be even there is a feature for both sin and cos."
+
+        # register lengthscale as parameter
+        self.lengthscale = nn.Parameter(torch.Tensor(1))
+        # TODO: deterministic initialization
+        self.lengthscale.data.uniform_(0, 1)
+
+        # sample self.unscaled_W shape: (M, D)
+        self.unscaled_W = torch.randn(self.M // 2, self.D)
+
+    def forward(self, X): # NxD -> MxD
+        W = self.unscaled_W * (1.0 / self.lengthscale)
+
+        # M x D @ D x N
+        Z = torch.mm(W, X.t())
+        uniform_weight = torch.sqrt(torch.tensor(2.0 / self.M)) # * np.sqrt(self.kernel_.variance)
+        Q_cos = uniform_weight * torch.cos(Z)
+        Q_sin = uniform_weight * torch.sin(Z)
+
+        return torch.cat((Q_cos, Q_sin), dim=0).t()
+
+    def extra_repr(self):
+        return 'D={}, M={}'.format(self.D, self.M)
+
+# Config with Lazy evaluation
+    # FeatureExtractor
+    # GPRegressionModel
+
+# Configuration:
+    # feature_extractor = {'name': GPRegressionModel, 'kwargs': {}}
+# in from_config:
+    # if not lazy:
+        # GPRegressionModel(*kwargs)
+    # if lazy:
+        # wrap constructor
+
+
+class SSGP(DKLGPModel):
+    def __init__(self, *args, **kwargs):
+        kwargs.update(
+            covar_root_decomposition=True,
+            feature_extractor_constructor=LazyConstructor(RFFEmbedding, M=1000),
+            gp_constructor=LazyConstructor(GPRegressionModel, 
+                    n_grid=None,
+                    kernel=LazyConstructor(gpytorch.kernels.LinearKernel),
+                    has_scale_kernel=False
+            )
+        )
+        super().__init__(*args, **kwargs)

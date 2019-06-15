@@ -849,3 +849,14 @@ run = notebook_run(config_updates={
 })
 
 #%%
+
+run = notebook_run(config_updates={
+    'obj_func': {
+        'name': 'Kink2D',
+    },
+    'model': {
+        'name': 'SSGP',
+        'kwargs': {}
+    },
+    'gp_samples': 1000,
+})
