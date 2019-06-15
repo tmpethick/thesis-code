@@ -7,6 +7,7 @@ import GPy
 from scipy.spatial.distance import cdist
 from scipy.linalg import cho_factor, cho_solve
 
+from src.config_helpers import ConfigMixin, construct_from_module, lazy_construct_from_module
 from src.kernels import GPyRBF
 
 
@@ -227,10 +228,9 @@ class BaseModel(object):
             ax.fill_between(X_line.reshape(-1), 
                             (mean + np.sqrt(var)).reshape(-1), 
                             (mean - np.sqrt(var)).reshape(-1), alpha=.2)
-        X_line
 
 
-class NormalizerModel(BaseModel):
+class NormalizerModel(ConfigMixin, BaseModel):
         def __init__(self, model, normalize_input=True, normalize_output=True):
             super().__init__()
             self.model = model
@@ -238,6 +238,15 @@ class NormalizerModel(BaseModel):
             self.Y_normalizer = None
             self._normalize_input = normalize_input
             self._normalize_output = normalize_output
+
+        @classmethod
+        def from_config(cls, *, model=None, **kwargs):
+            import src.models as models_module
+            model = construct_from_module(models_module, model)
+            return cls(
+                model=model,
+                **kwargs
+            )
 
         def _normalize(self, X, Y):
             if self._normalize_input:
@@ -305,7 +314,7 @@ class LinearInterpolateModel(ProbModel):
         return f(X), np.zeros(f(X).shape)
 
 
-class GPModel(ProbModel):
+class GPModel(ConfigMixin, ProbModel):
     def  __init__(self, 
             kernel, 
             noise_prior=None,
@@ -318,7 +327,8 @@ class GPModel(ProbModel):
             mean_prior=None):
         super().__init__()
 
-        self.kernel = kernel
+        self.kernel_constructor = kernel
+        self.kernel = None
         self.noise_prior = noise_prior
         self.do_optimize = do_optimize
         self.num_mcmc = num_mcmc
@@ -332,6 +342,15 @@ class GPModel(ProbModel):
         self.has_mcmc_warmup = False 
         self.output_dim = None
         self.mean_prior = mean_prior
+
+    @classmethod
+    def from_config(cls, *, kernel=None, **kwargs):
+        import src.kernels as kernels_module
+        kernel = lazy_construct_from_module(kernels_module, kernel)
+        return cls(
+            kernel=kernel,
+            **kwargs,
+        )
 
     def __repr__(self):
         return "ExactGP"
@@ -347,6 +366,9 @@ class GPModel(ProbModel):
             "X and Y has to match size. It was {} and {} respectively".format(X.shape[0], Y.shape[0])
 
         self.output_dim = Y.shape[-1]
+        input_dim = X.shape[-1]
+
+        self.kernel = self.kernel_constructor(input_dim)
 
         if self.mean_prior is not None:
             Y_mean = np.mean(Y)
@@ -544,10 +566,10 @@ class DerivativeGPModel(GPModel):
     """
 
     def _fit(self, X, Y, Y_dir=None):
-        return super(DerivativeGPModel, self)._fit(X, Y_dir, Y_dir=None, is_initial=is_initial)
+        return super(DerivativeGPModel, self)._fit(X, Y_dir, Y_dir=None)
 
 
-class TransformerModel(ProbModel):
+class TransformerModel(ConfigMixin, ProbModel):
     """Proxy a ProbModel through a Transformer first.
     """
 
@@ -555,6 +577,15 @@ class TransformerModel(ProbModel):
         super(TransformerModel, self).__init__()
         self.transformer = transformer
         self.prob_model = prob_model
+
+    @classmethod
+    def from_config(cls, *, transformer=None, prob_model=None, **kwargs):
+        import src.models as models_module
+        return cls(
+            transformer=construct_from_module(models_module, transformer),
+            prob_model=construct_from_module(models_module, prob_model),
+            **kwargs,
+        )
 
     def __repr__(self):
         return "{}<{},{}>".format(type(self).__name__, 
@@ -642,7 +673,7 @@ class GPVanillaLinearModel(GPVanillaModel):
 
 
 class LowRankGPModel(ProbModel):
-    def __init__(self, kernel, noise = 0.01, n_features=10, do_optimize=False, n_restarts_optimizer=10):
+    def __init__(self, kernel, noise=0.01, n_features=10, do_optimize=False, n_restarts_optimizer=10):
         super().__init__()
         self.noise = noise
         self.m = n_features

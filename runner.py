@@ -1,7 +1,6 @@
 import sys
 import subprocess
 import time
-import warnings
 
 from src.environments import BaseEnvironment, EnvironmentNormalizer
 from src.models.models import BaseModel, TransformerModel, NormalizerModel, GPModel
@@ -17,7 +16,6 @@ from src.plot_utils import plot1D, plot2D, plot_function, plot_model, plot_model
 
 import hashlib
 import json
-import itertools
 
 import numpy as np
 from sacred import Experiment
@@ -28,29 +26,10 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 matplotlib.rcParams['figure.dpi'] = 300 # migh high-res friendlly
 
-from src import models as models_module
-from src import acquisition_functions as acquisition_functions_module
-from src import environments as environments_module
-from src import kernels as kernels_module
-from src import algorithms as algorithm_module
 from src.algorithms import AcquisitionAlgorithm
-from src.utils import calc_errors, calc_errors_model_compare_mean, calc_errors_model_compare_var, random_hypercube_samples, construct_2D_grid, call_function_on_grid
+from src.utils import calc_errors, calc_errors_model_compare_mean, calc_errors_model_compare_var, random_hypercube_samples
 from src import settings
-from GPy.kern import Kern
 
-
-def unpack(config_obj):
-    return config_obj['name'], \
-           config_obj.get('arg', ()), \
-           config_obj.get('kwargs', {})
-
-
-def create_kernel(name, kwargs, input_dim):
-    Class = getattr(kernels_module, name)
-    if issubclass(Class, Kern):
-        return Class(input_dim, **kwargs)
-    else:
-        return Class(**kwargs)
 
 def hash_subdict(d, keys=None):
     """Create unique based on subdict of a dict.
@@ -90,43 +69,6 @@ def create_ex(interactive=False):
         if i % 5 == 0:  
             # Metrics
             _run.log_scalar('DKLGPModel.training.loss', loss, i)
-
-
-    def create_model(name, kwargs, input_dim=None):
-        # TODO: avoid this ad-hoc case...
-        if name == 'NormalizerModel':
-            model = kwargs['model']
-            kwargs2 = kwargs.copy()
-            kwargs2['model'] = create_model(model['name'], model['kwargs'], input_dim=input_dim)
-
-        elif name == 'TransformerModel':
-            transformer = kwargs['transformer']
-            prob_model = kwargs['prob_model']
-            transformer = create_model(transformer['name'], transformer['kwargs'])
-            # Currently only transformers with fixed output is supported.
-            kwargs2 = {
-                'transformer': transformer,
-                'prob_model': create_model(prob_model['name'], 
-                                           prob_model['kwargs'],
-                                           input_dim=transformer.output_dim),
-            }
-        else:
-            if 'kernel' in kwargs:
-                assert input_dim is not None, "input_dim is required if a kernel is specified."
-                kern_name, kern_args, kern_kwargs = unpack(kwargs.pop('kernel'))
-                kwargs2 = dict(
-                    kernel=create_kernel(kern_name, kern_kwargs, input_dim)
-                )
-                kwargs2.update(kwargs)
-            else:
-                kwargs2 = kwargs
-
-            if name == 'DKLGPModel':
-                kwargs2['training_callback'] = dklgpmodel_training_callback
-
-        Class = getattr(models_module, name)
-        return Class(**kwargs2)
-
 
     @ex.config_hook
     def add_unique_hashes(config, command_name, logger):
@@ -329,47 +271,39 @@ def create_ex(interactive=False):
 
     @ex.main
     def main(_config, _run, _log):
+        def recursively_apply_to_dict(d, modifier=lambda k, v: None):
+            def iterate(d_):
+                for k, v in d_.items():
+                    if isinstance(v, dict):
+                        iterate(v)
+                    modifier(k, v)
+
+            iterate(d)
+
+        # Add logging
+        def modifer(k, v):
+            if isinstance(v, dict) and v.get('name') == 'DKLGPModel':
+                v.get('kwargs')['training_callback'] = dklgpmodel_training_callback
+        recursively_apply_to_dict(_config, modifer)
+
         ## Model construction
+        from src.context import ExperimentContext
+        context = ExperimentContext.from_config(**_config)
 
-        # Create environment
-        name, args, kwargs = unpack(_config['obj_func'])
-        f = getattr(environments_module, name)(**kwargs)
-
-        # Create the model
-        models = [_config['model']]
-        if 'model2' in _config:
-            models.append(_config['model2'])
-
-        models = [create_model(model['name'], model['kwargs'], input_dim=f.input_dim)
-                  for model in models]
-
-        # Create acq func
-        if _config.get('acquisition_function'):
-            name, args, kwargs = unpack(_config['acquisition_function'])
-            Acq = getattr(acquisition_functions_module, name)
-            acq = Acq(*models, **kwargs)
-        else:
-            acq = None
-
-        if _config.get('bo'):
-            assert acq is not None, "Acquisition function required for BO"
-            # Create BO
-            Algorithm = getattr(algorithm_module, _config['bo']['name'])
-            bo_kwargs = _config['bo']['kwargs']
-            bo = Algorithm(f, models, acq, **bo_kwargs)
-
-            # Updates _run.result
+        f = context.obj_func
+        bo = context.bo
+        models = context.models
+        
+        if bo is not None:
             bo.run(callback=plot)
         else:
-            bo = None
-
             # TODO: Throw exceptions as warning so interactive mode can still play with the objects.
             # Updates _run.result
             # try:
             test_gp_model(f, models, 
-                acquisition_function=acq, 
-                n_samples=_config['gp_samples'],
-                use_derivatives=_config['gp_use_derivatives'])
+                acquisition_function=context.acquisition_function,
+                n_samples=context.gp_samples,
+                use_derivatives=context.gp_use_derivatives)
             # except:
             #     print("ups")
 
@@ -378,7 +312,7 @@ def create_ex(interactive=False):
             'f': f,
             'model': models[0],
             'model2': models[1] if len(models) >= 2 else None,
-            'acq': acq,
+            'acq': context.acquisition_function,
             'bo': bo,
         }
         mse = _run.result

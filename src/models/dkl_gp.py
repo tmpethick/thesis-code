@@ -3,10 +3,11 @@ import torch
 import gpytorch
 import warnings
 
+from src.config_helpers import ConfigMixin, lazy_construct_from_module
 from src.models.models import BaseModel
 from src.utils import construct_2D_grid, call_function_on_grid, random_hypercube_samples
 import matplotlib.pyplot as plt
-from .lazy_constructor import LazyConstructor
+from src.lazy_constructor import LazyConstructor
 
 
 if torch.cuda.is_available():
@@ -284,7 +285,7 @@ class GPRegressionModel(gpytorch.models.ExactGP):
         return gpytorch.distributions.MultivariateNormal(mean_x, covar_x)
 
 
-class GPyTorchModel(FeatureModel):
+class GPyTorchModel(ConfigMixin, FeatureModel):
     def __init__(self, 
         n_iter=50,
         learning_rate=0.1, 
@@ -335,6 +336,14 @@ class GPyTorchModel(FeatureModel):
         self.training_callback = training_callback
 
         self.warnings = {}
+
+    @classmethod
+    def from_config(cls, *, feature_extractor_constructor=None, gp_constructor=None, **kwargs):
+        return cls(
+            feature_extractor_constructor=lazy_construct_from_module(globals(), feature_extractor_constructor),
+            gp_constructor=lazy_construct_from_module(globals(), gp_constructor),
+            **kwargs,
+        )
 
     def _fit(self, X, Y, Y_dir=None):
         # catch warning, save and stop (runner should store this warning)
@@ -503,15 +512,15 @@ class GPyTorchModel(FeatureModel):
             else:
                 return mean, multivariate_normal.variance.detach().numpy()[:cut_tail, None]
 
-        def initialize_parameters(self, noise=None, **kwargs):
-            """Overwrite this for custom easy initialization of custom kernels.
-            """
-            if isinstance(self.likelihood, gpytorch.likelihoods.FixedNoiseGaussianLikelihood):
-              assert noise is None, "Only init noise if not fixed."
-            kwargs.update({
-                'likelihood.noise': noise
-            })
-            self.model.initialize_parameters(**kwargs)
+    def initialize_parameters(self, noise=None, **kwargs):
+        """Overwrite this for custom easy initialization of custom kernels.
+        """
+        if isinstance(self.likelihood, gpytorch.likelihoods.FixedNoiseGaussianLikelihood):
+          assert noise is None, "Only init noise if not fixed."
+        kwargs.update({
+            'likelihood.noise': noise
+        })
+        self.model.initialize_parameters(**kwargs)
 
 
 import torch
@@ -568,19 +577,26 @@ class SSGP(GPyTorchModel):
 
     def get_common_hyperparameters(self):
         return {
-            'variance': self.covar_module.variance,
+            'variance': self.model.covar_module.variance,
             'noise': self.noise if self.noise is not None else self.likelihood.noise.item(),
         }
 
+
 class DKLGPModel(GPyTorchModel):
     def __init__(self, *args, nn_kwargs=None, gp_kwargs=None, **kwargs):
+        if nn_kwargs is None:
+            nn_kwargs = {}
+        if gp_kwargs is None:
+            gp_kwargs = {}
+
         default_gp_kwargs = dict(
             kernel=LazyConstructor(gpytorch.kernels.RBFKernel, lengthscale_prior=None),
         )
         default_gp_kwargs.update(gp_kwargs)
         kwargs.update(
-            feature_extractor_constructor=LazyConstructor(LargeFeatureExtractor, nn_kwargs),
-            gp_constructor=LazyConstructor(GPRegressionModel, default_gp_kwargs)
+            feature_extractor_constructor=LazyConstructor(LargeFeatureExtractor, **nn_kwargs),
+            gp_constructor=LazyConstructor(GPRegressionModel, **default_gp_kwargs)
+        )
         super().__init__(*args, **kwargs)
 
     def initialize_parameters(self, **kwargs):

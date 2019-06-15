@@ -15,7 +15,10 @@ from .models import \
     RandomFourierFeaturesModel, \
     EfficientLinearModel, \
     QuadratureFourierFeaturesModel
-from src.kernels import RFFKernel, RFFMatern, RFFRBF
+from src.kernels import \
+    RFFKernel, \
+    RFFMatern, \
+    RFFRBF
 from .lls_gp import \
     LocalLengthScaleGPModel, \
     LocalLengthScaleGPBaselineModel

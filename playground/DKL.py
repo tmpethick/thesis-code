@@ -855,8 +855,17 @@ run = notebook_run(config_updates={
         'name': 'Sinc',
     },
     'model': {
-        'name': 'SSGP',
-        'kwargs': {}
+        'name': 'NormalizerModel',
+        'kwargs': {
+            'model': {
+                'name': 'GPModel',
+                'kwargs': {
+                    'kernel': {
+                        'name': 'GPyRBF',
+                    }
+                }
+            }
+        }
     },
     'gp_samples': 100,
 })
