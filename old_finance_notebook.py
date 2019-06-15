@@ -53,7 +53,7 @@ for kernel in [
 
 #%% Uniform sampling
 from src.algorithms import AcquisitionAlgorithm
-from src.models.models import GPModel
+from src.models.core_models import GPModel
 
 bounds = np.array([[-2,2]])
 def f(x):
@@ -75,7 +75,7 @@ rmse_vanilla, max_err = calc_errors(bq.models[0], bq.f)
 #%% Model Mismatch sampling approach
 from src.acquisition_functions import AcquisitionModelMismatch
 from src.algorithms import AcquisitionAlgorithm
-from src.models.models import GPModel
+from src.models.core_models import GPModel
 
 bounds = np.array([[-2,2]])
 def f(x):
@@ -120,7 +120,7 @@ ax.contour3D(X,Y,Z, 50, cmap='binary')
 
 #%% 2D vanilla strategy (scatter plot)
 from src.algorithms import AcquisitionAlgorithm
-from src.models.models import GPModel
+from src.models.core_models import GPModel
 
 bounds = np.array([[0,1],[0,1]])
 def f(x):
@@ -144,7 +144,7 @@ bq.plot()
 # Nb: Points seem to be concentrated around two areas/points.
 from src.acquisition_functions import AcquisitionModelMismatch
 from src.algorithms import AcquisitionAlgorithm
-from src.models.models import GPModel
+from src.models.core_models import GPModel
 
 bounds = np.array([[0,1],[0,1]])
 def f(x):

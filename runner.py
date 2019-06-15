@@ -3,10 +3,10 @@ import subprocess
 import time
 
 from src.environments import BaseEnvironment, EnvironmentNormalizer
-from src.models.models import BaseModel, TransformerModel, NormalizerModel, GPModel
+from src.models.core_models import BaseModel, GPModel
+from src.models import NormalizerModel, TransformerModel, DKLGPModel
 from src.models.lls_gp import LocalLengthScaleGPModel
-from src.models.dkl_gp import DKLGPModel
-from src.plot_utils import plot1D, plot2D, plot_function, plot_model, plot_model_unknown_bounds
+from src.plot_utils import plot_function, plot_model, plot_model_unknown_bounds
 
 # For some reason it breaks without TkAgg when running from CLI.
 # from src import settings
@@ -23,12 +23,12 @@ from sacred.observers import MongoObserver
 
 import matplotlib
 import matplotlib.pyplot as plt
-import seaborn as sns
+
 matplotlib.rcParams['figure.dpi'] = 300 # migh high-res friendlly
 
 from src.algorithms import AcquisitionAlgorithm
 from src.utils import calc_errors, calc_errors_model_compare_mean, calc_errors_model_compare_var, random_hypercube_samples
-from src import settings
+from src.experiment import settings
 
 
 def hash_subdict(d, keys=None):
@@ -287,7 +287,7 @@ def create_ex(interactive=False):
         recursively_apply_to_dict(_config, modifer)
 
         ## Model construction
-        from src.context import ExperimentContext
+        from src.experiment.context import ExperimentContext
         context = ExperimentContext.from_config(**_config)
 
         f = context.obj_func
@@ -325,7 +325,7 @@ def create_ex(interactive=False):
     return ex
 
 
-from src.encoder import PythonDictSyntax
+from src.experiment.encoder import PythonDictSyntax
 
 
 def config_dict_to_cli(conf, cmd_name=None):

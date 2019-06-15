@@ -1,20 +1,13 @@
 #%%
+from src.models import ActiveSubspace
 %load_ext autoreload
 %autoreload 2
 
-from runner import notebook_run, notebook_run_CLI, notebook_run_server, execute
+from runner import execute
 
-import matplotlib.pyplot as plt
-
-from src.utils import *
 from src.plot_utils import *
-from src.kernels import *
-from src.models.models import *
 from src.models.dkl_gp import *
-from src.models.lls_gp import *
-from src.models.asg import *
 from src.environments import *
-from src.acquisition_functions import *
 from src.algorithms import *
 
 latexify(columns=1)
@@ -135,8 +128,6 @@ model.model.plot_features(normalized_f)
 
 #%% TODO: Construct Frequency spectrum to show that it is more compact.
 
-from scipy.fftpack import fft
-
 model = run.interactive_stash['model']
 f = run.interactive_stash['f']
 f.plot()
@@ -193,9 +184,6 @@ functions = [GenzContinuous, GenzCornerPeak, GenzDiscontinuous, GenzGaussianPeak
 fig, axes = plt.subplots(2, 3, figsize=(5, 3))
 axes = axes.flatten()
 
-import src.latex as figuretex
-figuretex.use_config(width_scale=1.0, height_scale=2)
-
 for i, function in enumerate(functions):
     errs = np.empty(len(Ds))
     ax = axes[i]
@@ -233,11 +221,6 @@ train_x = torch.linspace(bounds[0,0], bounds[0,1], 100)
 train_y = np.sin(60 * train_x ** 4)
 
 def gpy_model(noise=0.5, lengthscale=2.5, variance=2):
-    import math
-    import torch
-    import gpytorch
-    from matplotlib import pyplot as plt
-
     import GPy
 
     kernel = GPy.kern.RBF(1, ARD=False)
@@ -311,12 +294,6 @@ savefig(fig, 'DKL/lml(lengthscale)-b.pdf')
 
 #%% \label{fig:low-noise-a}
 # Not terminated CG (crazy variance)
-
-import math
-import numpy as np
-import torch
-import gpytorch
-from matplotlib import pyplot as plt
 
 latexify(columns=2, fig_height=4)
 
@@ -441,7 +418,6 @@ model, likelihood, params = gpytorch_model(noise=0.0001, lengthscale=0.1, varian
 #%% Posterior variance with and without LOVE
 # \label{fig:low-noise-b}
 
-import math
 import torch
 import gpytorch
 import numpy as np

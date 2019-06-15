@@ -1,9 +1,12 @@
 from src import environments as environments_module, models as models_module, \
     acquisition_functions as acquisition_functions_module, algorithms as algorithm_module
-from src.config_helpers import ConfigMixin, construct_from_module
+from src.experiment.config_helpers import ConfigMixin, construct_from_module
 
 
 class ExperimentContext(ConfigMixin):
+    """An instance contains the top level context of an experiment.
+    Using `from_config` it can translate a config into a context with objects.
+    """
     def __init__(self,
         model=None,
         model2=None,

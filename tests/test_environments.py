@@ -2,7 +2,7 @@
 
 def test_environment_normalizer():
     from src.utils import random_hypercube_samples
-    from src.models.models import Normalizer
+    from src.models import Normalizer
     from src.environments import Step, EnvironmentNormalizer
 
     f = Step()

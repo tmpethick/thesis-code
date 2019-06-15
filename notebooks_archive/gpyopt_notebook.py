@@ -53,7 +53,7 @@ myBopt.plot_acquisition()
 #%% ------------ Home-backed
 from src.acquisition_functions import QuadratureAcquisition
 from src.algorithms import AcquisitionAlgorithm, bo_plot_callback
-from src.models.models import GPModel
+from src.models.core_models import GPModel
 
 kernel = GPy.kern.Matern32(2)
 noise_prior = 0.01
@@ -69,7 +69,7 @@ sns.scatterplot(bq.X[...,0], bq.X[...,1])
 #%% ------------ Home-backed Model Mismatch!
 from src.acquisition_functions import AcquisitionModelMismatch
 from src.algorithms import AcquisitionAlgorithm
-from src.models.models import GPModel
+from src.models.core_models import GPModel
 
 kernel = GPy.kern.Matern32(2)
 noise_prior = 0.01

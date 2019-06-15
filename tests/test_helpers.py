@@ -4,7 +4,7 @@ import pytest
 
 def test_cartesian_production():
     import numpy as np
-    from src.models.models import cartesian_product
+    from src.models.low_rank.fourier_features import cartesian_product
 
     a1 = np.array([1,2,3])
     a2 = np.array([1,2,3])

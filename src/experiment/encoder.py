@@ -5,6 +5,9 @@ from json.encoder import *
 c_make_encoder = None
 
 class PythonDictSyntax(json.JSONEncoder):
+    """Encodes dict as python representation instead of JSON representation,
+    i.e. it uses `None, True, False` instead of `null, true, false`.
+    """
     def iterencode(self, o, _one_shot=False):
         """Encode the given object and yield each string
         representation as available.

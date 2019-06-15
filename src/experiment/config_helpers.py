@@ -1,4 +1,4 @@
-from src.lazy_constructor import LazyConstructor
+from src.experiment.lazy_constructor import LazyConstructor
 
 
 class ConfigMixin(object):
@@ -33,6 +33,7 @@ def lazy_construct_from_module(module, config, overrides=None):
     return LazyConstructor(Class, **merged_kwargs)
 
 
+# Test examples
 # Fix kernel only working because of Lazy
 # Move default to Context (do not use __init__(**kwargs))
 # Retrieve config merged with defaults from init.

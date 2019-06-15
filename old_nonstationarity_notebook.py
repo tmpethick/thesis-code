@@ -8,7 +8,7 @@ from src.plot_utils import plot2D, plot1D, plot_function
 from src.algorithms import AcquisitionAlgorithm, bo_plot_callback
 from src.utils import random_hypercube_samples, root_mean_square_error
 from src.environments import Kink1D, Kink2D, BaseEnvironment
-from src.models.models import BaseModel
+from src.models.core_models import BaseModel
 from sklearn.metrics import mean_squared_error
 
 import matplotlib.pyplot as plt
@@ -17,7 +17,7 @@ import seaborn as sns
 sns.set_style("darkgrid")
 
 #%%
-from src.models.dkl_gp import DKLGPModel
+from src.models import DKLGPModel
 
 f = Kink1D()
 model = DKLGPModel(gp_dim=2)
@@ -71,7 +71,7 @@ plt.show()
 import GPy
 from src.acquisition_functions import QuadratureAcquisition
 from src.algorithms import AcquisitionAlgorithm
-from src.models.models import GPModel
+from src.models.core_models import GPModel
 
 f = Kink2D()
 

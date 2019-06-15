@@ -15,7 +15,7 @@ sns.set_style("darkgrid")
 from src.utils import *
 from src.plot_utils import *
 from src.kernels import *
-from src.models.models import *
+from src.models.core_models import *
 from src.models.dkl_gp import *
 from src.models.lls_gp import *
 from src.environments import *

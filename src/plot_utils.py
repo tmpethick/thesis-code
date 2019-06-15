@@ -1,17 +1,16 @@
 import math
 import os
 import pathlib
-import itertools 
-from cycler import cycler
+import itertools
 
 import matplotlib
 import numpy as np
 import seaborn as sns
 from matplotlib import pyplot as plt
 
-import src.settings as settings
+import src.experiment.settings as settings
 from src.environments import BaseEnvironment
-from src.models.models import BaseModel
+from src.models.core_models import BaseModel
 from src.utils import call_function_on_grid, construct_2D_grid
 
 

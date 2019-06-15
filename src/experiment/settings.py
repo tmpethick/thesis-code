@@ -1,7 +1,7 @@
 import os
 from enum import Enum
 
-from .env import MONGO_DB_PASSWORD
+from src.env import MONGO_DB_PASSWORD
 
 # ---------------- Setting options
 # ----------------

@@ -2,20 +2,14 @@
 %load_ext autoreload
 %autoreload 2
 
-from runner import notebook_run, notebook_run_CLI, notebook_run_server, execute
+from runner import notebook_run, notebook_run_server, execute
 
-import matplotlib.pyplot as plt
 import seaborn as sns
 sns.set_style("darkgrid")
 
-from src.utils import *
 from src.plot_utils import *
-from src.kernels import *
-from src.models.models import *
-from src.models.dkl_gp import *
-from src.models.lls_gp import *
+from src.models.core_models import *
 from src.environments import *
-from src.acquisition_functions import *
 from src.algorithms import *
 
 # AS + active sampling (learning inverse mapping A^T as well)
@@ -26,8 +20,6 @@ from src.algorithms import *
 
 
 from src.plot_utils import plot1D
-from src.models.models import QuadratureFourierFeaturesModel, RandomFourierFeaturesModel
-from src.utils import random_hypercube_samples
 from src.environments import Kink1D
 
 f = Kink1D()
@@ -50,7 +42,7 @@ class Step(BaseEnvironment):
         return np.where(X > 0.5, 0, 5) + noise
 
 #%%
-from src.models.models import RandomFourierFeaturesModel, RFFRBF, GPModel
+from src.models.core_models import RandomFourierFeaturesModel, RFFRBF, GPModel
 
 # f = Step()
 # X = np.random.uniform(f.bounds[0,0],f.bounds[0,1], 100)[:, None]
@@ -78,9 +70,9 @@ plt.show()
 #%% Noise makes a big difference. (1e-5 forces it to go through point which makes it oscillated.)
 # Oscillation is still a problem for RFF with noise though.
 # These VFF guys have similar problem: http://gpss.cc/gpa17/slides/VFF.pdf
-from src.models.models import GPModel
-from src.kernels import GPyRBF, RFFMatern, RFFRBF
-from src.models.models import RandomFourierFeaturesModel
+from src.models.core_models import GPModel
+from src.kernels import GPyRBF, RFFRBF
+from src.models.core_models import RandomFourierFeaturesModel
 
 noise = 0.1
 kernel = RFFRBF(lengthscale=0.1)
@@ -172,7 +164,7 @@ plt.show()
 #%% Generate Hessian of Kink2D
 
 from sympy import *
-from sympy.utilities.lambdify import lambdify, implemented_function,lambdastr
+from sympy.utilities.lambdify import lambdify, lambdastr
 x, y, z = symbols('x y z', real=True)
 z = 1 / (abs(Rational(1,2) - x ** 4 - y ** 4) + Rational(1,10))
 z.diff(x)
@@ -259,7 +251,8 @@ plt.show()
 #%% Prepare duck typing for RMSE testing 
 
 from src.utils import root_mean_square_error
-from src.models import GPModel
+from src.models import GPRegressionModel, DKLGPModel
+
 
 class DuckTypeModel(object):
     def __init__(self, model):
@@ -318,9 +311,8 @@ print(RMSE)
 
 from src.environments import Kink2DShifted
 from src.plot_utils import plot2D
-from src.models.models import GPModel
+from src.models.core_models import GPModel
 from src.kernels import GPyRBF
-from src.utils import random_hypercube_samples
 
 f = Kink2DShifted()
 
@@ -354,7 +346,7 @@ print(RMSE)
 # It is extremely sensitive to lengthscale/lengthscale: [0.03, ..0.06]
 
 from src.plot_utils import plot2D
-from src.models.models import QuadratureFourierFeaturesModel, RandomFourierFeaturesModel, RFFMatern, RFFRBF
+from src.models.core_models import RandomFourierFeaturesModel, RFFRBF
 from src.utils import random_hypercube_samples
 
 n_features = 300
@@ -383,7 +375,7 @@ print(RMSE)
 
 #%% Test QFF
 from src.plot_utils import plot2D
-from src.models.models import QuadratureFourierFeaturesModel, RandomFourierFeaturesModel, RFFMatern, RFFRBF
+from src.models.core_models import QuadratureFourierFeaturesModel
 from src.utils import random_hypercube_samples
 
 n_features = 300
@@ -408,7 +400,7 @@ print(RMSE)
 # Can we "fix" the wrong model (wrong legnthscale as well) by simply overrun it with observations?
 
 from src.plot_utils import plot2D
-from src.models.models import QuadratureFourierFeaturesModel, RandomFourierFeaturesModel, RFFMatern, RFFRBF
+from src.models.core_models import RandomFourierFeaturesModel, RFFRBF
 from src.utils import random_hypercube_samples
 
 n_features = 1000
@@ -437,11 +429,10 @@ print(RMSE)
 
 #%% Try KISS
 
-import math
 import torch
 import gpytorch
 from matplotlib import pyplot as plt
-from src.models.dkl_gp import DKLGPModel
+
 
 class GPRegressionModel(gpytorch.models.ExactGP):
     def __init__(self, train_x, train_y, likelihood, grid_bounds=None):
@@ -513,7 +504,7 @@ class KISSGP(DKLGPModel):
         with gpytorch.settings.use_toeplitz(True):
             train()
 
-from src.utils import random_hypercube_samples
+
 from src.plot_utils import plot2D
 from src.utils import root_mean_square_error
 
@@ -576,9 +567,9 @@ print(RMSE)
 
 from src.plot_utils import plot2D
 from src.utils import random_hypercube_samples
-from src.models.models import GPModel
-from src.environments import Kink2D, Kink2DShifted
-from src.kernels import GPyMatern32, GPyRBF
+from src.models.core_models import GPModel
+from src.environments import Kink2DShifted
+from src.kernels import GPyMatern32
 
 f = Kink2DShifted()
 
@@ -600,11 +591,9 @@ RMSE = root_mean_square_error(model, f, rand=True)
 print(RMSE)
 
 #%% DKLModel
-from src.plot_utils import plot2D
 from src.utils import random_hypercube_samples
 from src.models.dkl_gp import DKLGPModel
-from src.environments import Kink2D, Kink2DShifted, Kink1D
-from src.kernels import GPyMatern32, GPyRBF
+from src.environments import Kink2D
 from src.plot_utils import plot_model
 
 #f = Kink1D()
@@ -1033,7 +1022,6 @@ run = execute(config_updates={
 
 import matplotlib.pyplot as plt
 import numpy as np
-import seaborn as sns
 
 f = run.interactive_stash['f']
 model = run.interactive_stash['model']

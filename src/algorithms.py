@@ -7,7 +7,7 @@ from scipy import optimize
 import seaborn as sns
 
 from src.acquisition_functions import AcquisitionBase
-from src.models.models import BaseModel
+from src.models.core_models import BaseModel
 
 from src.utils import random_hypercube_samples, constrain_points, construct_2D_grid, call_function_on_grid
 

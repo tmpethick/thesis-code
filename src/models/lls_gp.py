@@ -7,7 +7,7 @@ from sklearn.gaussian_process.kernels \
 
 from gp_extras.kernels import LocalLengthScalesKernel
 
-from src.models.models import BaseModel
+from src.models.core_models import BaseModel
 
 
 class LocalLengthScaleGPModel(BaseModel):

@@ -16,13 +16,6 @@ sys.path.append(python_path)
 import TasmanianSG
 import numpy as np
 
-# imports specifically needed by the examples
-import math
-from datetime import datetime
-
-print("TasmanianSG version: {0:s}".format(TasmanianSG.__version__))
-print("TasmanianSG license: {0:s}".format(TasmanianSG.__license__))
-
 
 class AdaptiveSparseGrid(object):
     def __init__(self, f, depth=1, refinement_level=5, f_tol=1e-5, point_tol=None):
