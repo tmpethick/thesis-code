@@ -6,3 +6,4 @@ from .high_dim import *
 from .hpolib import *
 from .nonstationary import *
 from .smooth import *
+from .financial import *

@@ -1,9 +1,13 @@
 #%%
-from src.environments.discontinous import TwoKink2D, KinkDCircularEmbedding, TwoKink1D
-from src.environments.helpers import EnvironmentNormalizer
-from src.models import ActiveSubspace
 %load_ext autoreload
 %autoreload 2
+
+#%%
+
+from src.environments.discontinous import TwoKink2D, KinkDCircularEmbedding, TwoKink1D
+from src.environments.financial import SPXOptions
+from src.environments.helpers import EnvironmentNormalizer
+from src.models import ActiveSubspace, DKLGPModel
 
 from runner import notebook_run, execute
 
@@ -867,3 +871,79 @@ run = notebook_run(config_updates={
     'gp_samples': 100,
 })
 
+
+
+
+#%% Run financial SPX options data
+
+import matplotlib.pyplot as plt
+import numpy as np
+from src.environments.financial import SPXOptions
+from src.models import NormalizerModel
+from src.plot_utils import plot_model_unknown_bounds
+
+model = NormalizerModel.from_config({
+    'model': {
+        'name': 'DKLGPModel',
+        'kwargs': {
+            'learning_rate': 0.1,
+            'n_iter': 100,
+            'nn_kwargs': {'layers': [100, 50, 1]},
+            'gp_kwargs': {'n_grid': 1000},
+            'noise': None
+        }
+    }
+})
+
+# create model
+data = SPXOptions(D=1, subset_size=10000)
+
+# Train
+model.init(data.X_train, data.Y_train)
+
+# Test
+N = len(data.Y_test)
+Y_hat, var = model.get_statistics(data.X_test, full_cov=False)
+rmse = np.sqrt(np.sum(np.square(Y_hat - data.Y_test)) / N)
+err_max = np.max(np.fabs(Y_hat - data.Y_test))
+
+# Generalize plot_model_unknown_bounds
+# Generalize err calc
+
+#%% Only useful for 1D case
+# plot model on full (min max range)
+plot_model_unknown_bounds(model)
+plt.show()
+# plot all points ordered for data.X, data.Y
+plt.scatter(data.X_train, data.Y_train)
+plt.scatter(data.X_test, data.Y_test)
+plt.show()
+print(rmse)
+
+# init in test
+
+#%%
+
+training_size_to_total_size = lambda x: int(x * 1/(0.8*0.8))
+
+run = notebook_run(config_updates={
+    'obj_func': {
+        'name': 'SPXOptions',
+        'kwargs': {'D': 1, 'subset_size': training_size_to_total_size(1000)},
+    },
+    'model': {
+        'name': 'NormalizerModel',
+        'kwargs': {
+            'model': {
+                'name': 'DKLGPModel',
+                'kwargs': {
+                    'learning_rate': 0.1,
+                    'n_iter': 100,
+                    'nn_kwargs': {'layers': [100, 50, 1]},
+                    'gp_kwargs': {'n_grid': 1000},
+                    'noise': None
+                }
+            }
+        }
+    },
+})

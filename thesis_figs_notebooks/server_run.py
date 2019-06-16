@@ -643,3 +643,67 @@ for model in models:
 #         normalize_config(config)
 #         run = execute(config_updates=config)
 
+#%%
+
+training_size_to_total_size = lambda x: int(x * 1/(0.8*0.8))
+
+Ds = [1,2,3,4]
+Ns = [1000, 10000, 20000]
+Ms = [1000, 10000]
+
+# With DKL
+for D in Ds:
+    for N in Ns:
+        for M in Ms:
+            run = execute(config_updates={
+                'obj_func': {
+                    'name': 'SPXOptions',
+                    'kwargs': {'D': D, 'subset_size': training_size_to_total_size(N)},
+                },
+                'model': {
+                    'name': 'NormalizerModel',
+                    'kwargs': {
+                        'model': {
+                            'name': 'DKLGPModel',
+                            'kwargs': {
+                                'learning_rate': 0.1,
+                                'n_iter': 100,
+                                'nn_kwargs': {'layers': [100, 50, 1]},
+                                'gp_kwargs': {'n_grid': M},
+                                'noise': None
+                            }
+                        }
+                    }
+                },
+            })
+
+
+Ds = [1,2,3,4]
+Ms = [10000, 100, 22, 10]
+
+# Without DKL
+# With DKL
+for i, D in enumerate(Ds):
+    for N in Ns:
+        run = execute(config_updates={
+            'obj_func': {
+                'name': 'SPXOptions',
+                'kwargs': {'D': D, 'subset_size': training_size_to_total_size(N)},
+            },
+            'model': {
+                'name': 'NormalizerModel',
+                'kwargs': {
+                    'model': {
+                        'name': 'DKLGPModel',
+                        'kwargs': {
+                            'learning_rate': 0.1,
+                            'n_iter': 100,
+                            'nn_kwargs': {'layers': None},
+                            'gp_kwargs': {'n_grid': Ms[i]},
+                            'noise': None
+                        }
+                    }
+                }
+            },
+        })
+

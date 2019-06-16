@@ -9,7 +9,7 @@ import pandas as pd
 #%%
 
 import scipy.io
-mat = scipy.io.loadmat('data/OptionData_0619/optionsSPX_96_17.mat')
+mat = scipy.io.loadmat('data/OptionData_0619/optionsSPXweekly_96_17.mat')
 data = mat['optionsSPX']
 
 #%%
@@ -31,11 +31,28 @@ COLS = [
     "Theta",
     "LastTradeDate",
     "Callput",
-    "Date"]
+    "Date",
+    "S"]
 
 df = pd.DataFrame(data=dict(zip(COLS, data.T)))
-df
 
+order_X = [
+'strike',
+'tau',
+'S',
+'r',
+'q',
+'volume',
+'OpenInterest',
+'LastTradeDate',
+'ask',
+'bid',
+]
+df
 #%%
 
+df[order_X[:3]]
+
+
+#%%
 df.shape

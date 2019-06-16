@@ -2,6 +2,7 @@ import sys
 import subprocess
 import time
 
+from src.environments import DataSet
 from src.environments.core import BaseEnvironment
 from src.environments.helpers import EnvironmentNormalizer
 from src.models.core_models import BaseModel, GPModel
@@ -297,7 +298,7 @@ def create_ex(interactive=False):
         
         if bo is not None:
             bo.run(callback=plot)
-        else:
+        elif isinstance(f, BaseEnvironment):
             # TODO: Throw exceptions as warning so interactive mode can still play with the objects.
             # Updates _run.result
             # try:
@@ -307,15 +308,39 @@ def create_ex(interactive=False):
                 use_derivatives=context.gp_use_derivatives)
             # except:
             #     print("ups")
+        elif isinstance(f, DataSet):
+            print(f.X_train.shape)
+            print(f.X_test.shape)
+            print(f.X_val.shape)
+            # Train
+            for i, model in enumerate(models):
+                start_time = time.clock()
+                model.init(f.X_train, f.Y_train)
+                training_time = time.clock() - start_time
+
+                # Test
+                N = len(f.Y_val)
+                start_time = time.clock()
+                Y_hat, var = model.get_statistics(f.X_val, full_cov=False)
+                pred_time = time.clock() - start_time
+
+                rmse = np.sqrt(np.sum(np.square(Y_hat - f.Y_val)) / N)
+                max_err = np.max(np.fabs(Y_hat - f.Y_val))
+
+                if i == 0:
+                    log_scalar('rmse', rmse, 0)
+                    log_scalar('max_err', max_err, 0)
+                    log_scalar('time.training', training_time, 0)
+                    log_scalar('time.pred', pred_time, 0)
+                else:
+                    log_scalar('model{}.rmse'.format(i), rmse, 0)
+                    log_scalar('model{}.max_err'.format(i), max_err, 0)
+                    log_scalar('model{}.time.training'.format(i), training_time, 0)
+                    log_scalar('model{}.time.pred'.format(i), pred_time, 0)
 
         #Hack to have model available after run in interactive mode.
-        _run.interactive_stash = {
-            'f': f,
-            'model': models[0],
-            'model2': models[1] if len(models) >= 2 else None,
-            'acq': context.acquisition_function,
-            'bo': bo,
-        }
+        # TODO: just return context
+        _run.interactive_stash = context
         mse = _run.result
         return mse
 

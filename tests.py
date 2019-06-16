@@ -1,4 +1,5 @@
 #%%
+from src.environments.financial import SPXOptions
 from src.environments.nonstationary import IncreasingOscillationDecreasingAmplitude, Sin2DRotated
 from src.environments.smooth import CosProd2D, Sinc2D
 %load_ext autoreload
