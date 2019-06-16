@@ -1,6 +1,6 @@
 import numpy as np
 
-from src.models import LowRankGPModel
+from .low_rank import LowRankGPModel
 
 
 class RandomFourierFeaturesModel(LowRankGPModel):

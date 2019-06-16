@@ -6,36 +6,19 @@
   <component name="ChangeListManager">
     <list default="true" id="c818380e-e4c2-4b56-b288-ea97eb749031" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/finance2_notebook.py" beforeDir="false" afterPath="$PROJECT_DIR$/finance2_notebook.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/hessian_notebook.py" beforeDir="false" afterPath="$PROJECT_DIR$/hessian_notebook.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/notebooks_archive/gpyopt_notebook.py" beforeDir="false" afterPath="$PROJECT_DIR$/notebooks_archive/gpyopt_notebook.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/notebooks_archive/qff_notebook.py" beforeDir="false" afterPath="$PROJECT_DIR$/notebooks_archive/qff_notebook.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/old_finance_notebook.py" beforeDir="false" afterPath="$PROJECT_DIR$/old_finance_notebook.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/old_nonstationarity_notebook.py" beforeDir="false" afterPath="$PROJECT_DIR$/old_nonstationarity_notebook.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/playground/DKL.py" beforeDir="false" afterPath="$PROJECT_DIR$/playground/DKL.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/reproduce_notebook.py" beforeDir="false" afterPath="$PROJECT_DIR$/reproduce_notebook.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/config_scratchpad.py" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/runner.py" beforeDir="false" afterPath="$PROJECT_DIR$/runner.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/acquisition_functions.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/acquisition_functions.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/algorithms.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/algorithms.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/config_helpers.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/experiment/config_helpers.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/context.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/experiment/context.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/encoder.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/experiment/encoder.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/environments.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/environments.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/latex.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/lazy_constructor.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/experiment/lazy_constructor.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/models/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/models/__init__.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/models/asg.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/models/ASG.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/models/dkl_gp.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/models/dkl_gp.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/models/lls_gp.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/models/lls_gp.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/models/models.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/models/core_models.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/plot_utils.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/plot_utils.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/settings.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/experiment/settings.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/test_environments.py" beforeDir="false" afterPath="$PROJECT_DIR$/tests/test_environments.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/test_helpers.py" beforeDir="false" afterPath="$PROJECT_DIR$/tests/test_helpers.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/thesis_figs_notebooks/ASG.py" beforeDir="false" afterPath="$PROJECT_DIR$/thesis_figs_notebooks/ASG.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/thesis_figs_notebooks/DKL.py" beforeDir="false" afterPath="$PROJECT_DIR$/thesis_figs_notebooks/DKL.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/thesis_figs_notebooks/GP.py" beforeDir="false" afterPath="$PROJECT_DIR$/thesis_figs_notebooks/GP.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/thesis_figs_notebooks/playground.py" beforeDir="false" afterPath="$PROJECT_DIR$/thesis_figs_notebooks/playground.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/thesis_figs_notebooks/server_run.py" beforeDir="false" afterPath="$PROJECT_DIR$/thesis_figs_notebooks/server_run.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/experiment/config_helpers.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/experiment/config_helpers.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/experiment/context.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/experiment/context.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/experiment/lazy_constructor.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/models/DKL/feature_models.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/models/DKL/feature_models.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/models/DKL/gpr.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/models/DKL/gpr.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/models/core_models.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/models/core_models.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/models/low_rank/fourier_features.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/models/low_rank/fourier_features.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/models/normalizer.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/models/normalizer.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/models/transformers.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/models/transformers.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -57,12 +40,12 @@
           <entry key="project.open.time.13" value="1" />
           <entry key="project.open.time.2" value="1" />
           <entry key="project.open.time.31" value="1" />
-          <entry key="project.open.time.5" value="1" />
+          <entry key="project.open.time.5" value="2" />
           <entry key="project.open.time.6" value="1" />
           <entry key="project.open.time.7" value="2" />
           <entry key="project.open.time.8" value="3" />
           <entry key="project.open.time.9" value="1" />
-          <entry key="project.opened" value="12" />
+          <entry key="project.opened" value="13" />
         </counts>
       </usages-collector>
       <usages-collector id="statistics.file.extensions.open">
@@ -71,7 +54,7 @@
           <entry key="ipynb" value="3" />
           <entry key="json" value="2" />
           <entry key="md" value="4" />
-          <entry key="py" value="210" />
+          <entry key="py" value="236" />
           <entry key="pyi" value="1" />
           <entry key="yaml" value="14" />
         </counts>
@@ -82,7 +65,7 @@
           <entry key="JSON" value="2" />
           <entry key="Markdown" value="4" />
           <entry key="PLAIN_TEXT" value="1" />
-          <entry key="Python" value="210" />
+          <entry key="Python" value="236" />
           <entry key="PythonStub" value="1" />
           <entry key="YAML" value="14" />
         </counts>
@@ -92,7 +75,7 @@
           <entry key="Python Console" value="945" />
           <entry key="dummy" value="41" />
           <entry key="md" value="54" />
-          <entry key="py" value="33952" />
+          <entry key="py" value="35288" />
           <entry key="yaml" value="17" />
         </counts>
       </usages-collector>
@@ -100,7 +83,7 @@
         <counts>
           <entry key="Markdown" value="54" />
           <entry key="PLAIN_TEXT" value="41" />
-          <entry key="Python" value="34897" />
+          <entry key="Python" value="36233" />
           <entry key="YAML" value="17" />
         </counts>
       </usages-collector>
@@ -108,23 +91,23 @@
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file pinned="false" current-in-tab="false">
+      <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/src/experiment/config_helpers.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="525">
-              <caret line="35" column="8" selection-start-line="35" selection-start-column="8" selection-end-line="35" selection-end-column="8" />
+            <state relative-caret-position="417">
+              <caret line="54" selection-start-line="54" selection-end-line="54" />
               <folding>
-                <marker date="1560624006242" expanded="true" signature="1075:1076" ph="..." />
+                <marker date="1560669795926" expanded="true" signature="1691:1692" ph="..." />
               </folding>
             </state>
           </provider>
         </entry>
       </file>
       <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/models/DKL/feature_models.py">
+        <entry file="file://$PROJECT_DIR$/src/algorithms.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="253">
-              <caret line="139" column="29" selection-start-line="139" selection-start-column="26" selection-end-line="139" selection-end-column="29" />
+            <state relative-caret-position="183">
+              <caret line="142" column="52" lean-forward="true" selection-start-line="142" selection-start-column="52" selection-end-line="142" selection-end-column="52" />
               <folding>
                 <element signature="e#0#15#0" expanded="true" />
               </folding>
@@ -133,19 +116,10 @@
         </entry>
       </file>
       <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/experiment/encoder.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="105">
-              <caret line="8" column="12" selection-start-line="8" selection-start-column="12" selection-end-line="8" selection-end-column="12" />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/experiment/context.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="105">
-              <caret line="7" column="78" selection-start-line="7" selection-start-column="78" selection-end-line="7" selection-end-column="78" />
+            <state relative-caret-position="541">
+              <caret line="77" lean-forward="true" selection-start-line="77" selection-end-line="77" />
               <folding>
                 <element signature="e#0#169#0" expanded="true" />
               </folding>
@@ -154,9 +128,40 @@
         </entry>
       </file>
       <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/models/DKL/gpr.py">
+        <entry file="file://$PROJECT_DIR$/sacred_notebook.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="-45">
+            <state relative-caret-position="-2326">
+              <caret line="373" selection-start-line="373" selection-end-line="373" />
+              <folding>
+                <element signature="e#40#80#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/tests.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="266">
+              <caret line="138" column="9" lean-forward="true" selection-start-line="138" selection-start-column="9" selection-end-line="138" selection-end-column="9" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/models/DKL/feature_extractors.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="45">
+              <caret line="3" column="27" selection-start-line="3" selection-start-column="6" selection-end-line="3" selection-end-column="27" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/models/DKL/feature_models.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="227">
+              <caret line="456" column="48" lean-forward="true" selection-start-line="456" selection-start-column="48" selection-end-line="456" selection-end-column="48" />
               <folding>
                 <element signature="e#0#15#0" expanded="true" />
               </folding>
@@ -165,56 +170,37 @@
         </entry>
       </file>
       <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/models/DKL/gpr.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state>
+              <folding>
+                <element signature="e#0#15#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/environments.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="150">
+              <caret line="10" column="6" selection-start-line="10" selection-start-column="6" selection-end-line="10" selection-end-column="6" />
+              <folding>
+                <element signature="e#0#18#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/runner.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="250">
-              <caret line="330" column="22" selection-start-line="330" selection-start-column="4" selection-end-line="330" selection-end-column="22" />
+            <state relative-caret-position="3990">
+              <caret line="290" column="48" selection-start-line="290" selection-start-column="48" selection-end-line="290" selection-end-column="48" />
               <folding>
                 <element signature="e#0#10#0" expanded="true" />
-                <marker date="1560623864745" expanded="true" signature="10754:10763" ph="..." />
+                <marker date="1560628229028" expanded="true" signature="10754:10763" ph="..." />
               </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/src/models/low_rank/__init__.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="45">
-              <caret line="3" lean-forward="true" selection-start-line="3" selection-end-line="3" />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/experiment/settings.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="615">
-              <caret line="41" lean-forward="true" selection-start-line="41" selection-end-line="41" />
-              <folding>
-                <element signature="e#0#9#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/kernels.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="525">
-              <caret line="35" column="27" lean-forward="true" selection-start-line="35" selection-start-column="27" selection-end-line="35" selection-end-column="27" />
-              <folding>
-                <element signature="e#0#10#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/utils.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="1380">
-              <caret line="93" selection-start-line="93" selection-end-line="93" />
             </state>
           </provider>
         </entry>
@@ -231,11 +217,6 @@
   </component>
   <component name="FindInProjectRecents">
     <findStrings>
-      <find>interac</find>
-      <find>hist</find>
-      <find>kernels</find>
-      <find>RFF</find>
-      <find>rejection</find>
       <find>fit</find>
       <find>normaliz</find>
       <find>add_observations</find>
@@ -249,7 +230,6 @@
       <find>LazyConstructor</find>
       <find>configmixi</find>
       <find>gp_use_derivatives</find>
-      <find>model_compare</find>
       <find>models =</find>
       <find>get_outputscale</find>
       <find>LinearFromFeatureExtractor</find>
@@ -261,6 +241,12 @@
       <find>LargeFeatureExtractor</find>
       <find>nn.</find>
       <find>logger</find>
+      <find>lazy_construct_from_module</find>
+      <find>from_module</find>
+      <find>from_config</find>
+      <find>kernel_constructor</find>
+      <find>model_compare</find>
+      <find>none</find>
     </findStrings>
     <replaceStrings>
       <replace />
@@ -272,10 +258,6 @@
   <component name="IdeDocumentHistory">
     <option name="CHANGED_PATHS">
       <list>
-        <option value="$PROJECT_DIR$/src/models/manifold_gp.py" />
-        <option value="$PROJECT_DIR$/nonstationarity_lls_notebook.py" />
-        <option value="$PROJECT_DIR$/kernel_notebook.py" />
-        <option value="$PROJECT_DIR$/gp_notebook.py" />
         <option value="$PROJECT_DIR$/active_sampling_notebook.py" />
         <option value="$PROJECT_DIR$/notebooks_archive/gpyopt_notebook.py" />
         <option value="$USER_HOME$/anaconda3/envs/lions/lib/python3.6/site-packages/sacred/run.py" />
@@ -297,32 +279,36 @@
         <option value="$PROJECT_DIR$/src/models/lls_gp.py" />
         <option value="$USER_HOME$/anaconda3/envs/lions/lib/python3.6/site-packages/gp_extras/kernels/kernels_non_stationary.py" />
         <option value="$PROJECT_DIR$/src/plot_utils.py" />
-        <option value="$PROJECT_DIR$/sacred_notebook.py" />
         <option value="$PROJECT_DIR$/finance_notebook.py" />
         <option value="$PROJECT_DIR$/src/encoder.py" />
         <option value="$PROJECT_DIR$/debug_notebook.py" />
-        <option value="$PROJECT_DIR$/src/acquisition_functions.py" />
         <option value="$PROJECT_DIR$/hessian_notebook.py" />
-        <option value="$PROJECT_DIR$/src/algorithms.py" />
         <option value="$PROJECT_DIR$/src/utils.py" />
         <option value="$PROJECT_DIR$/tests/test_helpers.py" />
         <option value="$PROJECT_DIR$/src/models/__init__.py" />
-        <option value="$PROJECT_DIR$/runner.py" />
         <option value="$PROJECT_DIR$/src/context.py" />
         <option value="$PROJECT_DIR$/src/environments.py" />
         <option value="$PROJECT_DIR$/src/models/asg.py" />
         <option value="$PROJECT_DIR$/src/models/models.py" />
-        <option value="$PROJECT_DIR$/src/models/core_models.py" />
         <option value="$PROJECT_DIR$/src/config_helpers.py" />
         <option value="$PROJECT_DIR$/src/models/dkl_gp.py" />
-        <option value="$PROJECT_DIR$/src/models/low_rank/fourier_features.py" />
-        <option value="$PROJECT_DIR$/src/models/DKL/feature_models.py" />
         <option value="$PROJECT_DIR$/thesis_figs_notebooks/DKL.py" />
         <option value="$PROJECT_DIR$/src/experiment/encoder.py" />
-        <option value="$PROJECT_DIR$/src/experiment/context.py" />
-        <option value="$PROJECT_DIR$/src/experiment/config_helpers.py" />
         <option value="$PROJECT_DIR$/src/models/DKL/feature_extractors.py" />
         <option value="$PROJECT_DIR$/src/models/low_rank/__init__.py" />
+        <option value="$PROJECT_DIR$/src/models/low_rank/fourier_features.py" />
+        <option value="$PROJECT_DIR$/src/experiment/lazy_constructor.py" />
+        <option value="$PROJECT_DIR$/src/models/transformers.py" />
+        <option value="$PROJECT_DIR$/src/models/normalizer.py" />
+        <option value="$PROJECT_DIR$/runner.py" />
+        <option value="$PROJECT_DIR$/sacred_notebook.py" />
+        <option value="$PROJECT_DIR$/src/acquisition_functions.py" />
+        <option value="$PROJECT_DIR$/src/algorithms.py" />
+        <option value="$PROJECT_DIR$/src/models/core_models.py" />
+        <option value="$PROJECT_DIR$/src/experiment/context.py" />
+        <option value="$PROJECT_DIR$/src/models/DKL/feature_models.py" />
+        <option value="$PROJECT_DIR$/tests.py" />
+        <option value="$PROJECT_DIR$/src/experiment/config_helpers.py" />
       </list>
     </option>
   </component>
@@ -346,6 +332,7 @@
       <foldersAlwaysOnTop value="true" />
     </navigator>
     <panes>
+      <pane id="Scope" />
       <pane id="ProjectPane">
         <subPane>
           <expand>
@@ -387,18 +374,10 @@
               <item name="models" type="462c0819:PsiDirectoryNode" />
               <item name="DKL" type="462c0819:PsiDirectoryNode" />
             </path>
-            <path>
-              <item name="thesis-code" type="b2602c69:ProjectViewProjectNode" />
-              <item name="thesis-code" type="462c0819:PsiDirectoryNode" />
-              <item name="src" type="462c0819:PsiDirectoryNode" />
-              <item name="models" type="462c0819:PsiDirectoryNode" />
-              <item name="low_rank" type="462c0819:PsiDirectoryNode" />
-            </path>
           </expand>
           <select />
         </subPane>
       </pane>
-      <pane id="Scope" />
     </panes>
   </component>
   <component name="PropertiesComponent">
@@ -454,9 +433,6 @@
       <module name="thesis-code" />
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
-      <envs>
-        <env name="PYTHONUNBUFFERED" value="1" />
-      </envs>
       <option name="SDK_HOME" value="$USER_HOME$/anaconda3/envs/lions/bin/python" />
       <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
       <option name="IS_MODULE_SDK" value="false" />
@@ -545,28 +521,28 @@
     </todo-panel>
   </component>
   <component name="ToolWindowManager">
-    <frame x="-4" y="23" width="1680" height="1027" extended-state="6" />
+    <frame x="0" y="23" width="1680" height="1027" extended-state="6" />
     <editor active="true" />
     <layout>
       <window_info id="Favorites" order="0" side_tool="true" />
-      <window_info active="true" content_ui="combo" id="Project" order="1" sideWeight="0.3882353" visible="true" weight="0.13797314" />
+      <window_info content_ui="combo" id="Project" order="1" sideWeight="0.3882353" visible="true" weight="0.13919415" />
       <window_info id="Structure" order="2" sideWeight="0.6117647" side_tool="true" weight="0.13797314" />
       <window_info anchor="bottom" id="Database Changes" order="0" show_stripe_button="false" />
       <window_info anchor="bottom" id="Terminal" order="1" sideWeight="0.497558" weight="0.32941177" />
       <window_info anchor="bottom" id="Event Log" order="2" sideWeight="0.503663" side_tool="true" weight="0.7251337" />
       <window_info anchor="bottom" id="Version Control" order="3" />
-      <window_info anchor="bottom" id="Python Console" order="4" sideWeight="0.46683252" weight="0.3119171" />
+      <window_info anchor="bottom" id="Python Console" order="4" sideWeight="0.46683252" visible="true" weight="0.31122994" />
       <window_info anchor="bottom" id="Docker" order="5" show_stripe_button="false" />
       <window_info anchor="bottom" id="Message" order="6" />
-      <window_info anchor="bottom" id="Find" order="7" sideWeight="0.4968254" visible="true" weight="0.105882354" />
+      <window_info anchor="bottom" id="Find" order="7" sideWeight="0.4968254" weight="0.29839572" />
       <window_info anchor="bottom" id="Run" order="8" sideWeight="0.498779" weight="0.32941177" />
       <window_info anchor="bottom" id="Debug" order="9" sideWeight="0.490232" weight="0.28213167" />
       <window_info anchor="bottom" id="Cvs" order="10" weight="0.25" />
       <window_info anchor="bottom" id="Inspection" order="11" weight="0.4" />
       <window_info anchor="bottom" id="TODO" order="12" sideWeight="0.49893504" weight="0.3284974" />
-      <window_info anchor="right" id="SciView" order="0" sideWeight="0.8684211" visible="true" weight="0.24358974" />
+      <window_info active="true" anchor="right" id="SciView" order="0" sideWeight="0.8664596" visible="true" weight="0.24358974" />
       <window_info anchor="right" id="Database" order="1" />
-      <window_info anchor="right" x="0" y="0" width="370" height="827" id="Documentation" order="2" sideWeight="0.13157895" side_tool="true" visible="true" weight="0.24358974" />
+      <window_info anchor="right" x="0" y="0" width="370" height="827" id="Documentation" order="2" sideWeight="0.13354038" side_tool="true" visible="true" weight="0.24358974" />
       <window_info anchor="right" id="Commander" internal_type="SLIDING" order="3" type="SLIDING" weight="0.4" />
       <window_info anchor="right" id="Ant Build" order="4" weight="0.25" />
       <window_info anchor="right" content_ui="combo" id="Hierarchy" order="5" weight="0.25" />
@@ -680,42 +656,6 @@
     </expressions>
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$USER_HOME$/anaconda3/envs/lions/lib/python3.6/site-packages/gp_extras/kernels/kernels_non_stationary.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="305">
-          <caret line="289" selection-start-line="289" selection-end-line="289" selection-end-column="34" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/nonstationarity_notebook.py" />
-    <entry file="file://$USER_HOME$/anaconda3/envs/lions/lib/python3.6/site-packages/GPy/util/linalg.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="215">
-          <caret line="124" selection-start-line="124" selection-end-line="124" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$USER_HOME$/anaconda3/envs/lions/lib/python3.6/site-packages/IPython/core/interactiveshell.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="215">
-          <caret line="3295" selection-start-line="3295" selection-end-line="3295" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/plot_utils.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1660">
-          <caret line="114" selection-start-line="114" selection-end-line="114" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$USER_HOME$/anaconda3/envs/lions/lib/python3.6/site-packages/GPy/kern/src/kern.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="234">
-          <caret line="165" column="31" selection-start-line="165" selection-start-column="26" selection-end-line="165" selection-end-column="31" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$USER_HOME$/anaconda3/envs/lions/lib/python3.6/site-packages/emcee/sampler.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="102">
@@ -794,13 +734,6 @@
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/finance_notebook.py" />
-    <entry file="file://$PROJECT_DIR$/sacred_notebook.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="4350">
-          <caret line="296" column="6" selection-start-line="296" selection-start-column="6" selection-end-line="296" selection-end-column="6" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/debug_notebook.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="105">
@@ -829,28 +762,11 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/algorithms.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="2300">
-          <caret line="163" column="12" selection-start-line="163" selection-start-column="12" selection-end-line="163" selection-end-column="12" />
-          <folding>
-            <element signature="e#0#15#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/src/models/stableopt.py" />
     <entry file="file://$PROJECT_DIR$/gpytorch_notebook.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="460">
           <caret line="37" column="36" lean-forward="true" selection-start-line="37" selection-start-column="36" selection-end-line="37" selection-end-column="36" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/environments.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="298">
-          <caret line="162" column="27" selection-start-line="162" selection-start-column="27" selection-end-line="162" selection-end-column="27" />
         </state>
       </provider>
     </entry>
@@ -861,13 +777,6 @@
           <folding>
             <element signature="e#0#18#0" expanded="true" />
           </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/models/deprecated_models.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="750">
-          <caret line="50" column="41" selection-start-line="50" selection-start-column="27" selection-end-line="50" selection-end-column="41" />
         </state>
       </provider>
     </entry>
@@ -898,44 +807,11 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/models/core_models.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1365">
-          <caret line="91" column="28" selection-start-line="91" selection-start-column="6" selection-end-line="91" selection-end-column="28" />
-          <folding>
-            <element signature="e#0#18#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/models/low_rank/fourier_features.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="30">
-          <caret line="2" column="19" selection-start-line="2" selection-start-column="19" selection-end-line="2" selection-end-column="19" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/latex.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="263">
-          <caret line="57" column="30" lean-forward="true" selection-start-line="57" selection-start-column="30" selection-end-line="57" selection-end-column="30" />
-          <folding>
-            <element signature="e#0#18#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
+    <entry file="file://$PROJECT_DIR$/src/latex.py" />
     <entry file="file://$PROJECT_DIR$/thesis_figs_notebooks/DKL.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="238">
           <caret line="185" lean-forward="true" selection-start-line="185" selection-end-line="185" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/experiment/lazy_constructor.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="75">
-          <caret line="5" column="8" selection-start-line="5" selection-start-column="8" selection-end-line="5" selection-end-column="8" />
         </state>
       </provider>
     </entry>
@@ -952,16 +828,6 @@
           <caret line="35" column="27" lean-forward="true" selection-start-line="35" selection-start-column="27" selection-end-line="35" selection-end-column="27" />
           <folding>
             <element signature="e#0#10#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/acquisition_functions.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1290">
-          <caret line="86" selection-start-line="86" selection-end-line="86" />
-          <folding>
-            <element signature="e#0#18#0" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -983,43 +849,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/experiment/context.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="105">
-          <caret line="7" column="78" selection-start-line="7" selection-start-column="78" selection-end-line="7" selection-end-column="78" />
-          <folding>
-            <element signature="e#0#169#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/experiment/config_helpers.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="525">
-          <caret line="35" column="8" selection-start-line="35" selection-start-column="8" selection-end-line="35" selection-end-column="8" />
-          <folding>
-            <marker date="1560624006242" expanded="true" signature="1075:1076" ph="..." />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/models/DKL/feature_models.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="253">
-          <caret line="139" column="29" selection-start-line="139" selection-start-column="26" selection-end-line="139" selection-end-column="29" />
-          <folding>
-            <element signature="e#0#15#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/models/DKL/feature_extractors.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="330">
-          <caret line="22" column="29" selection-start-line="22" selection-start-column="29" selection-end-line="22" selection-end-column="29" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/src/experiment/encoder.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="105">
@@ -1027,22 +856,15 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/models/DKL/gpr.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-45">
-          <folding>
-            <element signature="e#0#15#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
+    <entry file="file://$PROJECT_DIR$/src/models/low_rank/low_rank.py">
+      <provider selected="true" editor-type-id="text-editor" />
     </entry>
-    <entry file="file://$PROJECT_DIR$/runner.py">
+    <entry file="file://$PROJECT_DIR$/src/models/deprecated_models.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="250">
-          <caret line="330" column="22" selection-start-line="330" selection-start-column="4" selection-end-line="330" selection-end-column="22" />
+        <state relative-caret-position="750">
+          <caret line="50" column="41" selection-start-line="50" selection-start-column="27" selection-end-line="50" selection-end-column="41" />
           <folding>
-            <element signature="e#0#10#0" expanded="true" />
-            <marker date="1560623864745" expanded="true" signature="10754:10763" ph="..." />
+            <element signature="e#0#18#0" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -1051,6 +873,153 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="45">
           <caret line="3" lean-forward="true" selection-start-line="3" selection-end-line="3" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/models/low_rank/fourier_features.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="30">
+          <caret line="2" column="14" selection-start-line="2" selection-start-column="14" selection-end-line="2" selection-end-column="14" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/config_scratchpad.py" />
+    <entry file="file://$PROJECT_DIR$/src/experiment/lazy_constructor.py" />
+    <entry file="file://$PROJECT_DIR$/src/models/transformers.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="180">
+          <caret line="122" column="9" lean-forward="true" selection-start-line="122" selection-start-column="9" selection-end-line="122" selection-end-column="9" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/acquisition_functions.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="105">
+          <caret line="10" column="40" selection-start-line="10" selection-start-column="40" selection-end-line="10" selection-end-column="40" />
+          <folding>
+            <element signature="e#0#18#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/models/normalizer.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="870">
+          <caret line="61" column="23" selection-start-line="61" selection-start-column="23" selection-end-line="61" selection-end-column="23" />
+          <folding>
+            <element signature="e#0#18#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/models/core_models.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="570">
+          <caret line="43" column="57" selection-start-line="43" selection-start-column="48" selection-end-line="43" selection-end-column="57" />
+          <folding>
+            <element signature="e#0#18#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/runner.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="3990">
+          <caret line="290" column="48" selection-start-line="290" selection-start-column="48" selection-end-line="290" selection-end-column="48" />
+          <folding>
+            <element signature="e#0#10#0" expanded="true" />
+            <marker date="1560628229028" expanded="true" signature="10754:10763" ph="..." />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/environments.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="150">
+          <caret line="10" column="6" selection-start-line="10" selection-start-column="6" selection-end-line="10" selection-end-column="6" />
+          <folding>
+            <element signature="e#0#18#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/playground/DKL.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="118">
+          <caret line="167" selection-start-line="167" selection-end-line="195" selection-end-column="36" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/experiment/context.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="541">
+          <caret line="77" lean-forward="true" selection-start-line="77" selection-end-line="77" />
+          <folding>
+            <element signature="e#0#169#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/sacred_notebook.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-2326">
+          <caret line="373" selection-start-line="373" selection-end-line="373" />
+          <folding>
+            <element signature="e#40#80#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/models/DKL/gpr.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state>
+          <folding>
+            <element signature="e#0#15#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/models/DKL/feature_extractors.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="45">
+          <caret line="3" column="27" selection-start-line="3" selection-start-column="6" selection-end-line="3" selection-end-column="27" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/models/DKL/feature_models.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="227">
+          <caret line="456" column="48" lean-forward="true" selection-start-line="456" selection-start-column="48" selection-end-line="456" selection-end-column="48" />
+          <folding>
+            <element signature="e#0#15#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/tests.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="266">
+          <caret line="138" column="9" lean-forward="true" selection-start-line="138" selection-start-column="9" selection-end-line="138" selection-end-column="9" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/algorithms.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="183">
+          <caret line="142" column="52" lean-forward="true" selection-start-line="142" selection-start-column="52" selection-end-line="142" selection-end-column="52" />
+          <folding>
+            <element signature="e#0#15#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/experiment/config_helpers.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="417">
+          <caret line="54" selection-start-line="54" selection-end-line="54" />
+          <folding>
+            <marker date="1560669795926" expanded="true" signature="1691:1692" ph="..." />
+          </folding>
         </state>
       </provider>
     </entry>

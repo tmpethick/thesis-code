@@ -114,9 +114,9 @@ class TransformerModel(ConfigMixin, ProbModel):
         self.prob_model = prob_model
 
     @classmethod
-    def from_config(cls, *, transformer=None, prob_model=None, **kwargs):
+    def process_config(cls, *, transformer=None, prob_model=None, **kwargs):
         import src.models as models_module
-        return cls(
+        return dict(
             transformer=construct_from_module(models_module, transformer),
             prob_model=construct_from_module(models_module, prob_model),
             **kwargs,

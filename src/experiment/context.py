@@ -1,6 +1,6 @@
 from src import environments as environments_module, models as models_module, \
     acquisition_functions as acquisition_functions_module, algorithms as algorithm_module
-from src.experiment.config_helpers import ConfigMixin, construct_from_module
+from src.experiment.config_helpers import ConfigMixin, construct_from_module, lazy_construct_from_module
 
 
 class ExperimentContext(ConfigMixin):
@@ -34,7 +34,7 @@ class ExperimentContext(ConfigMixin):
             self.models.append(model2)
 
     @classmethod
-    def from_config(cls, *,
+    def process_config(cls, *,
         model=None,
         model2=None,
         obj_func=None,
@@ -50,13 +50,23 @@ class ExperimentContext(ConfigMixin):
         if model2 is not None:
             models.append(model2)
 
-        acquisition_function = construct_from_module(acquisition_functions_module, acquisition_function, dict(models=models))
-        bo = construct_from_module(algorithm_module, bo, dict(
-            f=obj_func,
-            models=models,
-            acquisition_function=acquisition_function,
-        ))
-        return cls(
+        acquisition_function_constructor = lazy_construct_from_module(acquisition_functions_module, acquisition_function)
+        if acquisition_function_constructor is not None:
+            acquisition_function = acquisition_function_constructor(*models)
+        else:
+            acquisition_function = None
+
+        bo_constructor = lazy_construct_from_module(algorithm_module, bo)
+        if bo_constructor is not None:
+            bo = bo_constructor(
+                f=obj_func,
+                models=models,
+                acquisition_function=acquisition_function,
+            )
+        else:
+            bo = None
+
+        return dict(
             # TODO: pass models
             obj_func=obj_func,
             model=model,

@@ -288,7 +288,7 @@ def create_ex(interactive=False):
 
         ## Model construction
         from src.experiment.context import ExperimentContext
-        context = ExperimentContext.from_config(**_config)
+        context = ExperimentContext.from_config(_config)
 
         f = context.obj_func
         bo = context.bo

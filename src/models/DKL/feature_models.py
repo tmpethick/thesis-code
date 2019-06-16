@@ -5,8 +5,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 import torch
 
-from src.experiment.config_helpers import ConfigMixin, lazy_construct_from_module
-from src.experiment.lazy_constructor import LazyConstructor
+from src.experiment.config_helpers import ConfigMixin, lazy_construct_from_module, LazyConstructor
 from ..core_models import BaseModel
 from .gpr import GPRegressionModel
 from .feature_extractors import LargeFeatureExtractor, RFFEmbedding
@@ -234,8 +233,8 @@ class GPyTorchModel(ConfigMixin, FeatureModel):
         self.warnings = {}
 
     @classmethod
-    def from_config(cls, *, feature_extractor_constructor=None, gp_constructor=None, **kwargs):
-        return cls(
+    def process_config(cls, *, feature_extractor_constructor=None, gp_constructor=None, **kwargs):
+        return dict(
             feature_extractor_constructor=lazy_construct_from_module(globals(), feature_extractor_constructor),
             gp_constructor=lazy_construct_from_module(globals(), gp_constructor),
             **kwargs,
@@ -452,12 +451,17 @@ class DKLGPModel(GPyTorchModel):
         if gp_kwargs is None:
             gp_kwargs = {}
 
+        if nn_kwargs.get('layers') is not None:
+            feature_extractor_constructor = LazyConstructor(LargeFeatureExtractor, **nn_kwargs)
+        else:
+            feature_extractor_constructor = None
+
         default_gp_kwargs = dict(
             kernel=LazyConstructor(gpytorch.kernels.RBFKernel, lengthscale_prior=None),
         )
         default_gp_kwargs.update(gp_kwargs)
         kwargs.update(
-            feature_extractor_constructor=LazyConstructor(LargeFeatureExtractor, **nn_kwargs),
+            feature_extractor_constructor=feature_extractor_constructor,
             gp_constructor=LazyConstructor(GPRegressionModel, **default_gp_kwargs)
         )
         super().__init__(*args, **kwargs)
@@ -483,7 +487,7 @@ class DKLGPModel(GPyTorchModel):
             kernel = kernel.base_kernel
 
         return {
-            'outputscale': kernel.outputscale.item(),
-            'lengthscale': kernel.base_kernel.lengthscale.item(),
+            'outputscale': kernel.outputscale.detach().numpy(),
+            'lengthscale': kernel.base_kernel.lengthscale.detach().numpy(),
             'noise': self.noise if self.noise is not None else self.likelihood.noise.item(),
         }

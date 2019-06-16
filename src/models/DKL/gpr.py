@@ -1,6 +1,6 @@
 import gpytorch
 
-from src.experiment.lazy_constructor import LazyConstructor
+from src.experiment.config_helpers import LazyConstructor
 
 
 class GPRegressionModel(gpytorch.models.ExactGP):

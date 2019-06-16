@@ -56,10 +56,10 @@ class NormalizerModel(ConfigMixin, BaseModel):
             self._normalize_output = normalize_output
 
         @classmethod
-        def from_config(cls, *, model=None, **kwargs):
+        def process_config(cls, *, model=None, **kwargs):
             import src.models as models_module
             model = construct_from_module(models_module, model)
-            return cls(
+            return dict(
                 model=model,
                 **kwargs
             )

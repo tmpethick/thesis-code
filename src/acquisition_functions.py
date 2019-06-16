@@ -1,8 +1,10 @@
 import numpy as np
 from GPyOpt.acquisitions import AcquisitionBase as GPyOptAcquisitionBase
 
+from src.experiment.config_helpers import ConfigMixin
 
-class AcquisitionBase(object):
+
+class AcquisitionBase(ConfigMixin):
     pass
 
 class AcquisitionModelMismatch(AcquisitionBase):

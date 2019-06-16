@@ -42,6 +42,8 @@ class BaseModel(object):
 
         if self.Y_dir is not None:
             Y_dir = np.concatenate([self.Y_dir, Y_dir_new])
+        else:
+            Y_dir = None
 
         self.init(X, Y, Y_dir)
 
@@ -89,7 +91,7 @@ class ProbModel(BaseModel):
         raise NotImplementedError
 
 
-class LinearInterpolateModel(ProbModel):
+class LinearInterpolateModel(ConfigMixin, ProbModel):
     def _fit(self, X, Y, Y_dir=None):
         pass
 
@@ -113,7 +115,6 @@ class GPModel(ConfigMixin, ProbModel):
             leapfrog_steps=20,
             mean_prior=None):
         super().__init__()
-
         self.kernel_constructor = kernel
         self.kernel = None
         self.noise_prior = noise_prior
@@ -131,10 +132,10 @@ class GPModel(ConfigMixin, ProbModel):
         self.mean_prior = mean_prior
 
     @classmethod
-    def from_config(cls, *, kernel=None, **kwargs):
+    def process_config(cls, *, kernel=None, **kwargs):
         import src.kernels as kernels_module
         kernel = lazy_construct_from_module(kernels_module, kernel)
-        return cls(
+        return dict(
             kernel=kernel,
             **kwargs,
         )
