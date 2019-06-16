@@ -9,7 +9,7 @@ import seaborn as sns
 from matplotlib import pyplot as plt
 
 import src.experiment.settings as settings
-from src.environments import BaseEnvironment
+from src.environments.core import BaseEnvironment
 from src.models.core_models import BaseModel
 from src.utils import call_function_on_grid, construct_2D_grid
 

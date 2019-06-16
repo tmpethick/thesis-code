@@ -1,4 +1,5 @@
 #%%
+from src.environments.smooth import Sinc
 %load_ext autoreload
 %autoreload 2
 
@@ -9,7 +10,6 @@ sns.set_style("darkgrid")
 
 from src.plot_utils import *
 from src.models.core_models import *
-from src.environments import *
 from src.algorithms import *
 
 # AS + active sampling (learning inverse mapping A^T as well)
@@ -20,7 +20,7 @@ from src.algorithms import *
 
 
 from src.plot_utils import plot1D
-from src.environments import Kink1D
+from src.environments.discontinous import Kink1D, Kink2D, Kink2DShifted
 
 f = Kink1D()
 n_features = 300
@@ -133,7 +133,7 @@ for var in [1, 1000]:
 #%% Show oscillation outside observation with RFF on smooth function.
 # sin(x) with changing lengthscale.
 
-from src.environments import IncreasingOscillation
+from src.environments.nonstationary import IncreasingOscillation
 
 f = IncreasingOscillation()
 half_way = f.bounds[0,0] + (f.bounds[0,1] - f.bounds[0,0]) / 2
@@ -193,8 +193,6 @@ H_fro
 
 import numpy as np
 import emcee
-
-from src.environments import Kink2D
 
 f = Kink2D()
 
@@ -309,7 +307,6 @@ print(RMSE)
 # Normalizing would help. But wouldn't solve the inherint problem with stationarity.
 
 
-from src.environments import Kink2DShifted
 from src.plot_utils import plot2D
 from src.models.core_models import GPModel
 from src.kernels import GPyRBF

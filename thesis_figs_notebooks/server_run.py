@@ -1,11 +1,11 @@
 #%%
+from src.environments.discontinous import TwoKinkDEmbedding
 from src.models import ActiveSubspace
 %load_ext autoreload
 %autoreload 2
 
 from runner import execute
 
-from src.environments import *
 from src.algorithms import *
 
 NOISE_LEVELS = {

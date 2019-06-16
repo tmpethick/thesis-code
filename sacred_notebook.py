@@ -7,7 +7,7 @@ from runner import notebook_run, execute
 #%%
 # --------------------- Active sampling -----------------------
 
-from src.environments import IncreasingOscillation
+from src.environments.nonstationary import IncreasingOscillation
 import matplotlib.pyplot as plt
 
 fig = IncreasingOscillation().plot()
@@ -57,7 +57,7 @@ run = notebook_run(config_updates={
 # -------------------------- Derivative Exploitation ------------------------
 
 # 1D
-from src.environments import Sinc
+from src.environments.smooth import Sinc
 import numpy as np
 f = Sinc()
 #f.plot()
@@ -65,7 +65,8 @@ f.plot_derivative()
 f._plot(lambda x: np.abs(f.derivative(x)))
 
 #%% 2D
-from src.environments import Kink2D
+from src.environments.discontinous import Kink2D
+
 f = Kink2D()
 f.plot_derivative()
 
@@ -275,7 +276,7 @@ run = execute(config_updates={
 
 #%% AS
 from src.utils import random_hypercube_samples
-from src.environments import ActiveSubspaceTest, TwoKinkDEmbedding
+from src.environments.high_dim import ActiveSubspaceTest
 from src.models import ActiveSubspace
 
 Alpha = np.array([[0.78695576],

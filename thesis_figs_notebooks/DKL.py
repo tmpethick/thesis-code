@@ -1,4 +1,8 @@
 #%%
+from src.environments.discontinous import TwoKink2D, KinkDCircularEmbedding
+from src.environments.genz1984 import GenzContinuous, GenzCornerPeak, GenzDiscontinuous, GenzGaussianPeak, \
+    GenzOscillatory, GenzProductPeak
+from src.environments.helpers import EnvironmentNormalizer
 from src.models import ActiveSubspace
 %load_ext autoreload
 %autoreload 2
@@ -7,7 +11,6 @@ from runner import execute
 
 from src.plot_utils import *
 from src.models.dkl_gp import *
-from src.environments import *
 from src.algorithms import *
 
 latexify(columns=1)

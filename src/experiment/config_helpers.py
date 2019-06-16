@@ -15,14 +15,33 @@ class ConfigMixin(object):
     def process_config(cls, **kwargs):
         return kwargs
 
+    #def store_defaults(self):
+    #    pass
+
+    #def get_config(self):
+        # get defaults
+        # merge with passed
+        # for every ConfigMixin class do conversion back to config (even lazy).
+    #    pass
+
 
 class LazyConstructor(Generic[T]):
     def __init__(self, class_, **default_kwargs):
         self.class_ = class_
         self.default_kwargs = default_kwargs
 
+        #self.from_config = False
+
+    #def set_from_config(self, from_config):
+    #    self.from_config = from_config
+
     def __call__(self, *args, **new_kwargs) -> T:
         kwargs = {}
+
+        #if self.from_config:
+        #    assert len(args) == 0, "args not supported for from_config."
+        #    return self.class_.from_config(self.default_kwargs, overrides=new_kwargs)
+        #else:
         kwargs.update(self.default_kwargs)
         kwargs.update(new_kwargs)
         return self.class_(*args, **kwargs)
@@ -52,9 +71,9 @@ def lazy_construct_from_module(module, config, overrides=None):
     return LazyConstructor(Class, **kwargs)
 
 
-# Make lazy run from_config
-
-# Fix kernel only working because of Lazy
+# Storing configs
+    # Make lazy run from_config
+    # Fix kernel only working because of Lazy (wrap all GPyTorchKernels)
 # Move default to Context (do not use __init__(**kwargs))
 # Retrieve config merged with defaults from init.
 # Fix kernel => kernel_constructor naming

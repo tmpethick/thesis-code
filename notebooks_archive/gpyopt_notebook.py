@@ -13,7 +13,8 @@ from GPyOpt.core.task.space import Design_space
 from src.acquisition_functions import GPyOptQuadratureAcquisition
 import numpy as np
 
-from src.environments import Sixhumpcamel, to_gpyopt_bounds, Kink2D
+from src.environments.hpolib import Sixhumpcamel, to_gpyopt_bounds
+from src.environments.discontinous import Kink2D
 
 #%%
 

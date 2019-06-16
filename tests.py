@@ -1,17 +1,15 @@
 #%%
+from src.environments.nonstationary import IncreasingOscillationDecreasingAmplitude, Sin2DRotated
+from src.environments.smooth import CosProd2D, Sinc2D
 %load_ext autoreload
 %autoreload 2
 #%%
-from src.models import ActiveSubspace
 from runner import notebook_run, execute
 
 import seaborn as sns
 sns.set_style('white')
 
-from src.utils import *
 from src.plot_utils import *
-from src.models.ASG import *
-from src.environments import *
 from src.algorithms import *
 
 latexify(columns=1)
@@ -184,3 +182,14 @@ config = {
 run = execute(config_updates=config)
 
 #%%
+
+import matplotlib.pyplot as plt
+
+IncreasingOscillationDecreasingAmplitude().plot()
+plt.show(block=False)
+Sin2DRotated().plot()
+plt.show(block=False)
+CosProd2D().plot()
+plt.show(block=False)
+Sinc2D().plot()
+plt.show(block=False)

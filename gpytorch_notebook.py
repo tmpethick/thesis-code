@@ -9,7 +9,8 @@ from matplotlib import pyplot as plt
 %load_ext autoreload
 %autoreload 2
 
-from src.environments import Sinc
+from src.environments.smooth import Sinc
+
 # Training data is 11 points in [0,1] inclusive regularly spaced
 train_x = np.linspace(-20, 20, 100)
 # True function is sin(2*pi*x) with Gaussian noise

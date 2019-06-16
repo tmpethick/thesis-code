@@ -6,8 +6,7 @@
 %load_ext autoreload
 %autoreload 2
 
-import numpy as np
-from src.environments import NegSinc, Kink1D
+from src.environments.smooth import NegSinc
 from src.models import GPModel
 from src.kernels import GPyRBF
 

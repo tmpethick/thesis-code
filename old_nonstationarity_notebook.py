@@ -3,13 +3,10 @@
 %autoreload 2
 
 #%%
-import numpy as np
-from src.plot_utils import plot2D, plot1D, plot_function
-from src.algorithms import AcquisitionAlgorithm, bo_plot_callback
-from src.utils import random_hypercube_samples, root_mean_square_error
-from src.environments import Kink1D, Kink2D, BaseEnvironment
-from src.models.core_models import BaseModel
-from sklearn.metrics import mean_squared_error
+from src.plot_utils import plot_function
+from src.algorithms import bo_plot_callback
+from src.environments.core import BaseEnvironment
+from src.environments.discontinous import Kink1D, Kink2D
 
 import matplotlib.pyplot as plt
 
@@ -33,7 +30,7 @@ test_gp_model(f, model)
 plt.show()
 
 #%%
-from src.models.lls_gp import LocalLengthScaleGPModel, LocalLengthScaleGPBaselineModel
+from src.models.lls_gp import LocalLengthScaleGPModel
 
 f = Kink1D()
 model = LocalLengthScaleGPModel()
@@ -44,7 +41,7 @@ plot_function(f, model.get_lengthscale, title="Lengthscale", points=model.lls_ke
 plt.show()
 
 #%%
-from src.models.lls_gp import LocalLengthScaleGPModel, LocalLengthScaleGPBaselineModel
+from src.models.lls_gp import LocalLengthScaleGPModel
 
 f = Kink2D()
 model = LocalLengthScaleGPModel(l_samples=30)
@@ -55,7 +52,7 @@ plot_function(f, model.get_lengthscale, title="Lengthscale", points=model.lls_ke
 plt.show()
 
 #%%
-from src.models.lls_gp import LocalLengthScaleGPModel, LocalLengthScaleGPBaselineModel
+from src.models.lls_gp import LocalLengthScaleGPBaselineModel
 
 f = Kink2D()
 model = LocalLengthScaleGPBaselineModel()
@@ -87,7 +84,6 @@ bq.run(callback=bo_plot_callback)
 
 from src.acquisition_functions import QuadratureAcquisition
 from src.algorithms import AcquisitionAlgorithm
-from src.models.lls_gp import LocalLengthScaleGPModel, LocalLengthScaleGPBaselineModel
 from src.models.dkl_gp import DKLGPModel
 
 

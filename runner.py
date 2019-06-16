@@ -2,7 +2,8 @@ import sys
 import subprocess
 import time
 
-from src.environments import BaseEnvironment, EnvironmentNormalizer
+from src.environments.core import BaseEnvironment
+from src.environments.helpers import EnvironmentNormalizer
 from src.models.core_models import BaseModel, GPModel
 from src.models import NormalizerModel, TransformerModel, DKLGPModel
 from src.models.lls_gp import LocalLengthScaleGPModel

@@ -6,20 +6,9 @@
 %load_ext autoreload
 %autoreload 2
 
-from runner import notebook_run, notebook_run_CLI, notebook_run_server, execute
-
-import matplotlib.pyplot as plt
 import seaborn as sns
 sns.set_style("darkgrid")
 
-from src.utils import *
-from src.plot_utils import *
-from src.kernels import *
-from src.models.core_models import *
-from src.models.dkl_gp import *
-from src.models.lls_gp import *
-from src.environments import *
-from src.acquisition_functions import *
 from src.algorithms import *
 
 #%% Testing RFF and SKI behaviour

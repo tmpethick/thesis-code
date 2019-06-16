@@ -3,7 +3,8 @@
 def test_environment_normalizer():
     from src.utils import random_hypercube_samples
     from src.models import Normalizer
-    from src.environments import Step, EnvironmentNormalizer
+    from src.environments.helpers import EnvironmentNormalizer
+    from src.environments.discontinous import Step
 
     f = Step()
     X = random_hypercube_samples(100, f.bounds)

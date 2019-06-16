@@ -1,4 +1,6 @@
 #%%
+from src.environments.discontinous import TwoKink2D, KinkDCircularEmbedding, TwoKink1D
+from src.environments.helpers import EnvironmentNormalizer
 from src.models import ActiveSubspace
 %load_ext autoreload
 %autoreload 2
@@ -11,7 +13,6 @@ sns.set_style('white')
 from src.utils import *
 from src.plot_utils import *
 from src.models.ASG import *
-from src.environments import *
 from src.algorithms import *
 
 latexify(columns=1)
