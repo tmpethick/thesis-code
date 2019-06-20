@@ -292,9 +292,9 @@ class GPyTorchModel(ConfigMixin, FeatureModel):
         if not fix_gp_params:
             opt_parameter_list.append({'params': self.model.covar_module.parameters()})
             opt_parameter_list.append({'params': self.model.mean_module.parameters()})
-            # Only add noise as hyperparameter if it is not fixed.
-            #if self.noise is None:
-            opt_parameter_list.append({'params': self.model.likelihood.parameters()})
+            # # Only add noise as hyperparameter if it is not fixed.
+            if self.noise is None:
+                opt_parameter_list.append({'params': self.model.likelihood.parameters()})
 
         if self.has_feature_map:
             self.feature_extractor.train()
@@ -326,8 +326,8 @@ class GPyTorchModel(ConfigMixin, FeatureModel):
                 optimizer.step()
 
         with gpytorch.settings.use_toeplitz(self.model.uses_grid_interpolation), \
-            gpytorch.settings.fast_computations(covar_root_decomposition=self.covar_root_decomposition, log_prob=self.use_cg, solves=self.use_cg),\
-            gpytorch.settings.max_cg_iterations(self.max_cg_iter),\
+            gpytorch.settings.fast_computations(covar_root_decomposition=self.covar_root_decomposition, log_prob=self.use_cg, solves=self.use_cg), \
+            gpytorch.settings.max_cg_iterations(self.max_cg_iter), \
             gpytorch.settings.max_preconditioner_size(self.precond_size):
 
             # Catch CG warning
@@ -484,10 +484,14 @@ class DKLGPModel(GPyTorchModel):
     def get_common_hyperparameters(self):
         kernel = self.model.covar_module
         if self.model.uses_grid_interpolation:
-            kernel = kernel.base_kernel
+            rbf_kernel = kernel.base_kernel.base_kernel
+            scale_kernel = kernel.base_kernel
+        else:
+            rbf_kernel = kernel.base_kernel
+            scale_kernel = kernel
 
         return {
-            'outputscale': kernel.outputscale.detach().numpy(),
-            'lengthscale': kernel.base_kernel.lengthscale.detach().numpy(),
+            'outputscale': scale_kernel.outputscale.detach().numpy(),
+            'lengthscale': rbf_kernel.lengthscale.detach().numpy(),
             'noise': self.noise if self.noise is not None else self.likelihood.noise.item(),
         }

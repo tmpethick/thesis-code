@@ -77,3 +77,11 @@ def lazy_construct_from_module(module, config, overrides=None):
 # Move default to Context (do not use __init__(**kwargs))
 # Retrieve config merged with defaults from init.
 # Fix kernel => kernel_constructor naming
+
+def recursively_apply_to_dict(d, modifier=lambda k, v: None):
+    def iterate(d_):
+        for k, v in d_.items():
+            if isinstance(v, dict):
+                iterate(v)
+            modifier(k, v)
+    iterate(d)

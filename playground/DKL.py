@@ -929,7 +929,7 @@ training_size_to_total_size = lambda x: int(x * 1/(0.8*0.8))
 run = notebook_run(config_updates={
     'obj_func': {
         'name': 'SPXOptions',
-        'kwargs': {'D': 1, 'subset_size': training_size_to_total_size(1000)},
+        'kwargs': {'D': 1, 'subset_size': training_size_to_total_size(10000)},
     },
     'model': {
         'name': 'NormalizerModel',
@@ -938,12 +938,78 @@ run = notebook_run(config_updates={
                 'name': 'DKLGPModel',
                 'kwargs': {
                     'learning_rate': 0.1,
-                    'n_iter': 100,
-                    'nn_kwargs': {'layers': [100, 50, 1]},
-                    'gp_kwargs': {'n_grid': 1000},
+                    'n_iter': 1,
+                    'nn_kwargs': {'layers': None},
+                    'gp_kwargs': {'n_grid': 10000},
                     'noise': None
                 }
             }
         }
     },
 })
+
+#%% Run financial SPX options data
+
+import matplotlib.pyplot as plt
+import numpy as np
+from src.environments.financial import SPXOptions
+from src.models import NormalizerModel
+from src.plot_utils import plot_model_unknown_bounds
+
+# create model
+data = SPXOptions(D=1, subset_size=15000)
+
+import math
+import torch
+import gpytorch
+from matplotlib import pyplot as plt
+
+# Make plots inline
+
+train_x = torch.Tensor(data.X_train[:,0])
+train_y = torch.Tensor(data.Y_train[:,0])
+
+class GPRegressionModel(gpytorch.models.ExactGP):
+    def __init__(self, train_x, train_y, likelihood):
+        super(GPRegressionModel, self).__init__(train_x, train_y, likelihood)
+
+        # SKI requires a grid size hyperparameter. This util can help with that. Here we are using a grid that has the same number of points as the training data (a ratio of 1.0). Performance can be sensitive to this parameter, so you may want to adjust it for your own problem on a validation set.
+
+        self.mean_module = gpytorch.means.ConstantMean()
+        self.covar_module = gpytorch.kernels.GridInterpolationKernel(
+            gpytorch.kernels.ScaleKernel(gpytorch.kernels.RBFKernel()),
+            grid_size=10000, num_dims=1,
+        )
+
+    def forward(self, x):
+        mean_x = self.mean_module(x)
+        covar_x = self.covar_module(x)
+        return gpytorch.distributions.MultivariateNormal(mean_x, covar_x)
+
+
+likelihood = gpytorch.likelihoods.GaussianLikelihood()
+model = GPRegressionModel(train_x, train_y, likelihood)
+
+# Find optimal model hyperparameters
+model.train()
+likelihood.train()
+
+# Use the adam optimizer
+optimizer = torch.optim.Adam([
+    {'params': model.parameters()},  # Includes GaussianLikelihood parameters
+], lr=0.1)
+
+# "Loss" for GPs - the marginal log likelihood
+mll = gpytorch.mlls.ExactMarginalLogLikelihood(likelihood, model)
+
+training_iterations = 30
+for i in range(training_iterations):
+    optimizer.zero_grad()
+    output = model(train_x)
+    loss = -mll(output, train_y)
+    loss.backward()
+    print('Iter %d/%d - Loss: %.3f' % (i + 1, training_iterations, loss.item()))
+    optimizer.step()
+
+
+#%%

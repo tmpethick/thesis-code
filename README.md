@@ -112,6 +112,25 @@ sbatch hpc.sh 'python' 'runner.py' 'print_config' 'with' 'obj_func={"name": "Sin
 - Run `make` in `SparseGridCode/`.
 - Replace `basestring` with `str` in `SparseGridCode/TasmanianSparseGrids/InterfacePython/TasmanianSG.py`.
 
+## Profiling
+
+```
+pip install memory_profiler
+sudo mprof run --include-children python debug_notebook.py
+mprof plot --backend TkAgg
+```
+
+```
+pip install pympler
+```
+
+```python
+from pympler import muppy, summary
+all_objects = muppy.get_objects()
+sum1 = summary.summarize(all_objects)
+summary.print_(sum1)
+```
+
 
 ## Troubleshoot
 

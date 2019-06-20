@@ -650,6 +650,7 @@ training_size_to_total_size = lambda x: int(x * 1/(0.8*0.8))
 Ds = [1,2,3,4]
 Ns = [1000, 10000, 20000]
 Ms = [1000, 10000]
+# M can be big since the feature space is one dimensional.
 
 # With DKL
 for D in Ds:
@@ -670,6 +671,7 @@ for D in Ds:
                                 'n_iter': 100,
                                 'nn_kwargs': {'layers': [100, 50, 1]},
                                 'gp_kwargs': {'n_grid': M},
+                                'use_cg': True,
                                 'noise': None
                             }
                         }
@@ -678,7 +680,12 @@ for D in Ds:
             })
 
 
+#%%
+
+training_size_to_total_size = lambda x: int(x * 1/(0.8*0.8))
+
 Ds = [1,2,3,4]
+Ns = [1000, 10000, 20000]
 Ms = [10000, 100, 22, 10]
 
 # Without DKL
@@ -700,6 +707,7 @@ for i, D in enumerate(Ds):
                             'n_iter': 100,
                             'nn_kwargs': {'layers': None},
                             'gp_kwargs': {'n_grid': Ms[i]},
+                            'use_cg': True,
                             'noise': None
                         }
                     }
