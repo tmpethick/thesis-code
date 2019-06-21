@@ -113,9 +113,9 @@ class SPXOptions(DataSet):
         self.Y = df[[self.Y_label]].values
 
         self.X_train, self.X_test, self.Y_train, self.Y_test = \
-            train_test_split(self.X, self.Y, test_size=cls.test_percentage, shuffle=True, random_state=42)
+            train_test_split(self.X, self.Y, test_size=self.test_percentage, shuffle=True, random_state=42)
         self.X_train, self.X_val, self.Y_train, self.Y_val = \
-            train_test_split(self.X_train, self.Y_train, test_size=cls.val_percentage, shuffle=True, random_state=42)
+            train_test_split(self.X_train, self.Y_train, test_size=self.val_percentage, shuffle=True, random_state=42)
         self.X_train, self.Y_train = self.X_train[:subset_size], self.Y_train[:subset_size]
 
 
@@ -134,6 +134,8 @@ class GrowthModel(object):
             PostProcessing  # computes the L2 and Linfinity error of the mode
 
         self.params = Parameters(**kwargs)
+        
+        # To mimic the interface of BaseEnvironment
         self.bounds = np.array([[self.params.k_bar, self.params.k_up]] * self.params.n_agents)
         self.input_dim = self.params.n_agents
 

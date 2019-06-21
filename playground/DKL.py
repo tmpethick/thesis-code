@@ -1094,6 +1094,3 @@ gp = NormalizerModel.from_config({
     }
 })
 GrowthModel(gp).loop()
-
-
-#%%
