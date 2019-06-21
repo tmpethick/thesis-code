@@ -1,7 +1,47 @@
 # Scalable Bayesian Optimization
 
+## Datasets
+
+https://arxiv.org/pdf/1807.02125.pdf
+https://archive.ics.uci.edu/ml/datasets.php
+
+```
+challenger
+fertility
+slump
+automobile
+servo
+cancer
+hardware
+yacht
+autompg
+housing
+forest
+stock
+energy
+concrete
+solar
+wine
+skillcraft
+pumadyn
+elevators
+kin40k
+keggu
+3droad
+electric
+```
+
 
 ## TODO:
+
+- Financial data:
+  - Use all data points
+  - DKL
+
+- RFF
+- RFF / KISS comparison
+- Docs: Write documentation (see FEBO and gpytorch)
+- Config: store default configs
 
 - [ ] Implement vanilla GPy
 - [ ] Implement RFF

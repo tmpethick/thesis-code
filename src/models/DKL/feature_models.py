@@ -318,11 +318,11 @@ class GPyTorchModel(ConfigMixin, FeatureModel):
                 loss = -mll(output, self.Y_torch)
                 loss.backward()
 
-                training_loss = loss.item()
+                loss_ = loss.item()
                 if i % 30 == 0:
                     print('Current hyperparameters:', self.get_common_hyperparameters())
-                self.training_loss[i] = training_loss
-                self.training_callback(self, i, training_loss)
+                self.training_loss[i] = loss_
+                self.training_callback(self, i, loss_)
                 optimizer.step()
 
         with gpytorch.settings.use_toeplitz(self.model.uses_grid_interpolation), \
@@ -415,7 +415,7 @@ class GPyTorchModel(ConfigMixin, FeatureModel):
         kwargs.update({
             'likelihood.noise': noise
         })
-        self.model.initialize_parameters(**kwargs)
+        self.model.initialize(**kwargs)
 
 
 class SSGP(GPyTorchModel):

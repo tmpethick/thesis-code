@@ -13,10 +13,11 @@
 #     Simon Scheidegger, 01/19
 #======================================================================
 
+import os 
 import numpy as np
-from parameters import *
-import nonlinear_solver_iterate as solver
-import cPickle as pickle
+from .parameters import *
+from . import nonlinear_solver_iterate as solver
+import pickle as pickle
 
 from sklearn.gaussian_process import GaussianProcessRegressor
 from sklearn.gaussian_process.kernels import RBF, WhiteKernel, Matern
@@ -27,10 +28,11 @@ def GPR_iter(iteration):
     
     
     # Load the model from the previous iteration step
-    restart_data = filename + str(iteration-1) + ".pcl"
+    dir_path = os.path.dirname(os.path.realpath(__file__))
+    restart_data = os.path.join(dir_path, filename + str(iteration-1) + ".pcl")
     with open(restart_data, 'rb') as fd_old:
         gp_old = pickle.load(fd_old)
-        print "data from iteration step ", iteration -1 , "loaded from disk"
+        print("data from iteration step ", iteration -1 , "loaded from disk")
     fd_old.close()
     
     ##generate sample aPoints
@@ -65,12 +67,13 @@ def GPR_iter(iteration):
     gp.fit(Xtraining, y)    
      
     ##save the model to a file
-    output_file = filename + str(iteration) + ".pcl"
-    print output_file 
+    dir_path = os.path.dirname(os.path.realpath(__file__))
+    output_file = os.path.join(dir_path, filename + str(iteration) + ".pcl")
+    print(output_file) 
     with open(output_file, 'wb') as fd:
         pickle.dump(gp, fd, protocol=pickle.HIGHEST_PROTOCOL)
-        print "data of step ", iteration ,"  written to disk"
-        print " -------------------------------------------"
+        print("data of step ", iteration ,"  written to disk")
+        print(" -------------------------------------------")
     fd.close()    
     
 

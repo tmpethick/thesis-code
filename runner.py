@@ -161,6 +161,8 @@ def notebook_run_server(*args, **kwargs):
     subprocess.call(ssh_cmd)
 
 
+# DEPRECRATED since they don't automatically adjust settings.SAVE
+# Only access through `execute`.
 def notebook_run_CLI(*args, **kwargs):
     cmd = notebook_to_CLI(*args, **kwargs)
     print(cmd)
@@ -171,7 +173,7 @@ def notebook_run(*args, **kwargs):
     """Run experiment from a notebook/IPython env.
     
     Returns:
-        Experiment -- Includes _run.interactive_stash to access constructured models.
+        Experiment -- Includes _run.interactive_stash to access constructed models.
     """
     assert not kwargs.get('options'), "Currently options are not supported since we override them."
 

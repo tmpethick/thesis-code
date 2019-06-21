@@ -6,8 +6,8 @@
 #
 #=======================================================================
 
-from parameters import *
-from econ import *
+from .parameters import *
+from .econ import *
 import numpy as np
 
 #=======================================================================
@@ -55,7 +55,9 @@ def EV_F_ITER(X, k_init, n_agents, gp_old):
     Xtest[0,:] = knext_cube
     
     # interpolate the function, and get the point-wise std.
-    V_old, sigma_test = gp_old.get_statistics(Xtest, full_cov=False)
+    #V_old, sigma_test = gp_old.get_statistics(Xtest, full_cov=False)
+    #V_old, sigma_test = gp_old.get_statistics(Xtest, full_cov=False)
+    V_old, sigma_test = gp_old.predict(Xtest, return_std=True)
 
     # aggregate hyperparams
     if V_old.ndim == 3:

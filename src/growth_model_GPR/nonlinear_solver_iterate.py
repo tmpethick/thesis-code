@@ -7,8 +7,8 @@
 #     Simon Scheidegger, 11/16 ; 07/17; 01/19
 #======================================================================
 
-from parameters import *
-from ipopt_wrapper import EV_F_ITER, EV_GRAD_F_ITER, EV_G_ITER, EV_JAC_G_ITER
+from .parameters import *
+from .ipopt_wrapper import EV_F_ITER, EV_GRAD_F_ITER, EV_G_ITER, EV_JAC_G_ITER
 import numpy as np
 import pyipopt
 
@@ -18,7 +18,7 @@ def iterate(k_init, n_agents, gp_old):
     N=3*n_agents    # number of vars
     M=3*n_agents+1  # number of constraints
     NELE_JAC=N*M
-    NELE_HESS=(N**2-N)/2 + N    # number of non-zero entries of Hess matrix
+    NELE_HESS=(N**2-N)//2 + N    # number of non-zero entries of Hess matrix
     
     # Vector of variables -> solution of non-linear equation system 
     X=np.empty(N)

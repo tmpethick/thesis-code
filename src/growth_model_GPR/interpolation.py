@@ -8,11 +8,11 @@
 #
 #     Simon Scheidegger, 01/19
 #======================================================================
-
+import os 
 import numpy as np
-from parameters import *
-import nonlinear_solver_initial as solver
-import cPickle as pickle
+from .parameters import *
+from . import nonlinear_solver_initial as solver
+import pickle as pickle
 
 from sklearn.gaussian_process import GaussianProcessRegressor
 from sklearn.gaussian_process.kernels import RBF, WhiteKernel, Matern
@@ -21,7 +21,7 @@ from sklearn.gaussian_process.kernels import RBF, WhiteKernel, Matern
 
 def GPR_init(iteration):
     
-    print "hello from step ", iteration
+    print("hello from step ", iteration)
     
   
     #fix seed
@@ -52,14 +52,16 @@ def GPR_init(iteration):
 
     # Fit to data using Maximum Likelihood Estimation of the parameters
     gp.fit(Xtraining, y)    
-     
+
+ 
     #save the model to a file
-    output_file = filename + str(iteration) + ".pcl"
-    print output_file 
+    dir_path = os.path.dirname(os.path.realpath(__file__))
+    output_file = os.path.join(dir_path, filename + str(iteration) + ".pcl")
+    print(output_file) 
     with open(output_file, 'wb') as fd:
         pickle.dump(gp, fd, protocol=pickle.HIGHEST_PROTOCOL)
-        print "data of step ", iteration ,"  written to disk"
-        print " -------------------------------------------"
+        print("data of step ", iteration ,"  written to disk")
+        print(" -------------------------------------------")
     fd.close()
     
 #======================================================================

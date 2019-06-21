@@ -47,39 +47,3 @@ class ActiveSubspaceTest(BaseEnvironment):
 #         out[:, 1] += X[..., 2] * _test_old
 #         out[:, 2] += X[..., 1] * _test_old
 #         return out
-
-
-# import growth_model_GPR.nonlinear_solver_initial as solver_initializor
-# import growth_model_GPR.nonlinear_solver_iterate as solver_iterator
-
-
-# class DynamicBell(BaseEnvironment):
-#     # bounds are np.array([k_bar, k_up] * dim)
-
-#     def __init__(self, input_dim=10):
-#         self.dim = input_dim
-
-#         self._is_initialized = False
-#         self.n_agents = 2
-#         # TODO: consolidate with n_agents in parameters.py
-
-#     def _call(self, X, prob_model):
-#         """OBS: every call will iterate.
-#         We assume that self.prob_model is updated with new observations (discarding the old.)
-#         """
-#         n = X.shape[0]
-#         y = np.zeros(n, float)
-
-#         if self._is_initialized:
-#             for i in range(n):
-#                 y[i] = solver_iterator.iterate(X[i], self.n_agents, prob_model)[0]
-#         else:
-#             self._is_initialized = True
-#             for i in range(n):
-#                 y[i] = solver_initializor.initial(X[i], self.n_agents)[0]
-
-
-#         return y[:, None]
-
-
-__all__ = ['ActiveSubspaceTest']

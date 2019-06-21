@@ -6,3 +6,5 @@ data/
 SparseGridCode/spinterp_v5.1.1
 SparseGridCode/pyipopt
 SparseGridCode/TasmanianSparseGrids
+
+*.pcl

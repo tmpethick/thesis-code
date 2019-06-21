@@ -6,12 +6,14 @@
   <component name="ChangeListManager">
     <list default="true" id="c818380e-e4c2-4b56-b288-ea97eb749031" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.ipynb_checkpoints/explorer_notebook-checkpoint.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/.ipynb_checkpoints/explorer_notebook-checkpoint.ipynb" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/debug_notebook.py" beforeDir="false" afterPath="$PROJECT_DIR$/debug_notebook.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/hpc.sh" beforeDir="false" afterPath="$PROJECT_DIR$/hpc.sh" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/explorer_notebook.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/explorer_notebook.ipynb" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/playground/DKL.py" beforeDir="false" afterPath="$PROJECT_DIR$/playground/DKL.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/runner.py" beforeDir="false" afterPath="$PROJECT_DIR$/runner.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/experiment/config_helpers.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/experiment/config_helpers.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/environments/financial.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/environments/financial.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/environments/high_dim.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/environments/high_dim.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/experiment/runner.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/experiment/runner.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/models/DKL/feature_models.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/models/DKL/feature_models.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/models/DKL/gpr.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/models/DKL/gpr.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/thesis_figs_notebooks/server_run.py" beforeDir="false" afterPath="$PROJECT_DIR$/thesis_figs_notebooks/server_run.py" afterDir="false" />
@@ -52,7 +54,7 @@
           <entry key="json" value="2" />
           <entry key="md" value="4" />
           <entry key="pstat" value="1" />
-          <entry key="py" value="292" />
+          <entry key="py" value="295" />
           <entry key="pyi" value="1" />
           <entry key="sh" value="3" />
           <entry key="yaml" value="14" />
@@ -65,7 +67,7 @@
           <entry key="Markdown" value="4" />
           <entry key="PLAIN_TEXT" value="6" />
           <entry key="Profiler Session" value="1" />
-          <entry key="Python" value="292" />
+          <entry key="Python" value="295" />
           <entry key="PythonStub" value="1" />
           <entry key="YAML" value="14" />
         </counts>
@@ -76,7 +78,7 @@
           <entry key="Python Console" value="966" />
           <entry key="dummy" value="57" />
           <entry key="md" value="54" />
-          <entry key="py" value="40171" />
+          <entry key="py" value="40176" />
           <entry key="sh" value="2" />
           <entry key="yaml" value="17" />
         </counts>
@@ -85,7 +87,7 @@
         <counts>
           <entry key="Markdown" value="54" />
           <entry key="PLAIN_TEXT" value="76" />
-          <entry key="Python" value="41137" />
+          <entry key="Python" value="41142" />
           <entry key="YAML" value="17" />
         </counts>
       </usages-collector>
@@ -96,23 +98,11 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/experiment/config_helpers.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="105">
-              <caret line="7" column="8" selection-start-line="7" selection-start-column="8" selection-end-line="7" selection-end-column="8" />
+            <state relative-caret-position="-453">
+              <caret line="23" column="32" selection-start-line="23" selection-start-column="32" selection-end-line="23" selection-end-column="32" />
               <folding>
                 <marker date="1560703954871" expanded="true" signature="893:899" ph="..." />
                 <marker date="1560703954871" expanded="true" signature="2290:2291" ph="..." />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/playground/DKL.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="374">
-              <caret line="968" column="17" selection-start-line="968" selection-start-column="17" selection-end-line="968" selection-end-column="17" />
-              <folding>
-                <element signature="e#4#90#0" expanded="true" />
               </folding>
             </state>
           </provider>
@@ -122,7 +112,7 @@
         <entry file="file://$PROJECT_DIR$/src/experiment/context.py">
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="506">
-              <caret line="44" lean-forward="true" selection-start-line="44" selection-end-line="44" />
+              <caret line="44" selection-start-line="44" selection-end-line="44" />
               <folding>
                 <element signature="e#0#169#0" expanded="true" />
               </folding>
@@ -131,22 +121,24 @@
         </entry>
       </file>
       <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/experiment/settings.py">
+        <entry file="file://$PROJECT_DIR$/src/environments/financial.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="240">
-              <caret line="16" column="19" selection-start-line="16" selection-start-column="19" selection-end-line="16" selection-end-column="19" />
-              <folding>
-                <element signature="e#0#9#0" expanded="true" />
-              </folding>
+            <state relative-caret-position="295">
+              <caret line="142" column="35" lean-forward="true" selection-start-line="142" selection-start-column="35" selection-end-line="142" selection-end-column="35" />
             </state>
           </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/src/growth_model_GPR/main.py">
+          <provider selected="true" editor-type-id="text-editor" />
         </entry>
       </file>
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/models/DKL/feature_models.py">
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="357">
-              <caret line="490" column="22" lean-forward="true" selection-start-line="490" selection-start-column="22" selection-end-line="490" selection-end-column="22" />
+              <caret line="490" column="22" selection-start-line="490" selection-start-column="22" selection-end-line="490" selection-end-column="22" />
               <folding>
                 <element signature="e#0#15#0" expanded="true" />
               </folding>
@@ -288,9 +280,9 @@
         <option value="$PROJECT_DIR$/src/models/DKL/feature_models.py" />
         <option value="$PROJECT_DIR$/src/experiment/context.py" />
         <option value="$PROJECT_DIR$/debug_notebook.py" />
-        <option value="$PROJECT_DIR$/src/experiment/settings.py" />
         <option value="$PROJECT_DIR$/thesis_figs_notebooks/server_run.py" />
         <option value="$PROJECT_DIR$/playground/DKL.py" />
+        <option value="$PROJECT_DIR$/src/experiment/settings.py" />
       </list>
     </option>
   </component>
@@ -301,9 +293,8 @@
     <sorting>DEFINITION_ORDER</sorting>
   </component>
   <component name="ProjectFrameBounds" extendedState="6">
-    <option name="x" value="11" />
     <option name="y" value="23" />
-    <option name="width" value="1680" />
+    <option name="width" value="1920" />
     <option name="height" value="1027" />
   </component>
   <component name="ProjectLevelVcsManager" settingsEditedManually="true">
@@ -358,6 +349,12 @@
               <item name="thesis-code" type="462c0819:PsiDirectoryNode" />
               <item name="src" type="462c0819:PsiDirectoryNode" />
               <item name="experiment" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="thesis-code" type="b2602c69:ProjectViewProjectNode" />
+              <item name="thesis-code" type="462c0819:PsiDirectoryNode" />
+              <item name="src" type="462c0819:PsiDirectoryNode" />
+              <item name="growth_model_GPR" type="462c0819:PsiDirectoryNode" />
             </path>
           </expand>
           <select />
@@ -506,17 +503,17 @@
     </todo-panel>
   </component>
   <component name="ToolWindowManager">
-    <frame x="0" y="23" width="1680" height="1027" extended-state="6" />
+    <frame x="0" y="23" width="1920" height="1057" extended-state="6" />
     <editor active="true" />
     <layout>
       <window_info id="Favorites" order="0" side_tool="true" />
-      <window_info content_ui="combo" id="Project" order="1" sideWeight="0.38716578" visible="true" weight="0.13919415" />
+      <window_info active="true" content_ui="combo" id="Project" order="1" sideWeight="0.38716578" visible="true" weight="0.12140575" />
       <window_info id="Structure" order="2" sideWeight="0.6128342" side_tool="true" weight="0.13919415" />
       <window_info anchor="bottom" id="Database Changes" order="0" show_stripe_button="false" />
       <window_info anchor="bottom" id="Terminal" order="1" sideWeight="0.497558" weight="0.32941177" />
       <window_info anchor="bottom" id="Event Log" order="2" sideWeight="0.503663" side_tool="true" weight="0.7251337" />
       <window_info anchor="bottom" id="Version Control" order="3" weight="0.32941177" />
-      <window_info anchor="bottom" id="Python Console" order="4" sideWeight="0.46683252" visible="true" weight="0.31122994" />
+      <window_info anchor="bottom" id="Python Console" order="4" sideWeight="0.46683252" visible="true" weight="0.3015544" />
       <window_info anchor="bottom" id="Docker" order="5" show_stripe_button="false" />
       <window_info anchor="bottom" id="Message" order="6" />
       <window_info anchor="bottom" id="Find" order="7" sideWeight="0.4968254" weight="0.29839572" />
@@ -526,9 +523,9 @@
       <window_info anchor="bottom" id="Inspection" order="11" weight="0.4" />
       <window_info anchor="bottom" id="TODO" order="12" sideWeight="0.49893504" weight="0.3284974" />
       <window_info anchor="right" id="Coverage" side_tool="true" />
-      <window_info anchor="right" id="SciView" order="0" sideWeight="0.86490685" visible="true" weight="0.24358974" />
+      <window_info anchor="right" id="SciView" order="0" sideWeight="0.86498517" visible="true" weight="0.21246007" />
       <window_info anchor="right" id="Database" order="1" />
-      <window_info anchor="right" x="0" y="0" width="370" height="827" id="Documentation" order="2" sideWeight="0.13509317" side_tool="true" visible="true" weight="0.24358974" />
+      <window_info anchor="right" x="0" y="0" width="370" height="827" id="Documentation" order="2" sideWeight="0.13501483" side_tool="true" visible="true" weight="0.21246007" />
       <window_info anchor="right" id="Commander" internal_type="SLIDING" order="3" type="SLIDING" weight="0.4" />
       <window_info anchor="right" id="Ant Build" order="4" weight="0.25" />
       <window_info anchor="right" content_ui="combo" id="Hierarchy" order="5" weight="0.25" />
@@ -642,19 +639,6 @@
     </expressions>
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/src/kernels.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="525">
-          <caret line="35" column="27" lean-forward="true" selection-start-line="35" selection-start-column="27" selection-end-line="35" selection-end-column="27" />
-          <folding>
-            <element signature="e#0#10#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/models/low_rank/low_rank.py">
-      <provider selected="true" editor-type-id="text-editor" />
-    </entry>
     <entry file="file://$PROJECT_DIR$/src/models/deprecated_models.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="750">
@@ -849,18 +833,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/environments/financial.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="474">
-          <caret line="102" column="12" selection-start-line="102" selection-start-column="12" selection-end-line="102" selection-end-column="12" />
-          <folding>
-            <element signature="e#134#173#0" expanded="true" />
-            <marker date="1560698816267" expanded="true" signature="351:899" ph="..." />
-            <marker date="1560698816267" expanded="true" signature="1059:1060" ph="..." />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/Makefile">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="195">
@@ -967,20 +939,9 @@
     <entry file="file://$PROJECT_DIR$/src/models/DKL/feature_models.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="357">
-          <caret line="490" column="22" lean-forward="true" selection-start-line="490" selection-start-column="22" selection-end-line="490" selection-end-column="22" />
+          <caret line="490" column="22" selection-start-line="490" selection-start-column="22" selection-end-line="490" selection-end-column="22" />
           <folding>
             <element signature="e#0#15#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/experiment/config_helpers.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="105">
-          <caret line="7" column="8" selection-start-line="7" selection-start-column="8" selection-end-line="7" selection-end-column="8" />
-          <folding>
-            <marker date="1560703954871" expanded="true" signature="893:899" ph="..." />
-            <marker date="1560703954871" expanded="true" signature="2290:2291" ph="..." />
           </folding>
         </state>
       </provider>
@@ -989,16 +950,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="325">
           <caret line="58" column="34" selection-start-line="58" selection-start-column="34" selection-end-line="58" selection-end-column="34" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/experiment/settings.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="240">
-          <caret line="16" column="19" selection-start-line="16" selection-start-column="19" selection-end-line="16" selection-end-column="19" />
-          <folding>
-            <element signature="e#0#9#0" expanded="true" />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -1016,25 +967,65 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/playground/DKL.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="307">
+          <caret line="970" lean-forward="true" selection-start-line="970" selection-end-line="970" />
+          <folding>
+            <element signature="e#4#90#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/settings.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state>
+          <folding>
+            <element signature="e#0#9#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/experiment/config_helpers.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-453">
+          <caret line="23" column="32" selection-start-line="23" selection-start-column="32" selection-end-line="23" selection-end-column="32" />
+          <folding>
+            <marker date="1560703954871" expanded="true" signature="893:899" ph="..." />
+            <marker date="1560703954871" expanded="true" signature="2290:2291" ph="..." />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/experiment/settings.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="240">
+          <caret line="16" column="19" selection-start-line="16" selection-start-column="19" selection-end-line="16" selection-end-column="19" />
+          <folding>
+            <element signature="e#0#9#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/src/experiment/context.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="506">
-          <caret line="44" lean-forward="true" selection-start-line="44" selection-end-line="44" />
+          <caret line="44" selection-start-line="44" selection-end-line="44" />
           <folding>
             <element signature="e#0#169#0" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/playground/DKL.py">
+    <entry file="file://$PROJECT_DIR$/src/environments/financial.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="374">
-          <caret line="968" column="17" selection-start-line="968" selection-start-column="17" selection-end-line="968" selection-end-column="17" />
-          <folding>
-            <element signature="e#4#90#0" expanded="true" />
-          </folding>
+        <state relative-caret-position="295">
+          <caret line="142" column="35" lean-forward="true" selection-start-line="142" selection-start-column="35" selection-end-line="142" selection-end-column="35" />
         </state>
       </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/growth_model_GPR/main.py">
+      <provider selected="true" editor-type-id="text-editor" />
     </entry>
   </component>
 </project>

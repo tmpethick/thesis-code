@@ -7,7 +7,7 @@
 #     Simon Scheidegger, 11/16 ; 07/17
 #====================================================================== 
 
-from parameters import *
+from .parameters import *
 import numpy as np
 
 

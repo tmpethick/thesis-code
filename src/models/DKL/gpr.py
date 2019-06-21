@@ -28,7 +28,6 @@ class GPRegressionModel(gpytorch.models.ExactGP):
 
         kernel = kernel(ard_num_dims=gp_input_dim)
 
-
         if has_scale_kernel:
             kernel = gpytorch.kernels.ScaleKernel(kernel)
 

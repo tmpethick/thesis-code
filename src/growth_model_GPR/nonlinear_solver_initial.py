@@ -7,8 +7,8 @@
 #     Simon Scheidegger, 11/16 ; 07/17; 01/19
 #======================================================================
 
-from parameters import *
-from ipopt_wrapper import EV_F, EV_GRAD_F, EV_G, EV_JAC_G
+from .parameters import *
+from .ipopt_wrapper import EV_F, EV_GRAD_F, EV_G, EV_JAC_G
 import numpy as np
 import pyipopt
 
@@ -21,7 +21,7 @@ def initial(k_init, n_agents):
     N=nvars         # number of vars
     M=3*n_agents+1  # number of constraints
     NELE_JAC=N*M
-    NELE_HESS=(N**2-N)/2 + N    # number of non-zero entries of Hess matrix
+    NELE_HESS=(N**2-N)//2 + N    # number of non-zero entries of Hess matrix
 
     # check that number of nonlinear equations is consistent 
     if (N!=3*n_agents):

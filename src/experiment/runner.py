@@ -32,24 +32,24 @@ class Runner(object):
             self.run_models(models, X_train, Y_train, Y_train_dir, X_val, Y_val)
             self.plot_models(self.context)
 
-    def get_data_f(self, f: BaseEnvironment, context):
+    def get_data_f(self, f: BaseEnvironment):
         # Training
         bounds = f.bounds
         input_dim = f.input_dim
 
         if input_dim == 1:
-            X_train = np.random.uniform(bounds[0, 0], bounds[0, 1], (context.n_samples, 1))
+            X_train = np.random.uniform(bounds[0, 0], bounds[0, 1], (self.context.n_samples, 1))
         else:
-            X_train = random_hypercube_samples(context.n_samples, bounds)
+            X_train = random_hypercube_samples(self.context.n_samples, bounds)
 
         Y_train = f(X_train)
-        if context.gp_use_derivatives:
+        if self.context.gp_use_derivatives:
             Y_train_dir = f.derivative(X_train)
         else:
             Y_train_dir = None
 
         # Testing
-        X_val = random_hypercube_samples(context.n_samples, bounds)
+        X_val = random_hypercube_samples(self.context.n_samples, bounds)
         Y_val = f(X_val)
 
         return X_train, Y_train, Y_train_dir, X_val, Y_val
@@ -90,7 +90,9 @@ class Runner(object):
                 true_model = model
 
             if isinstance(true_model, DKLGPModel) or isinstance(true_model, GPModel):
-                self.log_info('Model{} has parameters: {}'.format(i, true_model.get_common_hyperparameters()))
+                hyperparameters = true_model.get_common_hyperparameters()
+                self.log_info('Model{} has parameters: {}'.format(i, hyperparameters))
+                self.update_result('hyperparameters', hyperparameters)
 
             if hasattr(true_model, 'warnings') and len(true_model.warnings) > 0:
                 self.update_result('WARNING', true_model.warnings)

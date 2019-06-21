@@ -645,6 +645,8 @@ for model in models:
 
 #%%
 
+# With DKL 1D
+
 training_size_to_total_size = lambda x: int(x * 1/(0.8*0.8))
 
 Ds = [1,2,3,4]
@@ -657,6 +659,7 @@ for D in Ds:
     for N in Ns:
         for M in Ms:
             run = execute(config_updates={
+                'tag': 'SPXOptions',
                 'obj_func': {
                     'name': 'SPXOptions',
                     'kwargs': {'D': D, 'subset_size': training_size_to_total_size(N)},
@@ -681,6 +684,7 @@ for D in Ds:
 
 
 #%%
+# With without DKL
 
 training_size_to_total_size = lambda x: int(x * 1/(0.8*0.8))
 
@@ -693,6 +697,7 @@ Ms = [10000, 100, 22, 10]
 for i, D in enumerate(Ds):
     for N in Ns:
         run = execute(config_updates={
+            'tag': 'SPXOptions',
             'obj_func': {
                 'name': 'SPXOptions',
                 'kwargs': {'D': D, 'subset_size': training_size_to_total_size(N)},
@@ -715,3 +720,108 @@ for i, D in enumerate(Ds):
             },
         })
 
+
+#%%
+# Learning rate
+
+from notebook_header import *
+
+Ds = [1,2,3,4]
+N = 10000
+Ms = [10000, 100, 22, 10] # such that inducing point matches approximately N*0.8^2
+
+# Without DKL
+# With DKL
+for rate in [0.1, 0.01]:
+    for i, D in enumerate(Ds):
+        run = execute(config_updates={
+            'tag': 'SPXOptions',
+            'obj_func': {
+                'name': 'SPXOptions',
+                'kwargs': {'D': D, 'subset_size': N},
+            },
+            'model': {
+                'name': 'NormalizerModel',
+                'kwargs': {
+                    'model': {
+                        'name': 'DKLGPModel',
+                        'kwargs': {
+                            'learning_rate': rate,
+                            'n_iter': 200,
+                            'nn_kwargs': {'layers': None},
+                            'gp_kwargs': {'n_grid': Ms[i]},
+                            'use_cg': True,
+                            'noise': None
+                        }
+                    }
+                }
+            },
+        })
+
+#%%
+# Dims without DKL
+
+from notebook_header import *
+
+Ds = [1,2,3,4]
+N = SPXOptions.max_train_size()
+Ms = [583104, 763, 84, 28] # Such that inducing point matches approximately N*0.8^2
+
+for i, D in enumerate(Ds):
+    run = execute(config_updates={
+        'tag': 'SPXOptions',
+        'obj_func': {
+            'name': 'SPXOptions',
+            'kwargs': {'D': D, 'subset_size': N},
+        },
+        'model': {
+            'name': 'NormalizerModel',
+            'kwargs': {
+                'model': {
+                    'name': 'DKLGPModel',
+                    'kwargs': {
+                        'learning_rate': 0.1,
+                        'n_iter': 30,
+                        'nn_kwargs': {'layers': None},
+                        'gp_kwargs': {'n_grid': Ms[i]},
+                        'use_cg': True,
+                        'noise': None
+                    }
+                }
+            }
+        },
+    })
+
+#%%
+# Dims without DKL 1D
+
+# Pick M as big as our training set.
+from notebook_header import *
+
+Ds = [1,2,3,4,10]
+M = int(N * 0.8 * 0.8)
+
+for i, D in enumerate(Ds):
+    run = execute(config_updates={
+        'tag': 'SPXOptions',
+        'obj_func': {
+            'name': 'SPXOptions',
+            'kwargs': {'D': D, 'subset_size': N},
+        },
+        'model': {
+            'name': 'NormalizerModel',
+            'kwargs': {
+                'model': {
+                    'name': 'DKLGPModel',
+                    'kwargs': {
+                        'learning_rate': 0.1,
+                        'n_iter': 30,
+                        'nn_kwargs': {'layers': [100, 50, 1]},
+                        'gp_kwargs': {'n_grid': M},
+                        'use_cg': True,
+                        'noise': None
+                    }
+                }
+            }
+        },
+    })
