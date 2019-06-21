@@ -13,13 +13,12 @@
 #
 #     Simon Scheidegger, 01/19 
 #======================================================================
-
-from . import nonlinear_solver_initial as solver     #solves opt. problems for terminal VF
-from . import nonlinear_solver_iterate as solviter   #solves opt. problems during VFI
-from .parameters import *                      #parameters of model
-from . import interpolation as interpol              #interface to sparse grid library/terminal VF
-from . import interpolation_iter as interpol_iter    #interface to sparse grid library/iteration
-from . import postprocessing as post                 #computes the L2 and Linfinity error of the model
+from src.growth_model_GPR.econ import Econ
+from src.growth_model_GPR.ipopt_wrapper import IPOptWrapper
+from .parameters import Parameters
+from .nonlinear_solver import NonlinearSolver   #solves opt. problems for terminal VF
+from .interpolation import  Interpolation       #interface to sparse grid library/terminal VF
+from .postprocessing import PostProcessing      #computes the L2 and Linfinity error of the model
 import numpy as np
 
 
@@ -27,32 +26,45 @@ import numpy as np
 # Start with Value Function Iteration
 
 
-for i in range(numstart, numits):
-# terminal value function
-    if (i==1):
-        print("start with Value Function Iteration")
-        interpol.GPR_init(i)
-    
-    else:     
-        print("Now, we are in Value Function Iteration step", i)
-        interpol_iter.GPR_iter(i)
-    
-    
-#======================================================================
-print("===============================================================")
-print(" ")
-print(" Computation of a growth model of dimension ", n_agents ," finished after ", numits, " steps")
-print(" ")
-print("===============================================================")
-#======================================================================
 
-# compute errors   
-avg_err=post.ls_error(n_agents, numstart, numits, No_samples_postprocess)
+class GrowthModel(object):
+    def __init__(self, **kwargs):
+        self.params = Parameters(**kwargs)
 
-#======================================================================
-print("===============================================================")
-print(" ")
-#print " Errors are computed -- see error.txt"
-print(" ")
-print("===============================================================")
-#======================================================================
+        self.econ = Econ(self.params)
+        self.ipopt = IPOptWrapper(self.params, self.econ)
+        self.nonlinear_solver = NonlinearSolver(self.params, self.ipopt)
+
+        self.interpolation = Interpolation(self.params, self.nonlinear_solver)
+        self.post = PostProcessing(self.params)
+
+    def loop(self):
+        for i in range(self.params.numstart, self.params.numits):
+        # terminal value function
+            if (i==1):
+                print("start with Value Function Iteration")
+                self.interpolation.GPR_init(i)
+
+            else:
+                print("Now, we are in Value Function Iteration step", i)
+                self.interpolation.GPR_iter(i)
+
+
+        #======================================================================
+        print("===============================================================")
+        print(" ")
+        print(" Computation of a growth model of dimension ", self.params.n_agents ," finished after ", self.params.numits, " steps")
+        print(" ")
+        print("===============================================================")
+        #======================================================================
+
+        # compute errors
+        avg_err=self.post.ls_error(self.params.n_agents, self.params.numstart, self.params.numits, self.params.No_samples_postprocess)
+
+        #======================================================================
+        print("===============================================================")
+        print(" ")
+        #print " Errors are computed -- see error.txt"
+        print(" ")
+        print("===============================================================")
+        #======================================================================

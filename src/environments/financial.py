@@ -132,8 +132,6 @@ def loop(model, env, N=1000, T=10):
 
 
 
-
-
 class DynamicBell(object):
     def __init__(self, input_dim=10):
         self.bounds = np.array([[k_bar, k_up]] * input_dim)

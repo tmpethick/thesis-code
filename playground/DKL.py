@@ -1071,5 +1071,12 @@ plot_model_unknown_bounds(run.interactive_stash.model)
 
 
 #%%
+%load_ext autoreload
+%autoreload 2
 
-import src.growth_model_GPR.main
+from src.growth_model_GPR.main import GrowthModel
+
+GrowthModel().loop()
+
+
+#%%
