@@ -1074,9 +1074,26 @@ plot_model_unknown_bounds(run.interactive_stash.model)
 %load_ext autoreload
 %autoreload 2
 
-from src.growth_model_GPR.main import GrowthModel
+from src.environments.financial import GrowthModel
+from src.models import NormalizerModel
 
-GrowthModel().loop()
+# kernel = RBF()
+# gp = GaussianProcessRegressor(kernel=kernel, n_restarts_optimizer=9)
+
+gp = NormalizerModel.from_config({
+    'model': {
+        'name': 'DKLGPModel',
+        'kwargs': {
+            'learning_rate': 0.1,
+            'n_iter': 100,
+            'nn_kwargs': {'layers': None},
+            #'gp_kwargs': {'n_grid': 1000},
+            'use_cg': True,
+            'noise': None
+        }
+    }
+})
+GrowthModel(gp).loop()
 
 
 #%%

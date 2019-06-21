@@ -120,45 +120,74 @@ class SPXOptions(DataSet):
 
 
 import numpy as np
-import growth_model_GPR.nonlinear_solver_initial as solver_initializor
-import growth_model_GPR.nonlinear_solver_iterate as solver_iterator
-
-
-def loop(model, env, N=1000, T=10):
-    for i in range(T):
-        X = random_hypercube_samples(1000, env.bounds)
-        Y = env(X, model)
-        model.init(X, Y)
 
 
 
-class DynamicBell(object):
-    def __init__(self, input_dim=10):
-        self.bounds = np.array([[k_bar, k_up]] * input_dim)
-        
-        self.dim = input_dim
-        self._is_initialized = False
-        self.n_agents = 2
-        # TODO: consolidate with n_agents in parameters.py
+class GrowthModel(object):
+    def __init__(self, model, **kwargs):
+        from src.growth_model_GPR.econ import Econ
+        from src.growth_model_GPR.ipopt_wrapper import IPOptWrapper
+        from src.growth_model_GPR.parameters import Parameters
+        from src.growth_model_GPR.nonlinear_solver import NonlinearSolver  # solves opt. problems for terminal VF
+        from src.growth_model_GPR.interpolation import Interpolation  # interface to sparse grid library/terminal VF
+        from src.growth_model_GPR.postprocessing import \
+            PostProcessing  # computes the L2 and Linfinity error of the mode
 
-    def _call(self, X, prob_model):
+        self.params = Parameters(**kwargs)
+        self.bounds = np.array([[self.params.k_bar, self.params.k_up]] * self.params.n_agents)
+        self.input_dim = self.params.n_agents
+
+        self.econ = Econ(self.params)
+        self.ipopt = IPOptWrapper(self.params, self.econ)
+        self.nonlinear_solver = NonlinearSolver(self.params, self.ipopt)
+
+        self.interpolation = Interpolation(self.params, self.nonlinear_solver)
+        self.post = PostProcessing(self.params)
+
+        self.model = model
+
+    def loop(self):
+        for i in range(self.params.numstart, self.params.numits):
+        # terminal value function
+            Xtraining = np.random.uniform(self.params.k_bar, self.params.k_up, (self.params.No_samples, self.input_dim))
+            if (i==1):
+                print("start with Value Function Iteration")
+                self.interpolation.GPR_init(i, Xtraining, self.model)
+
+            else:
+                print("Now, we are in Value Function Iteration step", i)
+                self.interpolation.GPR_iter(i, Xtraining, self.model)
+
+        #======================================================================
+        print("===============================================================")
+        print(" ")
+        print(" Computation of a growth model of dimension ", self.params.n_agents ," finished after ", self.params.numits, " steps")
+        print(" ")
+        print("===============================================================")
+        #======================================================================
+
+        # compute errors
+        # avg_err=self.post.ls_error(self.params.n_agents, self.params.numstart, self.params.numits, self.params.No_samples_postprocess)
+
+        #======================================================================
+        print("===============================================================")
+        print(" ")
+        #print " Errors are computed -- see error.txt"
+        print(" ")
+        print("===============================================================")
+        #======================================================================
+
+    #def _loop(model, env, N=1000, T=10):
+    #    for i in range(T):
+    #        X = random_hypercube_samples(1000, env.bounds)
+    #        Y = env(X, model)
+    #        model.init(X, Y)
+
+    def __call__(self, X, prob_model):
         """OBS: every call will iterate.
         We assume that self.prob_model is updated with new observations (discarding the old.)
         """
-        n = X.shape[0]
-        y = np.zeros(n, float)
-
-        if self._is_initialized:
-            for i in range(n):
-                y[i] = solver_iterator.iterate(X[i], self.n_agents, prob_model)[0]
-        else:
-            self._is_initialized = True
-            for i in range(n):
-                y[i] = solver_initializor.initial(X[i], self.n_agents)[0]
-
-
-        return y[:, None]
-
+        pass
 
 
 __all__ = ['DataSet', 'SPXOptions']
