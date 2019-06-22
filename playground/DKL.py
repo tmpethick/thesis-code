@@ -1074,7 +1074,7 @@ plot_model_unknown_bounds(run.interactive_stash.model)
 %load_ext autoreload
 %autoreload 2
 
-from src.environments.financial import GrowthModel
+from src.environments.financial import GrowthModel, GrowthModelCallback
 from src.models import NormalizerModel
 
 # kernel = RBF()
@@ -1093,4 +1093,9 @@ gp = NormalizerModel.from_config({
         }
     }
 })
-GrowthModel(gp).loop()
+
+
+
+growth_model = GrowthModel()
+callback = GrowthModelCallback(growth_model)
+growth_model.loop(gp, callback=callback)

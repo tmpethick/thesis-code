@@ -2,6 +2,7 @@ import math
 from abc import abstractmethod, ABCMeta
 
 import pandas as pd
+from ..models.core_models import BaseModel
 from sklearn.model_selection import train_test_split
 
 from src.experiment.config_helpers import ConfigMixin
@@ -124,7 +125,7 @@ import numpy as np
 
 
 class GrowthModel(object):
-    def __init__(self, model, **kwargs):
+    def __init__(self, **kwargs):
         from src.growth_model_GPR.econ import Econ
         from src.growth_model_GPR.ipopt_wrapper import IPOptWrapper
         from src.growth_model_GPR.parameters import Parameters
@@ -146,50 +147,66 @@ class GrowthModel(object):
         self.interpolation = Interpolation(self.params, self.nonlinear_solver)
         self.post = PostProcessing(self.params)
 
-        self.model = model
+    def sample(self, size):
+        return np.random.uniform(self.params.k_bar, self.params.k_up, (size, self.input_dim))
 
-    def loop(self):
+    def evaluate(self, Xtraining, model_prev=None):
+        np.random.seed(666)
+        #generate sample aPoints
+        y = np.zeros(self.params.No_samples, float) # training targets
+
+        if model_prev is None:
+            # solve bellman equations at training points
+            for i in range(len(Xtraining)):
+                y[i] = self.nonlinear_solver.initial(Xtraining[i], self.params.n_agents)[0]
+        else:
+            for i in range(len(Xtraining)):
+                y[i] = self.nonlinear_solver.iterate(Xtraining[i], self.params.n_agents, model_prev)[0]
+
+        # Fit to data using Maximum Likelihood Estimation of the parameters
+        y = y[:, np.newaxis]
+        return y
+
+    def loop(self, model: BaseModel, callback=lambda i, growth_model, model: None):
         for i in range(self.params.numstart, self.params.numits):
         # terminal value function
-            Xtraining = np.random.uniform(self.params.k_bar, self.params.k_up, (self.params.No_samples, self.input_dim))
+            Xtraining = self.sample(size=self.params.No_samples)
+
             if (i==1):
                 print("start with Value Function Iteration")
-                self.interpolation.GPR_init(i, Xtraining, self.model)
+                y = self.evaluate(Xtraining)
 
             else:
                 print("Now, we are in Value Function Iteration step", i)
-                self.interpolation.GPR_iter(i, Xtraining, self.model)
+                y = self.evaluate(Xtraining, model)
 
-        #======================================================================
-        print("===============================================================")
-        print(" ")
-        print(" Computation of a growth model of dimension ", self.params.n_agents ," finished after ", self.params.numits, " steps")
-        print(" ")
-        print("===============================================================")
-        #======================================================================
-
-        # compute errors
-        # avg_err=self.post.ls_error(self.params.n_agents, self.params.numstart, self.params.numits, self.params.No_samples_postprocess)
-
-        #======================================================================
-        print("===============================================================")
-        print(" ")
-        #print " Errors are computed -- see error.txt"
-        print(" ")
-        print("===============================================================")
-        #======================================================================
-
-    #def _loop(model, env, N=1000, T=10):
-    #    for i in range(T):
-    #        X = random_hypercube_samples(1000, env.bounds)
-    #        Y = env(X, model)
-    #        model.init(X, Y)
-
-    def __call__(self, X, prob_model):
-        """OBS: every call will iterate.
-        We assume that self.prob_model is updated with new observations (discarding the old.)
-        """
-        pass
+            model.init(Xtraining, y)
+            callback(i, self, model)
 
 
-__all__ = ['DataSet', 'SPXOptions']
+class GrowthModelCallback(object):
+    def __init__(self, growth_model):
+        np.random.seed(0)
+        self.N = growth_model.params.No_samples_postprocess
+        numits = growth_model.params.numits
+
+        self.X_test = growth_model.sample(self.N)
+        self.y_pred_prev = np.zeros(self.N)
+
+        self.max_err = np.empty(numits)
+        self.RMSE = np.empty(numits)
+        self.MAE = np.empty(numits)
+
+    def __call__(self, i, growth_model, model):
+        y_pred, _ = model.get_statistics(self.X_test, full_cov=False)
+
+        if i != 0:
+            diff = self.y_pred_prev - y_pred
+            self.max_err[i-1] = np.amax(np.fabs(diff))
+            self.MAE[i-1] = np.average(np.fabs(diff)) / self.N
+            self.RMSE[i-1] = np.sqrt(np.sum(np.square(diff)) / self.N)
+
+        self.y_pred_prev = y_pred
+
+
+__all__ = ['DataSet', 'SPXOptions', 'GrowthModel', 'GrowthModelCallback']
