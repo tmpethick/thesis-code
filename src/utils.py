@@ -57,6 +57,15 @@ def _calc_errors(est1, est2, f, rand=False, rand_N=2500):
     return rmse, max_err
 
 
+def errors(Y1, Y2):
+    Y_diff = Y1 - Y2
+    N = Y1.size
+    mae = np.average(np.fabs(Y_diff)) / N
+    max_err = np.max(np.fabs(Y_diff))
+    rmse = np.sqrt(np.sum(np.square(Y_diff)) / N)
+    return mae, rmse, max_err
+
+
 def random_hypercube_samples(n_samples, bounds, rng=None):
     """Random sample from d-dimensional hypercube (d = bounds.shape[0]).
 

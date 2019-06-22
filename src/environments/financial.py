@@ -1,6 +1,8 @@
 import math
 from abc import abstractmethod, ABCMeta
+import matplotlib.pyplot as plt
 
+from src.utils import errors
 import pandas as pd
 from ..models.core_models import BaseModel
 from sklearn.model_selection import train_test_split
@@ -209,4 +211,87 @@ class GrowthModelCallback(object):
         self.y_pred_prev = y_pred
 
 
-__all__ = ['DataSet', 'SPXOptions', 'GrowthModel', 'GrowthModelCallback']
+from .option_pricer.option_pricing_2d import  heston_option_pricing_2d
+
+class HestonOptionPricer(object):
+    def __init__(self,
+        strike = 0.9,
+        n_trials = 5000,
+        n_steps = 12,
+        interval = 0.2):
+
+        vol = np.arange(0.1, 0.8+interval-10**-10, interval)
+        # From 1 month to 6 months
+        time_to_maturity = [0.08,0.17,0.25,0.34,0.42,0.5,1]
+        # 0.1,0.3,0.7
+        kappa = 3.00 - 0.3*4
+
+        xs = []
+        ys = []
+        err = []
+
+        # for t in time_to_maturity:
+        [X,y,x1,x2,xxx,YT] = heston_option_pricing_2d(time_to_maturity,strike,n_trials,n_steps,vol,vol[0],vol[-1],'c',False,kappa)
+        print(X.shape,y.shape,x1.shape,x2.shape,xxx.shape,YT)
+        self.X_train = X
+        self.Y_train = y
+        self.X_test = xxx
+        self.X1_test = x1
+        self.X2_test = x2
+        self.Y_test = YT
+
+    def plot(self, model):
+        model.init(self.X_train, self.Y_train)
+        y_pred, sigma = model.get_statistics(self.X_test)
+        y_pred = y_pred.reshape(len(self.X1_test),len(self.X2_test))
+        
+        YT = self.Y_test.reshape(len(self.X1_test),len(self.X2_test))
+        x1, x2 = np.meshgrid(self.X1_test, self.X2_test)
+
+        fig = plt.figure()
+        ax = fig.gca(projection='3d')
+        surf = ax.plot_surface(x1, x2, YT, cmap=plt.cm.coolwarm,
+                            linewidth=0, antialiased=False)
+        # surf = ax.plot_surface(x1, x2, y_pred, cmap=plt.cm.coolwarm,
+        #                     linewidth=0, antialiased=False)
+        plt.xlabel('volatility')
+        plt.ylabel('time to maturity')
+        # Add a color bar which maps values to colors.
+        fig.colorbar(surf, shrink=0.5, aspect=5)
+        print("MAE, RMSE, MAX =", errors(y_pred.flatten(), YT.flatten()))
+        return fig
+
+
+class AAPL(DataSet):
+    X_train = None
+    Y_train = None
+    X_val = None
+    Y_val = None
+    X_test = None
+    Y_test = None
+
+    prioritized_X_labels = ['days', 'delta']
+    Y_label = 'impl_volatility'
+    test_percentage = 0.2
+    val_percentage = 0.2
+
+    def __init__(self, D=2, subset_size=None):
+        """
+        Keyword Arguments:
+            D {int} -- dimensionality of the input space (default: {1})
+            subset_size {int} -- Size of the training set (default: {None})
+        """
+        self.D = D
+
+        df = pd.read_csv('data/AAPL/fdata.csv')
+        self.X = df[self.prioritized_X_labels[:self.D]].values
+        self.Y = df[[self.Y_label]].values
+
+        self.X_train, self.X_test, self.Y_train, self.Y_test = \
+            train_test_split(self.X, self.Y, test_size=self.test_percentage, shuffle=True, random_state=42)
+        self.X_train, self.X_val, self.Y_train, self.Y_val = \
+            train_test_split(self.X_train, self.Y_train, test_size=self.val_percentage, shuffle=True, random_state=42)
+        self.X_train, self.Y_train = self.X_train[:subset_size], self.Y_train[:subset_size]
+
+
+__all__ = ['DataSet', 'SPXOptions', 'AAPL', 'GrowthModel', 'GrowthModelCallback']

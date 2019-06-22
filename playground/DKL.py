@@ -1099,3 +1099,89 @@ gp = NormalizerModel.from_config({
 growth_model = GrowthModel()
 callback = GrowthModelCallback(growth_model)
 growth_model.loop(gp, callback=callback)
+
+
+# Machine Learning for High-Dimensional Dynamic Stochastic Economies
+# SJE-submit.pdf
+# JoCS_R1.pdf 
+
+# n_agents = 2,
+# numstart = 1,
+# numits = 7,
+# filename = "restart/restart_file_step_",
+# No_samples_postprocess = 20,
+
+
+#%%
+# option pricer routines (2D surface) / Heston model pricer
+%load_ext autoreload
+%autoreload 2
+
+from src.environments.financial import HestonOptionPricer
+from src.models.normalizer import NormalizerModel
+
+model = NormalizerModel.from_config({
+    'model': {
+        'name': 'DKLGPModel',
+        'kwargs': {
+            'learning_rate': 0.1,
+            'n_iter': 100,
+            'nn_kwargs': {'layers': None},
+            #'gp_kwargs': {'n_grid': 1000},
+            'noise': None
+        }
+    }
+})
+
+op = HestonOptionPricer()
+op.plot(model)
+
+#%% Test KISS-GP
+
+# AAPLE data
+# impl_volatility as a y and days, delta as X
+# imp-vol as been smoothed!
+
+# Is this really non-linear
+# 3D?
+# Can we expect to do well?
+# How do we measure error when multiple entries at one location?
+
+from notebook_header import *
+
+model = NormalizerModel.from_config({
+    'model': {
+        'name': 'DKLGPModel',
+        'kwargs': {
+            'learning_rate': 0.1,
+            'n_iter': 100,
+            'nn_kwargs': {'layers': None},
+            'gp_kwargs': {'n_grid': None},
+            'use_cg': True,
+            'noise': None
+        }
+    }
+})
+
+# create model
+data = AAPL(D=2, subset_size=1000)
+
+# Train
+model.init(data.X_train, data.Y_train)
+
+# Test
+N = len(data.Y_test)
+Y_hat, var = model.get_statistics(data.X_test, full_cov=False)
+rmse = np.sqrt(np.sum(np.square(Y_hat - data.Y_test)) / N)
+err_max = np.max(np.fabs(Y_hat - data.Y_test))
+
+#%%
+fig = plt.figure()
+ax = fig.add_subplot(111, projection='3d')
+ax.scatter(data.X_train[:,0], data.X_train[:,1], data.Y_train[:,0])
+
+
+#%%
+
+# 2D-20D (FORTRAN)
+#the surrogate model for the economic model that has converged and that has a R^n -> R^m mapping, and kinks...

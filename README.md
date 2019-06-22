@@ -94,6 +94,8 @@ pip install dnspython
 pip install pyyaml GitPython pymongo
 pip install incense
 
+pip install cvxopt
+
 git clone https://github.com/jmetzen/gp_extras.git
 cd gp_extras
 python setup.py install 

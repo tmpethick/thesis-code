@@ -23,12 +23,11 @@ class Parameters(object):
         numstart = 1,
         numits = 7,
         filename = "restart/restart_file_step_" ,
-        beta = 0.8,
-        rho = 0.95,
+        beta = 0.96,
         zeta = 0.5,
         psi = 0.36,
         gamma = 2.0,
-        delta = 0.025,
+        delta = 0.06,
         eta = 1,
         k_bar = 0.2,
         k_up = 3.0,
@@ -54,7 +53,6 @@ class Parameters(object):
 
         # Model Paramters
         self.beta = beta
-        self.rho = rho
         self.zeta = zeta
         self.psi = psi
         self.gamma = gamma
