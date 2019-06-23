@@ -1133,19 +1133,11 @@ model = NormalizerModel.from_config({
     }
 })
 
-op = HestonOptionPricer()
-op.plot(model)
+#%%
+op = HestonOptionPricer(strike=0.9, n_trials=5000, n_steps=12)
+op.plot()
 
 #%% Test KISS-GP
-
-# AAPLE data
-# impl_volatility as a y and days, delta as X
-# imp-vol as been smoothed!
-
-# Is this really non-linear
-# 3D?
-# Can we expect to do well?
-# How do we measure error when multiple entries at one location?
 
 from notebook_header import *
 
@@ -1184,4 +1176,15 @@ ax.scatter(data.X_train[:,0], data.X_train[:,1], data.Y_train[:,0])
 #%%
 
 # 2D-20D (FORTRAN)
-#the surrogate model for the economic model that has converged and that has a R^n -> R^m mapping, and kinks...
+# the surrogate model for the economic model that has converged and that has a R^n -> R^m mapping, and kinks...
+
+#%%
+
+# Test that it is indeed active subspace of dim 1:
+f = ActiveSubspaceArbitrary1D(D=10)
+X = random_hypercube_samples(1000, f.bounds)
+G = f.derivative(X)
+model = ActiveSubspace()
+model.fit(X, f(X), G)
+model.W.shape[-1]
+model.plot()

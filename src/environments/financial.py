@@ -232,7 +232,7 @@ class HestonOptionPricer(object):
 
         # for t in time_to_maturity:
         [X,y,x1,x2,xxx,YT] = heston_option_pricing_2d(time_to_maturity,strike,n_trials,n_steps,vol,vol[0],vol[-1],'c',False,kappa)
-        print(X.shape,y.shape,x1.shape,x2.shape,xxx.shape,YT)
+        print(X.shape,y.shape,x1.shape,x2.shape,xxx.shape,YT.shape)
         self.X_train = X
         self.Y_train = y
         self.X_test = xxx
@@ -240,25 +240,36 @@ class HestonOptionPricer(object):
         self.X2_test = x2
         self.Y_test = YT
 
-    def plot(self, model):
+    def plot_model(self, model):
         model.init(self.X_train, self.Y_train)
         y_pred, sigma = model.get_statistics(self.X_test)
         y_pred = y_pred.reshape(len(self.X1_test),len(self.X2_test))
-        
-        YT = self.Y_test.reshape(len(self.X1_test),len(self.X2_test))
-        x1, x2 = np.meshgrid(self.X1_test, self.X2_test)
 
         fig = plt.figure()
         ax = fig.gca(projection='3d')
-        surf = ax.plot_surface(x1, x2, YT, cmap=plt.cm.coolwarm,
-                            linewidth=0, antialiased=False)
-        # surf = ax.plot_surface(x1, x2, y_pred, cmap=plt.cm.coolwarm,
-        #                     linewidth=0, antialiased=False)
+        surf = ax.plot_surface(x1, x2, y_pred, cmap=plt.cm.coolwarm,
+                               linewidth=0, antialiased=False)
         plt.xlabel('volatility')
         plt.ylabel('time to maturity')
         # Add a color bar which maps values to colors.
         fig.colorbar(surf, shrink=0.5, aspect=5)
         print("MAE, RMSE, MAX =", errors(y_pred.flatten(), YT.flatten()))
+        return fig
+
+    def plot(self):
+        YT = self.Y_test.reshape(len(self.X1_test),len(self.X2_test))
+        x1, x2 = np.meshgrid(self.X1_test, self.X2_test)
+
+        fig = plt.figure()
+        ax = fig.gca()
+        ax = fig.gca(projection='3d')
+        surf = ax.plot_surface(x1, x2, YT, cmap=plt.cm.coolwarm,
+                            linewidth=0, antialiased=False)
+        #surf = ax.contourf(x1, x2, YT, 1000)
+        plt.xlabel('volatility')
+        plt.ylabel('time to maturity')
+        # Add a color bar which maps values to colors.
+        fig.colorbar(surf, shrink=0.5, aspect=5)
         return fig
 
 
