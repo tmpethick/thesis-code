@@ -5,7 +5,7 @@ from src.experiment.config_helpers import ConfigMixin, construct_from_module
 from src.models import ProbModel
 
 
-class Transformer(object):
+class Transformer(ConfigMixin, object):
     @property
     def output_dim(self):
         raise NotImplementedError
@@ -130,28 +130,28 @@ class TransformerModel(ConfigMixin, ProbModel):
     # TODO: proxy the rest of the interface to prob_model (incl self.X and self.Y)
 
     def init(self, X, Y, Y_dir=None, train=True):
-        self.X = X
-        self.Y = Y
+        self._X = X
+        self._Y = Y
         self.Y_dir = Y_dir
 
         self.transformer.fit(self.X, self.Y, Y_dir=self.Y_dir)
         X = self.transformer.transform(self.X)
 
-        self.prob_model.init(X, Y, Y_dir=Y_dir, train=train)
+        self.prob_model.init(X, Y, Y_dir=Y_dir)
 
     def add_observations(self, X_new, Y_new, Y_dir_new=None):
-        self.X = np.concatenate([self.X, X_new])
-        self.Y = np.concatenate([self.Y, Y_new])
+        X = np.concatenate([self._X, X_new])
+        Y = np.concatenate([self._Y, Y_new])
 
         if self.Y_dir is not None:
-            self.Y_dir = np.concatenate([self.Y, Y_dir_new])
+            Y_dir = np.concatenate([self.Y_dir, Y_dir_new])
+        else:
+            Y_dir = None
 
-        self.transformer.fit(self.X, self.Y, Y_dir=self.Y_dir)
-        X = self.transformer.transform(self.X)
+        self.init(X, Y, Y_dir)
 
-        # Necessary to call init again since we do not know if the transformation of previous observation stayed the same.
-        self.prob_model.init(X, self.Y, Y_dir=self.Y_dir, train=True)
-        # self.prob_model.add_observations(X_new, Y_new, Y_dir_new=Y_dir_new)
+        # Necessary to call init again since we do not know if the transformation of previous observation stays the same.
+        self.init(X, Y, Y_dir)
 
     def _get_statistics(self, X, full_cov=True):
         X = self.transformer.transform(X)

@@ -114,6 +114,7 @@ class GPModel(ConfigMixin, ProbModel):
             step_size=1e-1,
             leapfrog_steps=20,
             mean_prior=None):
+
         super().__init__()
         self.kernel_constructor = kernel
         self.kernel = None

@@ -6,6 +6,7 @@ from src.utils import construct_2D_grid, call_function_on_grid
 
 class BaseEnvironment(ConfigMixin):
     x_opt = None
+    is_expensive = False
 
     def __init__(self, noise=None):
         self.noise = noise

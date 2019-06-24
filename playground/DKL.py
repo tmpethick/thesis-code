@@ -1101,10 +1101,6 @@ callback = GrowthModelCallback(growth_model)
 growth_model.loop(gp, callback=callback)
 
 
-# Machine Learning for High-Dimensional Dynamic Stochastic Economies
-# SJE-submit.pdf
-# JoCS_R1.pdf 
-
 # n_agents = 2,
 # numstart = 1,
 # numits = 7,
@@ -1188,3 +1184,6 @@ model = ActiveSubspace()
 model.fit(X, f(X), G)
 model.W.shape[-1]
 model.plot()
+
+#55
+

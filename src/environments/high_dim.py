@@ -3,6 +3,16 @@ import numpy as np
 from src.environments.core import BaseEnvironment
 
 
+class Exp(BaseEnvironment):
+    bounds = np.array([[-1, 1]])
+
+    def _call(self, X):
+        return np.exp(X)
+    
+    def derivative(self, X):
+        return np.exp(X)
+
+
 class ActiveSubspaceTest(BaseEnvironment):
     """"
     Function in 10D input space with only a 1D active subspace
@@ -27,7 +37,47 @@ class ActiveSubspaceTest(BaseEnvironment):
         return Y * coefs[None, :]
 
 
-class ActiveSubspaceArbitrary1D(BaseEnvironment):
+class Embedding(BaseEnvironment):
+    bounds = None
+
+    def __init__(self, base_env, D=10, is_random=False, **kwargs):
+        self.base_env = base_env
+        self.bounds = np.repeat(self.base_env.bounds, D, axis=0)
+
+        if is_random:
+            rand = np.random.RandomState(42)
+            self.coefs = rand.uniform(0,1, size=D)
+
+        n_inactive = D - 1
+        active = 0.7
+        ratio = 1
+        self.coefs = np.linspace(0, 1, n_inactive + 1)[1:]
+
+        # Find out what to scale coefficient with so sum is 1 times the active dim.
+        a = active * ratio / np.sum(self.coefs)
+        self.coefs = a * self.coefs
+
+        # Add the active dim
+        self.coefs = np.insert(self.coefs, len(self.coefs) // 2, active)
+        
+        super().__init__(**kwargs)
+
+    def transform(self, X):
+        return np.einsum('...i,i->...', X, self.coefs)[:, None]
+
+    def _call(self, X):
+        Z = self.transform(X)
+        return self.base_env(Z)
+
+    def derivative(self, X):
+        Z = self.transform(X)
+        Y = self.base_env.derivative(Z)
+        return Y * self.coefs[None, :]
+
+    # TODO: implement from_config to setup base_env
+
+
+class ActiveSubspaceArbitrary1D(Embedding):
     """"
     Function in `D` input space with only a 1D active subspace
     i.e. after a suitable rotation it only has 1 dimension in which the function varies significantly.
@@ -38,56 +88,10 @@ class ActiveSubspaceArbitrary1D(BaseEnvironment):
     Paper (fig. 4):
     https://papers.ssrn.com/sol3/papers.cfm?abstract_id=2927400
     """
-    bounds = None
 
-    def __init__(self, D=10, **kwargs):
-        self.bounds = np.array([[-1, 1]] * D)
-        
-        n_inactive = D - 1
-        active = 0.7
-        ratio = 1
-        self.coefs = np.linspace(0, 1, n_inactive + 1)[1:]
+    def __init__(self, D=10, is_random=False, **kwargs):
+        super().__init__(base_env=Exp(), D=D, is_random=is_random, **kwargs)
 
-        # Find out what to scale coefficient with so sum is 1 times the active dim.
-        a = active * ratio / np.sum(self.coefs)
-        self.coefs = a * self.coefs
-
-
-        # Add the active dim
-        self.coefs = np.insert(self.coefs, len(self.coefs) // 2, active)
-        
-        super().__init__(**kwargs)
-
-    def _call(self, X):
-        Z = np.einsum('...i,i->...', X, self.coefs)
-        y = np.exp(Z)
-        return y[..., None]
-
-    def derivative(self, X):
-        Y = self(X)
-        return Y * self.coefs[None, :]
-
-
-# class ActiveSubspaceModifiedTest(BaseEnvironment):
-#     bounds = np.array([[-1,1]] * 10)
-
-#     def __init__(self, *args, **kwargs):
-#         super().__init__(*args, **kwargs)
-#         self._f = ActiveSubspaceTest()
-
-#     def _call(self, X):
-#         return X[..., 1]*X[..., 2] * self._f(X)
-
-#     def derivative(self, X):
-#         """TODO: Fix derivative
-#         """
-#         _test_old = self._f.derivative(X)
-#         val = np.atleast_1d(X[..., 1] * X[..., 2] * _test_old)
-#         coefs = np.array([0.01, 0.7, 0.02, 0.03, 0.04, 0.05, 0.06, 0.08, 0.09, 0.1])
-#         out = val[:, None] * coefs[None, :]
-#         out[:, 1] += X[..., 2] * _test_old
-#         out[:, 2] += X[..., 1] * _test_old
-#         return out
 
 __all__ = [
     'ActiveSubspaceTest',

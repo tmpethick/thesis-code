@@ -825,3 +825,80 @@ for i, D in enumerate(Ds):
             }
         },
     })
+
+#%%
+# Dims without DKL 1D
+
+# Pick M as big as our training set.
+from notebook_header import *
+
+
+Ns = [10, 32, 50, 100, 200]
+
+gp = {
+    'name': 'NormalizerModel',
+    'kwargs': {
+        'model': {
+            'name': 'GPModel',
+            'kwargs': dict(
+                kernel=dict(
+                    name='GPyRBF',
+                    kwargs={'lengthscale': 0.6, 'ARD': True},
+                ),
+                noise_prior=None,
+                do_optimize=True,
+                num_mcmc=0,
+            )
+        },
+    }
+}
+
+kissmodel = {
+    'name': 'NormalizerModel',
+    'kwargs': {
+        'model': {
+            'name': 'DKLGPModel',
+            'kwargs': {
+                'learning_rate': 0.1,
+                'n_iter': 30,
+                'nn_kwargs': {'layers': None},
+                #'gp_kwargs': {'n_grid': 10000},
+                'use_cg': True,
+                'noise': None
+            }
+        }
+    }
+}
+
+models = [gp, kissmodel]
+
+for model in models:
+    for N in Ns:
+        run = execute(config_updates={
+            'tag': 'heston',
+            'obj_func': {
+                'name': 'HestonOptionPricer',
+            },
+            'model': model,
+            'gp_samples': N,
+            'use_sample_grid': True,
+        })
+
+
+run = execute(config_updates={
+    'tag': 'heston',
+    'obj_func': {
+        'name': 'HestonOptionPricer',
+        'kwargs': {n_train: N},
+    },
+    'model': model,
+})
+
+# f(X)
+
+# model = AdaptiveSparseGrid()
+# model.fit(f)
+
+
+# is_expensive
+# grid sampling

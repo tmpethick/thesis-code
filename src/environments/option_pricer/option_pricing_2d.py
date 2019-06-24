@@ -2,7 +2,7 @@ import numpy as np
 from src.environments.option_pricer import binomial
 from .MonteCarlo import MonteCarlo
 from matplotlib import pyplot as plt
-
+from src.utils import random_hypercube_samples
 
 # Gaussian Process Regression in 2D
 # time_to_maturity for the option
@@ -13,7 +13,7 @@ from matplotlib import pyplot as plt
 # max_vol --> maximum value of the volatility
 # Option type --> can be 'c' for CALL and 'p' for PUT options
 # is_american --> True if it is an American option, false otherwise
-def heston_option_pricing_2d(time_to_maturity, strike, n_trials, n_steps, vol, min_vol, max_vol,o_type,is_american,kappa):
+def heston_option_pricing_2d(time_to_maturity, strike, n_trials, n_steps, vol, min_vol, max_vol,o_type,is_american,kappa, bounds, grid_test=False):
     risk_free_rate = 0.1
     dividend = 0.3
 
@@ -68,31 +68,34 @@ def heston_option_pricing_2d(time_to_maturity, strike, n_trials, n_steps, vol, m
     # X = np.array(X).reshape(-1,1)
     # print(X)
 
-    # Points we are going to make prediction at
-    x1 = np.linspace(min_vol,max_vol,n)
-    x2 = np.linspace(time_to_maturity[0],time_to_maturity[-1],n)
-    # lin = np.linspace(-lim, lim, res)
+    if grid_test:
+        # Points we are going to make prediction at
+        x1 = np.linspace(min_vol,max_vol,n)
+        x2 = np.linspace(time_to_maturity[0],time_to_maturity[-1],n)
+        # lin = np.linspace(-lim, lim, res)
 
-    # x1.shape = (50, 50)
-    xx, xt = np.meshgrid(x1, x2)
-    # xx.shape = (2500, 2)
-    xxx = np.vstack((xx.flatten(), xt.flatten())).T
-
-    # print(x)
+        # x1.shape = (50, 50)
+        xx, xt = np.meshgrid(x1, x2)
+        # xx.shape = (2500, 2)
+        X_test = np.vstack((xx.flatten(), xt.flatten())).T
+    else:
+        x1 = None
+        x2 = None
+        X_test = random_hypercube_samples(bounds, 2500, rng=np.random.RandomState(42))
 
     YT=[]
     # Compute real price for testPoints
-    for t in x2:
-        for v in x1:
-            # np.random.seed(1)
-            V0 = v**2
-            mc = MonteCarlo(S0=stock_price,K=strike,T=t,r=risk_free_rate,q=dividend,sigma=volatility,
-                        kappa=kappa,theta=theta,xi=xi,rho=rho,V0=V0,underlying_process="Heston model")
-            price_matrix = mc.simulate(n_trials=n_trials,n_steps=n_steps,boundaryScheme="Higham and Mao")
-            if (is_american):
-                mc.LSM(option_type=o_type,func_list=[lambda x: x**0, lambda x: x],onlyITM=False,buy_cost=0.0,sell_cost=0.0)
-            price = mc.MCPricer(option_type=o_type, isAmerican=is_american) 
-            YT.append(price)
+    for x in X_test:
+        [t,v] = x
+        # np.random.seed(1)
+        V0 = v**2
+        mc = MonteCarlo(S0=stock_price,K=strike,T=t,r=risk_free_rate,q=dividend,sigma=volatility,
+                    kappa=kappa,theta=theta,xi=xi,rho=rho,V0=V0,underlying_process="Heston model")
+        price_matrix = mc.simulate(n_trials=n_trials,n_steps=n_steps,boundaryScheme="Higham and Mao")
+        if (is_american):
+            mc.LSM(option_type=o_type,func_list=[lambda x: x**0, lambda x: x],onlyITM=False,buy_cost=0.0,sell_cost=0.0)
+        price = mc.MCPricer(option_type=o_type, isAmerican=is_american) 
+        YT.append(price)
 
     YT = np.array(YT)[:,np.newaxis]
-    return [X,y,x1,x2,xxx,YT]
+    return [X,y,x1,x2,X_test,YT]

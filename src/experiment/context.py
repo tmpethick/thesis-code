@@ -1,6 +1,7 @@
 from src import environments as environments_module, models as models_module, \
     acquisition_functions as acquisition_functions_module, algorithms as algorithm_module
 from src.experiment.config_helpers import ConfigMixin, construct_from_module, lazy_construct_from_module
+from src.experiment import settings
 
 
 class ExperimentContext(ConfigMixin):
@@ -8,24 +9,38 @@ class ExperimentContext(ConfigMixin):
     Using `from_config` it can translate a config into a context with objects.
     """
     def __init__(self,
-        model=None,
-        model2=None,
-        obj_func=None,
-        acquisition_function=None,
-        bo=None,
-        n_samples=None,
-        gp_use_derivatives=None,
-        tag=None,
-        **kwargs
-    ):
+                 model=None,
+                 model2=None,
+                 obj_func=None,
+                 acquisition_function=None,
+                 bo=None,
+                 gp_samples=None,
+                 gp_test_samples=2500,
+                 use_sample_grid=False,
+                 gp_use_derivatives=None,
+                 tag=None,
+                 verbosity=None,
+                 **kwargs
+                 ):
         self.model = model
         self.model2 = model2
         self.obj_func = obj_func
         self.acquisition_function = acquisition_function
         self.bo = bo
-        self.n_samples = n_samples
+
+        self.gp_samples = gp_samples
+        self.gp_test_samples = gp_test_samples
+        self.use_sample_grid = use_sample_grid
         self.gp_use_derivatives = gp_use_derivatives
+
         self.tag = tag
+        self.verbosity = {
+            'plot': settings.MODE is not settings.MODES.SERVER, # do not plot on server by default.
+            'bo_show_iter': 30,
+        }
+        if isinstance(verbosity, dict):
+            self.verbosity.update(verbosity)
+
         self.__dict__.update(kwargs)
 
         # Derivatives

@@ -24,9 +24,10 @@ def calc_errors_model_compare_var(model1, model2, f, rand=False, rand_N=2500):
 
 
 def _calc_errors(est1, est2, f, rand=False, rand_N=2500):
+    rng = np.random.RandomState(42)
     if rand:
         N = rand_N
-        X_line = random_hypercube_samples(N, f.bounds)
+        X_line = random_hypercube_samples(N, f.bounds, rng=rng)
     elif f.input_dim == 1:
         N = 500
         X_line = np.linspace(f.bounds[0, 0], f.bounds[0, 1], N)[:, None]
@@ -36,8 +37,8 @@ def _calc_errors(est1, est2, f, rand=False, rand_N=2500):
         X_line = XY.reshape((-1, 2))
     else:
         # TODO: put down grid instead.
-        N = 10000
-        X_line = random_hypercube_samples(N, f.bounds)
+        N = rand_N
+        X_line = random_hypercube_samples(N, f.bounds, rng=rng)
 
     Y = est2(X_line)
     Y_hat = est1(X_line)

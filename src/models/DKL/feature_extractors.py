@@ -9,6 +9,7 @@ class LargeFeatureExtractor(torch.nn.Sequential):
         assert len(layers) >= 1, "You need to specify at least an output layer size."
         layers = (D,) + tuple(layers)
 
+        i = -1
         for i in range(0, len(layers) - 2):
             in_ = layers[i]
             out = layers[i + 1]

@@ -37,11 +37,15 @@ class Parameters(object):
         l_up = 10.0,
         inv_bar = 1e-2,
         inv_up = 10.0,
+        No_samples = None,
         No_samples_postprocess = 20,
     ):
         # How many training points for GPR
         self.n_agents = n_agents # number of continuous dimensions of the model
-        self.No_samples = 10*n_agents
+        if No_samples is None:
+            self.No_samples = 10*n_agents
+        else:
+            self.No_samples = No_samples
 
         # control of iterations
         self.numstart = numstart

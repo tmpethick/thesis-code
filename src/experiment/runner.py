@@ -30,17 +30,20 @@ class Runner(object):
         elif isinstance(f, BaseEnvironment):
             X_train, Y_train, Y_train_dir, X_val, Y_val = self.get_data_f(f)
             self.run_models(models, X_train, Y_train, Y_train_dir, X_val, Y_val)
-            self.plot_models(self.context)
+            
+            if not (hasattr(models[0], 'is_expensive') and models[0].is_expensive):
+                self.plot_models(self.context)
 
     def get_data_f(self, f: BaseEnvironment):
         # Training
+        assert isinstance(self.context.gp_samples, int), "n_samples need to be an int"
         bounds = f.bounds
         input_dim = f.input_dim
 
         if input_dim == 1:
-            X_train = np.random.uniform(bounds[0, 0], bounds[0, 1], (self.context.n_samples, 1))
+            X_train = np.random.uniform(bounds[0, 0], bounds[0, 1], (self.context.gp_samples, 1))
         else:
-            X_train = random_hypercube_samples(self.context.n_samples, bounds)
+            X_train = random_hypercube_samples(self.context.gp_samples, bounds)
 
         Y_train = f(X_train)
         if self.context.gp_use_derivatives:
@@ -49,7 +52,7 @@ class Runner(object):
             Y_train_dir = None
 
         # Testing
-        X_val = random_hypercube_samples(self.context.n_samples, bounds)
+        X_val = random_hypercube_samples(self.context.gp_test_samples, bounds, rng=np.random.RandomState(1))
         Y_val = f(X_val)
 
         return X_train, Y_train, Y_train_dir, X_val, Y_val
@@ -99,6 +102,7 @@ class Runner(object):
 
     def plot_models(self, context):
         f = context.obj_func
+        X = context.model.X
 
         if context.model_compare:
             # TODO: For now only supports 2 models
@@ -175,9 +179,9 @@ class Runner(object):
     def log_info(self, msg):
         self._log.info(msg)
 
-    def save_fig(self, fig, filename, verbosity):
+    def save_fig(self, fig, filename):
         fig.savefig(filename)
-        if verbosity['plot']:
+        if self.context.verbosity['plot']:
             plt.show()
         self._run.add_artifact(filename)
 

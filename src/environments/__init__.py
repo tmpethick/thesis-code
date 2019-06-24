@@ -7,4 +7,3 @@ from .hpolib import *
 from .nonstationary import *
 from .smooth import *
 from .financial import *
-

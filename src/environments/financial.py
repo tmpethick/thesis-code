@@ -1,6 +1,7 @@
 import math
 from abc import abstractmethod, ABCMeta
 import matplotlib.pyplot as plt
+import numpy as np
 
 from src.utils import errors
 import pandas as pd
@@ -9,6 +10,10 @@ from sklearn.model_selection import train_test_split
 
 from src.experiment.config_helpers import ConfigMixin
 from src.utils import random_hypercube_samples
+
+from src.environments.option_pricer import binomial
+from .option_pricer.MonteCarlo import MonteCarlo
+
 
 class DataSet(ConfigMixin, metaclass=ABCMeta):
     @property
@@ -122,11 +127,7 @@ class SPXOptions(DataSet):
         self.X_train, self.Y_train = self.X_train[:subset_size], self.Y_train[:subset_size]
 
 
-import numpy as np
-
-
-
-class GrowthModel(object):
+class GrowthModel(ConfigMixin):
     def __init__(self, **kwargs):
         from src.growth_model_GPR.econ import Econ
         from src.growth_model_GPR.ipopt_wrapper import IPOptWrapper
@@ -160,6 +161,7 @@ class GrowthModel(object):
         if model_prev is None:
             # solve bellman equations at training points
             for i in range(len(Xtraining)):
+                print("solving bellman", i)
                 y[i] = self.nonlinear_solver.initial(Xtraining[i], self.params.n_agents)[0]
         else:
             for i in range(len(Xtraining)):
@@ -177,7 +179,6 @@ class GrowthModel(object):
             if (i==1):
                 print("start with Value Function Iteration")
                 y = self.evaluate(Xtraining)
-
             else:
                 print("Now, we are in Value Function Iteration step", i)
                 y = self.evaluate(Xtraining, model)
@@ -212,65 +213,113 @@ class GrowthModelCallback(object):
 
 
 from .option_pricer.option_pricing_2d import  heston_option_pricing_2d
+from .core import BaseEnvironment
 
-class HestonOptionPricer(object):
+class HestonOptionPricer(BaseEnvironment):
+    bounds = None 
+    is_expensive = True
+
     def __init__(self,
         strike = 0.9,
         n_trials = 5000,
         n_steps = 12,
-        interval = 0.2):
+        **kwargs,
+        ):
 
-        vol = np.arange(0.1, 0.8+interval-10**-10, interval)
+        super().__init__(**kwargs)
+
+        min_vol = 0.08
+        max_vol = 1
+        min_maturity = 0.1
+        max_maturity = 0.9
+        self.bounds = np.array([[min_vol, max_vol], [min_maturity, max_maturity]])
+
+        #interval = 0.2,
+        #vol = np.arange(0.1, 0.8+interval-10**-10, interval)
         # From 1 month to 6 months
-        time_to_maturity = [0.08,0.17,0.25,0.34,0.42,0.5,1]
+        #time_to_maturity = [0.08,0.17,0.25,0.34,0.42,0.5,1]
         # 0.1,0.3,0.7
-        kappa = 3.00 - 0.3*4
-
-        xs = []
-        ys = []
-        err = []
+        
+        # Mean reversion speed
+        self.kappa = 3.00 - 0.3*4
+        self.strike = strike
+        self.n_trials = n_trials
+        self.n_steps = n_steps
+        self.is_american = False
+        self.o_type = 'c'
 
         # for t in time_to_maturity:
-        [X,y,x1,x2,xxx,YT] = heston_option_pricing_2d(time_to_maturity,strike,n_trials,n_steps,vol,vol[0],vol[-1],'c',False,kappa)
-        print(X.shape,y.shape,x1.shape,x2.shape,xxx.shape,YT.shape)
-        self.X_train = X
-        self.Y_train = y
-        self.X_test = xxx
-        self.X1_test = x1
-        self.X2_test = x2
-        self.Y_test = YT
+        # [X,y,x1,x2,xxx,YT] = heston_option_pricing_2d(time_to_maturity,strike,n_trials,n_steps,vol,vol[0],vol[-1],'c',False,kappa, self.bounds, grid_test=False)
+        # print(X.shape,y.shape,x1.shape,x2.shape,xxx.shape,YT.shape)
 
-    def plot_model(self, model):
-        model.init(self.X_train, self.Y_train)
-        y_pred, sigma = model.get_statistics(self.X_test)
-        y_pred = y_pred.reshape(len(self.X1_test),len(self.X2_test))
+    def _call(self, X):
+        risk_free_rate = 0.1
+        dividend = 0.3
+        # Only for BlackScholes model
+        volatility = 0
+        # stock price
+        stock_price = 1
 
-        fig = plt.figure()
-        ax = fig.gca(projection='3d')
-        surf = ax.plot_surface(x1, x2, y_pred, cmap=plt.cm.coolwarm,
-                               linewidth=0, antialiased=False)
-        plt.xlabel('volatility')
-        plt.ylabel('time to maturity')
-        # Add a color bar which maps values to colors.
-        fig.colorbar(surf, shrink=0.5, aspect=5)
-        print("MAE, RMSE, MAX =", errors(y_pred.flatten(), YT.flatten()))
-        return fig
+        # Theta =  Gamma(in the paper)
+        theta = 3/self.kappa*0.03
+        rho = -0.6
 
-    def plot(self):
-        YT = self.Y_test.reshape(len(self.X1_test),len(self.X2_test))
-        x1, x2 = np.meshgrid(self.X1_test, self.X2_test)
+        # volatility of volatility
+        xi = 0.6
 
-        fig = plt.figure()
-        ax = fig.gca()
-        ax = fig.gca(projection='3d')
-        surf = ax.plot_surface(x1, x2, YT, cmap=plt.cm.coolwarm,
-                            linewidth=0, antialiased=False)
-        #surf = ax.contourf(x1, x2, YT, 1000)
-        plt.xlabel('volatility')
-        plt.ylabel('time to maturity')
-        # Add a color bar which maps values to colors.
-        fig.colorbar(surf, shrink=0.5, aspect=5)
-        return fig
+        Y=[]
+        for x in X:
+            [t,v] = x
+            # np.random.seed(1)
+            V0 = v**2
+            mc = MonteCarlo(S0=stock_price,K=self.strike,T=t,r=risk_free_rate,q=dividend,sigma=volatility,
+                        kappa=self.kappa,theta=theta,xi=xi,rho=rho,V0=V0,underlying_process="Heston model")
+            price_matrix = mc.simulate(n_trials=self.n_trials,n_steps=self.n_steps,boundaryScheme="Higham and Mao")
+            if (self.is_american):
+                mc.LSM(option_type=self.o_type,func_list=[lambda x: x**0, lambda x: x],onlyITM=False,buy_cost=0.0,sell_cost=0.0)
+            price = mc.MCPricer(option_type=self.o_type, isAmerican=self.is_american) 
+            Y.append(price)
+        Y = np.array(Y)[:,np.newaxis]
+        return Y
+
+
+    # def plot_model(self, model):
+    #     assert self.X1_test is not None, "Plotting only possible for `grid_test=True`"
+
+    #     x1, x2 = np.meshgrid(self.X1_test, self.X2_test)
+
+    #     model.init(self.X_train, self.Y_train)
+    #     y_pred, sigma = model.get_statistics(self.X_test)
+    #     y_pred = y_pred.reshape(len(self.X1_test),len(self.X2_test))
+
+    #     fig = plt.figure()
+    #     ax = fig.gca(projection='3d')
+    #     surf = ax.plot_surface(x1, x2, y_pred, cmap=plt.cm.coolwarm,
+    #                            linewidth=0, antialiased=False)
+    #     plt.xlabel('volatility')
+    #     plt.ylabel('time to maturity')
+    #     # Add a color bar which maps values to colors.
+    #     fig.colorbar(surf, shrink=0.5, aspect=5)
+    #     print("MAE, RMSE, MAX =", errors(y_pred.flatten(), YT.flatten()))
+    #     return fig
+
+    # def plot(self):
+    #     assert self.X1_test is not None, "Plotting only possible for `grid_test=True`"
+
+    #     YT = self.Y_test.reshape(len(self.X1_test),len(self.X2_test))
+    #     x1, x2 = np.meshgrid(self.X1_test, self.X2_test)
+
+    #     fig = plt.figure()
+    #     ax = fig.gca()
+    #     ax = fig.gca(projection='3d')
+    #     surf = ax.plot_surface(x1, x2, YT, cmap=plt.cm.coolwarm,
+    #                         linewidth=0, antialiased=False)
+    #     #surf = ax.contourf(x1, x2, YT, 1000)
+    #     plt.xlabel('volatility')
+    #     plt.ylabel('time to maturity')
+    #     # Add a color bar which maps values to colors.
+    #     fig.colorbar(surf, shrink=0.5, aspect=5)
+    #     return fig
 
 
 class AAPL(DataSet):
@@ -305,4 +354,4 @@ class AAPL(DataSet):
         self.X_train, self.Y_train = self.X_train[:subset_size], self.Y_train[:subset_size]
 
 
-__all__ = ['DataSet', 'SPXOptions', 'AAPL', 'GrowthModel', 'GrowthModelCallback']
+__all__ = ['DataSet', 'SPXOptions', 'HestonOptionPricer', 'AAPL', 'GrowthModel', 'GrowthModelCallback']

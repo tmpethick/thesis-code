@@ -5,8 +5,21 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="c818380e-e4c2-4b56-b288-ea97eb749031" name="Default Changelist" comment="">
+      <change beforePath="$PROJECT_DIR$/.ipynb_checkpoints/explorer_notebook-checkpoint.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/.ipynb_checkpoints/explorer_notebook-checkpoint.ipynb" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/explorer_notebook.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/explorer_notebook.ipynb" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/playground/DKL.py" beforeDir="false" afterPath="$PROJECT_DIR$/playground/DKL.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/environments/financial.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/environments/financial.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/environments/high_dim.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/environments/high_dim.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/environments/option_pricer/option_pricing_2d.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/environments/option_pricer/option_pricing_2d.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/experiment/context.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/experiment/context.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/experiment/runner.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/experiment/runner.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/experiment/settings.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/experiment/settings.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/growth_model_GPR/parameters.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/growth_model_GPR/parameters.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/models/DKL/feature_extractors.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/models/DKL/feature_extractors.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/models/core_models.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/models/core_models.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/models/transformers.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/models/transformers.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/utils.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/utils.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/thesis_figs_notebooks/server_run.py" beforeDir="false" afterPath="$PROJECT_DIR$/thesis_figs_notebooks/server_run.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -44,7 +57,7 @@
           <entry key="json" value="2" />
           <entry key="md" value="4" />
           <entry key="pstat" value="1" />
-          <entry key="py" value="308" />
+          <entry key="py" value="310" />
           <entry key="pyi" value="1" />
           <entry key="sh" value="3" />
           <entry key="yaml" value="14" />
@@ -57,7 +70,7 @@
           <entry key="Markdown" value="4" />
           <entry key="PLAIN_TEXT" value="6" />
           <entry key="Profiler Session" value="1" />
-          <entry key="Python" value="308" />
+          <entry key="Python" value="310" />
           <entry key="PythonStub" value="1" />
           <entry key="YAML" value="14" />
         </counts>
@@ -68,7 +81,7 @@
           <entry key="Python Console" value="966" />
           <entry key="dummy" value="57" />
           <entry key="md" value="54" />
-          <entry key="py" value="41609" />
+          <entry key="py" value="41634" />
           <entry key="sh" value="2" />
           <entry key="yaml" value="17" />
         </counts>
@@ -77,7 +90,7 @@
         <counts>
           <entry key="Markdown" value="54" />
           <entry key="PLAIN_TEXT" value="76" />
-          <entry key="Python" value="42575" />
+          <entry key="Python" value="42600" />
           <entry key="YAML" value="17" />
         </counts>
       </usages-collector>
@@ -88,8 +101,8 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/environments/financial.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="435">
-              <caret line="29" column="20" lean-forward="true" selection-start-line="29" selection-start-column="20" selection-end-line="29" selection-end-column="20" />
+            <state relative-caret-position="540">
+              <caret line="36" column="20" selection-start-line="36" selection-start-column="20" selection-end-line="36" selection-end-column="20" />
               <folding>
                 <element signature="e#0#11#0" expanded="true" />
               </folding>
@@ -98,10 +111,34 @@
         </entry>
       </file>
       <file pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/src/experiment/context.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="75">
+              <caret line="5" lean-forward="true" selection-start-line="5" selection-end-line="5" />
+              <folding>
+                <element signature="e#0#169#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/experiment/runner.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="171">
+              <caret line="37" column="25" lean-forward="true" selection-start-line="37" selection-start-column="25" selection-end-line="37" selection-end-column="25" />
+              <folding>
+                <element signature="e#0#11#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/growth_model_GPR/parameters.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="1011">
-              <caret line="77" column="60" selection-start-line="77" selection-start-column="60" selection-end-line="77" selection-end-column="60" />
+            <state relative-caret-position="276">
+              <caret line="28" column="14" selection-start-line="28" selection-start-column="14" selection-end-line="28" selection-end-column="14" />
             </state>
           </provider>
         </entry>
@@ -178,7 +215,6 @@
   </component>
   <component name="FindInProjectRecents">
     <findStrings>
-      <find>lazy_construct_from_module</find>
       <find>from_module</find>
       <find>from_config</find>
       <find>kernel_constructor</find>
@@ -208,6 +244,7 @@
       <find>solver</find>
       <find>main</find>
       <find>gp_old</find>
+      <find>n_samples</find>
     </findStrings>
     <replaceStrings>
       <replace />
@@ -219,7 +256,6 @@
   <component name="IdeDocumentHistory">
     <option name="CHANGED_PATHS">
       <list>
-        <option value="$PROJECT_DIR$/tests/test_helpers.py" />
         <option value="$PROJECT_DIR$/src/models/__init__.py" />
         <option value="$PROJECT_DIR$/src/context.py" />
         <option value="$PROJECT_DIR$/src/environments.py" />
@@ -254,7 +290,6 @@
         <option value="$PROJECT_DIR$/debug_gpytorch.py" />
         <option value="$PROJECT_DIR$/src/models/DKL/gpr.py" />
         <option value="$PROJECT_DIR$/src/models/DKL/feature_models.py" />
-        <option value="$PROJECT_DIR$/src/experiment/context.py" />
         <option value="$PROJECT_DIR$/debug_notebook.py" />
         <option value="$PROJECT_DIR$/thesis_figs_notebooks/server_run.py" />
         <option value="$PROJECT_DIR$/playground/DKL.py" />
@@ -270,6 +305,8 @@
         <option value="$PROJECT_DIR$/src/environments/financial.py" />
         <option value="$PROJECT_DIR$/src/growth_model_GPR/interpolation.py" />
         <option value="$PROJECT_DIR$/src/growth_model_GPR/parameters.py" />
+        <option value="$PROJECT_DIR$/src/experiment/runner.py" />
+        <option value="$PROJECT_DIR$/src/experiment/context.py" />
       </list>
     </option>
   </component>
@@ -490,11 +527,11 @@
     </todo-panel>
   </component>
   <component name="ToolWindowManager">
-    <frame x="0" y="23" width="1680" height="1027" extended-state="6" />
+    <frame x="0" y="23" width="1920" height="1057" extended-state="6" />
     <editor active="true" />
     <layout>
       <window_info id="Favorites" order="0" side_tool="true" />
-      <window_info active="true" content_ui="combo" id="Project" order="1" sideWeight="0.38716578" visible="true" weight="0.13919415" />
+      <window_info active="true" content_ui="combo" id="Project" order="1" sideWeight="0.38716578" visible="true" weight="0.12140575" />
       <window_info id="Structure" order="2" sideWeight="0.6128342" side_tool="true" weight="0.13919415" />
       <window_info anchor="bottom" id="Database Changes" order="0" show_stripe_button="false" />
       <window_info anchor="bottom" id="Terminal" order="1" sideWeight="0.497558" weight="0.32941177" />
@@ -503,16 +540,16 @@
       <window_info anchor="bottom" id="Python Console" order="4" sideWeight="0.46683252" weight="0.3015544" />
       <window_info anchor="bottom" id="Docker" order="5" show_stripe_button="false" />
       <window_info anchor="bottom" id="Message" order="6" />
-      <window_info anchor="bottom" id="Find" order="7" sideWeight="0.4968254" visible="true" weight="0.30695188" />
+      <window_info anchor="bottom" id="Find" order="7" sideWeight="0.4968254" visible="true" weight="0.29740933" />
       <window_info anchor="bottom" id="Run" order="8" sideWeight="0.498779" weight="0.32941177" />
       <window_info anchor="bottom" id="Debug" order="9" sideWeight="0.490232" weight="0.28213167" />
       <window_info anchor="bottom" id="Cvs" order="10" weight="0.25" />
       <window_info anchor="bottom" id="Inspection" order="11" weight="0.4" />
       <window_info anchor="bottom" id="TODO" order="12" sideWeight="0.49893504" weight="0.3284974" />
       <window_info anchor="right" id="Coverage" side_tool="true" />
-      <window_info anchor="right" id="SciView" order="0" sideWeight="0.86419755" visible="true" weight="0.24358974" />
+      <window_info anchor="right" id="SciView" order="0" sideWeight="0.8643068" visible="true" weight="0.21246007" />
       <window_info anchor="right" id="Database" order="1" />
-      <window_info anchor="right" x="0" y="0" width="370" height="827" id="Documentation" order="2" sideWeight="0.13580246" side_tool="true" visible="true" weight="0.24358974" />
+      <window_info anchor="right" x="0" y="0" width="370" height="827" id="Documentation" order="2" sideWeight="0.13569322" side_tool="true" visible="true" weight="0.21246007" />
       <window_info anchor="right" id="Commander" internal_type="SLIDING" order="3" type="SLIDING" weight="0.4" />
       <window_info anchor="right" id="Ant Build" order="4" weight="0.25" />
       <window_info anchor="right" content_ui="combo" id="Hierarchy" order="5" weight="0.25" />
@@ -821,15 +858,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/experiment/runner.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-2517">
-          <folding>
-            <element signature="e#0#11#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/src/models/core_models.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="199">
@@ -931,16 +959,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/experiment/context.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="506">
-          <caret line="44" selection-start-line="44" selection-end-line="44" />
-          <folding>
-            <element signature="e#0#169#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/src/growth_model_GPR/__init__.py">
       <provider selected="true" editor-type-id="text-editor" />
     </entry>
@@ -1023,8 +1041,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/src/environments/financial.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="435">
-          <caret line="29" column="20" lean-forward="true" selection-start-line="29" selection-start-column="20" selection-end-line="29" selection-end-column="20" />
+        <state relative-caret-position="540">
+          <caret line="36" column="20" selection-start-line="36" selection-start-column="20" selection-end-line="36" selection-end-column="20" />
           <folding>
             <element signature="e#0#11#0" expanded="true" />
           </folding>
@@ -1033,8 +1051,28 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/src/growth_model_GPR/parameters.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1011">
-          <caret line="77" column="60" selection-start-line="77" selection-start-column="60" selection-end-line="77" selection-end-column="60" />
+        <state relative-caret-position="276">
+          <caret line="28" column="14" selection-start-line="28" selection-start-column="14" selection-end-line="28" selection-end-column="14" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/experiment/runner.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="171">
+          <caret line="37" column="25" lean-forward="true" selection-start-line="37" selection-start-column="25" selection-end-line="37" selection-end-column="25" />
+          <folding>
+            <element signature="e#0#11#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/experiment/context.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="75">
+          <caret line="5" lean-forward="true" selection-start-line="5" selection-end-line="5" />
+          <folding>
+            <element signature="e#0#169#0" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>
