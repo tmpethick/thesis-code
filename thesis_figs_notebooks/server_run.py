@@ -833,9 +833,9 @@ for i, D in enumerate(Ds):
 from notebook_header import *
 
 
-Ns = [10, 32, 50, 100, 200]
+Ns = [10, 32, 50, 100, 140]
 
-gp = {
+gp = lambda N: {
     'name': 'NormalizerModel',
     'kwargs': {
         'model': {
@@ -853,7 +853,7 @@ gp = {
     }
 }
 
-kissmodel = {
+kissmodels = lambda N: {
     'name': 'NormalizerModel',
     'kwargs': {
         'model': {
@@ -862,7 +862,7 @@ kissmodel = {
                 'learning_rate': 0.1,
                 'n_iter': 300,
                 'nn_kwargs': {'layers': None},
-                #'gp_kwargs': {'n_grid': 10000},
+                'gp_kwargs': {'n_grid': N * 2},
                 'use_cg': True,
                 'noise': None
             }
@@ -870,7 +870,7 @@ kissmodel = {
     }
 }
 
-models = [gp, kissmodel]
+models = [gp, kissmodels]
 
 for model in models:
     for N in Ns:
@@ -879,12 +879,12 @@ for model in models:
             'obj_func': {
                 'name': 'HestonOptionPricer',
             },
-            'model': model,
+            'model': model(N),
             'gp_samples': N,
             'use_sample_grid': True,
         })
 
-for N in Ns:
+for d in range(1,5):
     run = execute(config_updates={
         'tag': 'heston',
         'obj_func': {
@@ -893,10 +893,9 @@ for N in Ns:
         'model': {
             'name': 'AdaptiveSparseGrid',
             'kwargs': dict(
-                depth=5, 
+                depth=d, 
                 refinement_level=0,
                 f_tol=1e-3,
             )
         },
-        'gp_samples': N,
     })

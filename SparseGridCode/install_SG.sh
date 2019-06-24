@@ -21,5 +21,3 @@ cd ../
 cd pyipopt
 ./install.sh
 echo " IPOPT and PYIPOPT is installed "
-
-

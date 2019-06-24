@@ -151,8 +151,17 @@ sbatch hpc.sh 'python' 'runner.py' 'print_config' 'with' 'obj_func={"name": "Sin
 
 ## Adapative Sparse Grid installation
 
-- Run `make` in `SparseGridCode/`.
 - Replace `basestring` with `str` in `SparseGridCode/TasmanianSparseGrids/InterfacePython/TasmanianSG.py`.
+- Run:
+  ```
+cd SparseGridCode/TasmanianSparseGrids
+make
+cd ../
+cd pyipopt
+./install.sh
+echo " IPOPT and PYIPOPT is installed "
+  ```
+
 
 ## Profiling
 

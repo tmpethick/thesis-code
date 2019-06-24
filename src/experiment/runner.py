@@ -37,7 +37,6 @@ class Runner(object):
 
     def get_data_f(self, f: BaseEnvironment):
         # Training
-        assert isinstance(self.context.gp_samples, int), "n_samples need to be an int"
         bounds = f.bounds
         input_dim = f.input_dim
 
@@ -45,16 +44,18 @@ class Runner(object):
         if isinstance(self.context.model, ControlledLocationsModelMixin):
             X_train = None
             Y_train = None
-        elif self.context.use_sample_grid:
-            X_train = np.mgrid[[slice(axis[0], axis[1], self.context.gp_samples*1j) for axis in bounds]]
-            X_train = np.moveaxis(X_train, 0, -1)
-            X_train = np.reshape(X_train, (-1, X_train.shape[-1]))
-            Y_train = f(X_train)
         else:
-            if input_dim == 1:
-                X_train = np.random.uniform(bounds[0, 0], bounds[0, 1], (self.context.gp_samples, 1))
+            assert isinstance(self.context.gp_samples, int), "n_samples need to be an int"
+            if self.context.use_sample_grid:
+                X_train = np.mgrid[[slice(axis[0], axis[1], self.context.gp_samples*1j) for axis in bounds]]
+                X_train = np.moveaxis(X_train, 0, -1)
+                X_train = np.reshape(X_train, (-1, X_train.shape[-1]))
+                Y_train = f(X_train)
             else:
-                X_train = random_hypercube_samples(self.context.gp_samples, bounds)
+                if input_dim == 1:
+                    X_train = np.random.uniform(bounds[0, 0], bounds[0, 1], (self.context.gp_samples, 1))
+                else:
+                    X_train = random_hypercube_samples(self.context.gp_samples, bounds)
             Y_train = f(X_train)
 
         if self.context.gp_use_derivatives:

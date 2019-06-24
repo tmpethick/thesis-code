@@ -6,19 +6,10 @@
   <component name="ChangeListManager">
     <list default="true" id="c818380e-e4c2-4b56-b288-ea97eb749031" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.ipynb_checkpoints/explorer_notebook-checkpoint.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/.ipynb_checkpoints/explorer_notebook-checkpoint.ipynb" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/SparseGridCode/install_SG.sh" beforeDir="false" afterPath="$PROJECT_DIR$/SparseGridCode/install_SG.sh" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/explorer_notebook.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/explorer_notebook.ipynb" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/playground/DKL.py" beforeDir="false" afterPath="$PROJECT_DIR$/playground/DKL.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/environments/financial.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/environments/financial.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/environments/high_dim.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/environments/high_dim.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/environments/option_pricer/option_pricing_2d.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/environments/option_pricer/option_pricing_2d.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/experiment/context.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/experiment/context.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/experiment/runner.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/experiment/runner.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/experiment/settings.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/experiment/settings.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/growth_model_GPR/parameters.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/growth_model_GPR/parameters.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/models/DKL/feature_extractors.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/models/DKL/feature_extractors.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/models/core_models.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/models/core_models.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/models/transformers.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/models/transformers.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/utils.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/utils.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/thesis_figs_notebooks/server_run.py" beforeDir="false" afterPath="$PROJECT_DIR$/thesis_figs_notebooks/server_run.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -98,35 +89,11 @@
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/environments/financial.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="540">
-              <caret line="36" column="20" selection-start-line="36" selection-start-column="20" selection-end-line="36" selection-end-column="20" />
-              <folding>
-                <element signature="e#0#11#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
       <file pinned="false" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/src/experiment/context.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="75">
-              <caret line="5" lean-forward="true" selection-start-line="5" selection-end-line="5" />
-              <folding>
-                <element signature="e#0#169#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/experiment/runner.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="171">
-              <caret line="37" column="25" lean-forward="true" selection-start-line="37" selection-start-column="25" selection-end-line="37" selection-end-column="25" />
+            <state relative-caret-position="244">
+              <caret line="40" column="25" selection-start-line="40" selection-start-column="25" selection-end-line="40" selection-end-column="25" />
               <folding>
                 <element signature="e#0#11#0" expanded="true" />
               </folding>
@@ -318,8 +285,8 @@
   </component>
   <component name="ProjectFrameBounds" extendedState="6">
     <option name="y" value="23" />
-    <option name="width" value="1680" />
-    <option name="height" value="1027" />
+    <option name="width" value="1920" />
+    <option name="height" value="1057" />
   </component>
   <component name="ProjectLevelVcsManager" settingsEditedManually="true">
     <ConfirmationsSetting value="1" id="Add" />
@@ -528,28 +495,27 @@
   </component>
   <component name="ToolWindowManager">
     <frame x="0" y="23" width="1920" height="1057" extended-state="6" />
-    <editor active="true" />
     <layout>
       <window_info id="Favorites" order="0" side_tool="true" />
-      <window_info active="true" content_ui="combo" id="Project" order="1" sideWeight="0.38716578" visible="true" weight="0.12140575" />
+      <window_info content_ui="combo" id="Project" order="1" sideWeight="0.38716578" visible="true" weight="0.12140575" />
       <window_info id="Structure" order="2" sideWeight="0.6128342" side_tool="true" weight="0.13919415" />
       <window_info anchor="bottom" id="Database Changes" order="0" show_stripe_button="false" />
       <window_info anchor="bottom" id="Terminal" order="1" sideWeight="0.497558" weight="0.32941177" />
       <window_info anchor="bottom" id="Event Log" order="2" sideWeight="0.503663" side_tool="true" weight="0.7251337" />
       <window_info anchor="bottom" id="Version Control" order="3" weight="0.32941177" />
-      <window_info anchor="bottom" id="Python Console" order="4" sideWeight="0.46683252" weight="0.3015544" />
+      <window_info active="true" anchor="bottom" id="Python Console" order="4" sideWeight="0.46683252" visible="true" weight="0.3015544" />
       <window_info anchor="bottom" id="Docker" order="5" show_stripe_button="false" />
       <window_info anchor="bottom" id="Message" order="6" />
-      <window_info anchor="bottom" id="Find" order="7" sideWeight="0.4968254" visible="true" weight="0.29740933" />
+      <window_info anchor="bottom" id="Find" order="7" sideWeight="0.4968254" weight="0.29740933" />
       <window_info anchor="bottom" id="Run" order="8" sideWeight="0.498779" weight="0.32941177" />
       <window_info anchor="bottom" id="Debug" order="9" sideWeight="0.490232" weight="0.28213167" />
       <window_info anchor="bottom" id="Cvs" order="10" weight="0.25" />
       <window_info anchor="bottom" id="Inspection" order="11" weight="0.4" />
       <window_info anchor="bottom" id="TODO" order="12" sideWeight="0.49893504" weight="0.3284974" />
       <window_info anchor="right" id="Coverage" side_tool="true" />
-      <window_info anchor="right" id="SciView" order="0" sideWeight="0.8643068" visible="true" weight="0.21246007" />
+      <window_info anchor="right" id="SciView" order="0" sideWeight="0.86498517" visible="true" weight="0.21246007" />
       <window_info anchor="right" id="Database" order="1" />
-      <window_info anchor="right" x="0" y="0" width="370" height="827" id="Documentation" order="2" sideWeight="0.13569322" side_tool="true" visible="true" weight="0.21246007" />
+      <window_info anchor="right" x="0" y="0" width="370" height="827" id="Documentation" order="2" sideWeight="0.13501483" side_tool="true" visible="true" weight="0.21246007" />
       <window_info anchor="right" id="Commander" internal_type="SLIDING" order="3" type="SLIDING" weight="0.4" />
       <window_info anchor="right" id="Ant Build" order="4" weight="0.25" />
       <window_info anchor="right" content_ui="combo" id="Hierarchy" order="5" weight="0.25" />
@@ -1039,30 +1005,10 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/environments/financial.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="540">
-          <caret line="36" column="20" selection-start-line="36" selection-start-column="20" selection-end-line="36" selection-end-column="20" />
-          <folding>
-            <element signature="e#0#11#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/src/growth_model_GPR/parameters.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="276">
           <caret line="28" column="14" selection-start-line="28" selection-start-column="14" selection-end-line="28" selection-end-column="14" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/experiment/runner.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="171">
-          <caret line="37" column="25" lean-forward="true" selection-start-line="37" selection-start-column="25" selection-end-line="37" selection-end-column="25" />
-          <folding>
-            <element signature="e#0#11#0" expanded="true" />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -1072,6 +1018,26 @@
           <caret line="5" lean-forward="true" selection-start-line="5" selection-end-line="5" />
           <folding>
             <element signature="e#0#169#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/environments/financial.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="300">
+          <caret line="20" column="22" lean-forward="true" selection-start-line="20" selection-start-column="22" selection-end-line="20" selection-end-column="22" />
+          <folding>
+            <element signature="e#0#11#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/experiment/runner.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="244">
+          <caret line="40" column="25" selection-start-line="40" selection-start-column="25" selection-end-line="40" selection-end-column="25" />
+          <folding>
+            <element signature="e#0#11#0" expanded="true" />
           </folding>
         </state>
       </provider>
