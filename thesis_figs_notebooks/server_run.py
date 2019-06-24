@@ -860,7 +860,7 @@ kissmodel = {
             'name': 'DKLGPModel',
             'kwargs': {
                 'learning_rate': 0.1,
-                'n_iter': 30,
+                'n_iter': 300,
                 'nn_kwargs': {'layers': None},
                 #'gp_kwargs': {'n_grid': 10000},
                 'use_cg': True,
@@ -884,21 +884,19 @@ for model in models:
             'use_sample_grid': True,
         })
 
-
-run = execute(config_updates={
-    'tag': 'heston',
-    'obj_func': {
-        'name': 'HestonOptionPricer',
-        'kwargs': {n_train: N},
-    },
-    'model': model,
-})
-
-# f(X)
-
-# model = AdaptiveSparseGrid()
-# model.fit(f)
-
-
-# is_expensive
-# grid sampling
+for N in Ns:
+    run = execute(config_updates={
+        'tag': 'heston',
+        'obj_func': {
+            'name': 'HestonOptionPricer',
+        },
+        'model': {
+            'name': 'AdaptiveSparseGrid',
+            'kwargs': dict(
+                depth=5, 
+                refinement_level=0,
+                f_tol=1e-3,
+            )
+        },
+        'gp_samples': N,
+    })

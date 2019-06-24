@@ -10,6 +10,7 @@ from src.models import NormalizerModel, DKLGPModel, GPModel, TransformerModel, L
 from src.plot_utils import plot_model, plot_model_unknown_bounds, plot_function
 from src.utils import random_hypercube_samples, calc_errors_model_compare_mean, calc_errors_model_compare_var, \
     calc_errors
+from src.models.ASG import ControlledLocationsModelMixin
 
 
 class Runner(object):
@@ -40,17 +41,22 @@ class Runner(object):
         bounds = f.bounds
         input_dim = f.input_dim
 
-        if self.context.use_sample_grid:
+        # TODO: currently only based on the first model.
+        if isinstance(self.context.model, ControlledLocationsModelMixin):
+            X_train = None
+            Y_train = None
+        elif self.context.use_sample_grid:
             X_train = np.mgrid[[slice(axis[0], axis[1], self.context.gp_samples*1j) for axis in bounds]]
             X_train = np.moveaxis(X_train, 0, -1)
             X_train = np.reshape(X_train, (-1, X_train.shape[-1]))
+            Y_train = f(X_train)
         else:
             if input_dim == 1:
                 X_train = np.random.uniform(bounds[0, 0], bounds[0, 1], (self.context.gp_samples, 1))
             else:
                 X_train = random_hypercube_samples(self.context.gp_samples, bounds)
+            Y_train = f(X_train)
 
-        Y_train = f(X_train)
         if self.context.gp_use_derivatives:
             Y_train_dir = f.derivative(X_train)
         else:
@@ -64,9 +70,13 @@ class Runner(object):
 
 
     def run_models(self, models, X_train, Y_train, Y_train_dir, X_val, Y_val):
+        f = self.context.obj_func
         for i, model in enumerate(models):
             start_time = time.clock()
-            model.init(X_train, Y_train, Y_dir=Y_train_dir)
+            if isinstance(model, ControlledLocationsModelMixin):
+                model.fit(f)
+            else:
+                model.init(X_train, Y_train, Y_dir=Y_train_dir)
             training_time = time.clock() - start_time
 
             # Test

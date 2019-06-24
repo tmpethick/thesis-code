@@ -2,6 +2,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import warnings
 
+from src.experiment.config_helpers import ConfigMixin
 from src.utils import construct_2D_grid, call_function_on_grid
 
 import sys 
@@ -17,8 +18,18 @@ import TasmanianSG
 import numpy as np
 
 
-class AdaptiveSparseGrid(object):
-    def __init__(self, f, depth=1, refinement_level=5, f_tol=1e-5, point_tol=None):
+class ControlledLocationsModelMixin(object):
+    """Deligates responsibility of picking training location to the model.
+    """
+    def fit(self, f, bounds):
+        raise NotImplementedError
+
+    def get_statistics(self, X, **kwargs):
+        return NotImplementedError
+
+
+class AdaptiveSparseGrid(ConfigMixin, ControlledLocationsModelMixin):
+    def __init__(self, depth=1, refinement_level=5, f_tol=1e-5, point_tol=None):
         if refinement_level == 0 and point_tol is not None:
             warnings.warn("`point_tol` will be ignored for fixed depth.")
 
@@ -26,15 +37,8 @@ class AdaptiveSparseGrid(object):
         self.refinement_level = refinement_level
         self.f_tol = f_tol
         self.point_tol = point_tol
-        self.f = f
 
-        in_dim = self.f.input_dim
-        out_dim = 1
-        which_basis = 1
-
-        self.grid  = TasmanianSG.TasmanianSparseGrid(tasmanian_library=C_LIB)
-        self.grid.makeLocalPolynomialGrid(in_dim, out_dim, self.depth, which_basis, "localp")
-        self.grid.setDomainTransform(self.f.bounds)
+        self.grid = None
 
         # This will only be able to change if point_tol is set.
         self.early_stopping_level = refinement_level
@@ -43,9 +47,18 @@ class AdaptiveSparseGrid(object):
     def total_depth(self):
         return self.depth + self.early_stopping_level + 1
 
-    def fit(self, callback=None):
+    def fit(self, f, callback=None):
+        in_dim = f.input_dim
+        out_dim = 1
+        which_basis = 1
+        
+        if self.grid is None:
+            self.grid = TasmanianSG.TasmanianSparseGrid(tasmanian_library=C_LIB)
+            self.grid.makeLocalPolynomialGrid(in_dim, out_dim, self.depth, which_basis, "localp")
+            self.grid.setDomainTransform(f.bounds)
+
         X_train = self.grid.getPoints()
-        Y_train = self.f(X_train)
+        Y_train = f(X_train)
         self.grid.loadNeededPoints(Y_train)
 
         if callable(callback):
@@ -54,7 +67,7 @@ class AdaptiveSparseGrid(object):
         for iK in range(self.refinement_level):
             self.grid.setSurplusRefinement(self.f_tol, -1, "classic")
             X_train = self.grid.getNeededPoints()
-            Y_train = self.f(X_train)
+            Y_train = f(X_train)
             self.grid.loadNeededPoints(Y_train)
 
             if self.point_tol is not None:
@@ -64,6 +77,9 @@ class AdaptiveSparseGrid(object):
 
             if callable(callback):
                 callback(i=iK, model=self)
+
+    def get_statistics(self, X, **kwargs):
+        return self.evaluate(X), None
 
     def evaluate(self, X):
         Y_hat = self.grid.evaluateBatch(X)
@@ -81,13 +97,13 @@ class AdaptiveSparseGrid(object):
         L2_err = np.sqrt(np.sum((Y_hat - Y_test) ** 2) / N_test)
         return Loo_err, L2_err
 
-    def plot(self):
+    def plot(self, f):
         X_train = self.grid.getLoadedPoints()
         
         if X_train.shape[-1] == 1:
 
             fig = plt.figure()
-            X_line = np.linspace(self.f.bounds[0,0], self.f.bounds[0,1])[:, None]
+            X_line = np.linspace(f.bounds[0,0], f.bounds[0,1])[:, None]
 
             ax = fig.add_subplot(221)
             ax.set_title("f")
@@ -114,7 +130,7 @@ class AdaptiveSparseGrid(object):
         if X_train.shape[-1] == 2:
 
             fig = plt.figure()
-            XY, X, Y = construct_2D_grid(self.f.bounds)
+            XY, X, Y = construct_2D_grid(f.bounds)
             
             ax = fig.add_subplot(221)
             ax.set_title("f")
@@ -143,3 +159,4 @@ class AdaptiveSparseGrid(object):
             return fig
 
 
+__all__ = ['ControlledLocationsModelMixin', 'AdaptiveSparseGrid']
