@@ -31,7 +31,7 @@ class Runner(object):
             X_train, Y_train, Y_train_dir, X_val, Y_val = self.get_data_f(f)
             self.run_models(models, X_train, Y_train, Y_train_dir, X_val, Y_val)
             
-            if not (hasattr(models[0], 'is_expensive') and models[0].is_expensive):
+            if not (hasattr(f, 'is_expensive') and f.is_expensive):
                 self.plot_models(self.context)
 
     def get_data_f(self, f: BaseEnvironment):
@@ -40,10 +40,15 @@ class Runner(object):
         bounds = f.bounds
         input_dim = f.input_dim
 
-        if input_dim == 1:
-            X_train = np.random.uniform(bounds[0, 0], bounds[0, 1], (self.context.gp_samples, 1))
+        if self.context.use_sample_grid:
+            X_train = np.mgrid[[slice(axis[0], axis[1], self.context.gp_samples*1j) for axis in bounds]]
+            X_train = np.moveaxis(X_train, 0, -1)
+            X_train = np.reshape(X_train, (-1, X_train.shape[-1]))
         else:
-            X_train = random_hypercube_samples(self.context.gp_samples, bounds)
+            if input_dim == 1:
+                X_train = np.random.uniform(bounds[0, 0], bounds[0, 1], (self.context.gp_samples, 1))
+            else:
+                X_train = random_hypercube_samples(self.context.gp_samples, bounds)
 
         Y_train = f(X_train)
         if self.context.gp_use_derivatives:
