@@ -1,50 +1,14 @@
 import math
-from abc import abstractmethod, ABCMeta
-import matplotlib.pyplot as plt
 import numpy as np
+from src.environments.dataset import DataSet
 
-from src.utils import errors
 import pandas as pd
 from ..models.core_models import BaseModel
 from sklearn.model_selection import train_test_split
 
 from src.experiment.config_helpers import ConfigMixin
-from src.utils import random_hypercube_samples
 
-from src.environments.option_pricer import binomial
 from .option_pricer.MonteCarlo import MonteCarlo
-
-
-class DataSet(ConfigMixin, metaclass=ABCMeta):
-    @property
-    @abstractmethod
-    def X_train(self):
-        raise NotImplementedError
-
-    @property
-    @abstractmethod
-    def Y_train(self):
-        raise NotImplementedError
-
-    @property
-    @abstractmethod
-    def X_test(self):
-        raise NotImplementedError
-
-    @property
-    @abstractmethod
-    def Y_test(self):
-        raise NotImplementedError
-
-    @property
-    @abstractmethod
-    def X_val(self):
-        raise NotImplementedError
-
-    @property
-    @abstractmethod
-    def Y_val(self):
-        raise NotImplementedError
 
 
 class SPXOptions(DataSet):
@@ -212,7 +176,6 @@ class GrowthModelCallback(object):
         self.y_pred_prev = y_pred
 
 
-from .option_pricer.option_pricing_2d import  heston_option_pricing_2d
 from .core import BaseEnvironment
 
 class HestonOptionPricer(BaseEnvironment):
@@ -354,4 +317,4 @@ class AAPL(DataSet):
         self.X_train, self.Y_train = self.X_train[:subset_size], self.Y_train[:subset_size]
 
 
-__all__ = ['DataSet', 'SPXOptions', 'HestonOptionPricer', 'AAPL', 'GrowthModel', 'GrowthModelCallback']
+__all__ = ['SPXOptions', 'HestonOptionPricer', 'AAPL', 'GrowthModel', 'GrowthModelCallback']

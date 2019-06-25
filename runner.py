@@ -24,6 +24,10 @@ matplotlib.rcParams['figure.dpi'] = 300 # migh high-res friendlly
 
 from src.experiment import settings
 
+def unpack(config_obj):
+    return config_obj['name'], \
+           config_obj.get('arg', ()), \
+           config_obj.get('kwargs', {})
 
 def hash_subdict(d, keys=None):
     """Create unique based on subdict of a dict.

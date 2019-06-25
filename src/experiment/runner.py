@@ -4,7 +4,8 @@ import numpy as np
 from matplotlib import pyplot as plt
 
 from src.algorithms import AcquisitionAlgorithm
-from src.environments import DataSet, BaseEnvironment, EnvironmentNormalizer
+from src.environments import BaseEnvironment, EnvironmentNormalizer
+from src.environments.dataset import DataSet
 from src.experiment import settings
 from src.models import NormalizerModel, DKLGPModel, GPModel, TransformerModel, LocalLengthScaleGPModel
 from src.plot_utils import plot_model, plot_model_unknown_bounds, plot_function

@@ -8,6 +8,55 @@ import pandas as pd
 
 #%%
 
+DATASETS = [
+    '3droad',
+    'airfoil',
+    'autompg',
+    'autos',
+    'bike',
+    'breastcancer',
+    'buzz',
+    'challenger',
+    'concrete',
+    'concreteslump',
+    'elevators',
+    'energy',
+    'fertility',
+    'forest',
+    'gas',
+    'houseelectric',
+    'housing',
+    'keggdirected',
+    'keggundirected',
+    'kin40k',
+    'machine',
+    'parkinsons',
+    'pendulum',
+    'pol',
+    'protein',
+    'pumadyn32nm',
+    'servo',
+    'skillcraft',
+    'slice',
+    'sml',
+    'solar',
+    'song',
+    'stock',
+    'tamielectric',
+    'wine',
+    'yacht',
+]
+
+
+#%% UCI
+
+import scipy.io
+mat = scipy.io.loadmat('data/uci/{0}/{0}.mat'.format('challenger'))
+data = mat
+data['data'].shape
+
+#%%
+
 import scipy.io
 mat = scipy.io.loadmat('data/OptionData_0619/optionsSPXweekly_96_17.mat')
 data = mat['optionsSPX']

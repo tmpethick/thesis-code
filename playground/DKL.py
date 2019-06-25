@@ -1186,4 +1186,38 @@ model.W.shape[-1]
 model.plot()
 
 #55
+#%%
+%load_ext autoreload
+%autoreload 2
+from src.environments import UCI
 
+UCI.max_train_size('3droad')
+threedroad = UCI('3droad', subset_size=1000)
+print(threedroad.X_train.shape)
+print(threedroad.Y_train.shape)
+
+#%%
+run = execute(config_updates={
+    'obj_func': {
+        'name': 'UCI',
+        'kwargs': {'name': '3droad', 'subset_size': 1000},
+    },
+    'model': {
+        'name': 'NormalizerModel',
+        'kwargs': {
+            'model': {
+                'name': 'DKLGPModel',
+                'kwargs': {
+                    'learning_rate': 0.1,
+                    'n_iter': 10,
+                    'nn_kwargs': {'layers': None},
+                    'gp_kwargs': {'n_grid': 10},
+                    'max_cg_iter': 1000,
+                    'precond_size': 10,
+                    'use_cg': True,
+                    'noise': None
+                }
+            }
+        }
+    },
+})

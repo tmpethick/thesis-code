@@ -1,38 +1,8 @@
 #%%
-from src.environments.discontinous import TwoKinkDEmbedding
-from src.models import ActiveSubspace
 %load_ext autoreload
 %autoreload 2
+from notebook_header import *
 
-from runner import execute
-
-from src.algorithms import *
-
-NOISE_LEVELS = {
-    'Step':                   1e-2,
-    'Kink1D':                 10,
-    'Kink2D':                 1e-2,
-    'TwoKink1D':              1e-2,
-    'TwoKink2D':              1e-2,
-    'TwoKinkDEmbedding':      1e-2,
-    'Sinc':                   1e-2,
-    'Branin':                 1e-1,
-    'KinkDCircularEmbedding': 1e-2,
-    'KinkDCircularEmbedding': 1e-2,
-    'KinkDCircularEmbedding': 1e-2,
-    'ActiveSubspaceTest':     1e-2,
-    'TwoKinkDEmbedding':      1e-2,
-}
-
-def add_noiselevels(obj_funs):
-    for obj_fun in obj_funs:
-        level = NOISE_LEVELS.get(obj_fun['name'])
-        kwargs = obj_fun.get('kwargs', {})
-
-        # Only add it if its not been set
-        if 'noise' not in kwargs:
-            kwargs['noise'] = level
-        obj_fun['kwargs'] = kwargs
 
 #%% Non-stationarity (Step)
 
@@ -221,10 +191,10 @@ exactGP = {
         'kernel': {
             'name': 'GPyRBF',
             'kwargs': {
-                'lengthscale': 1
+                'lengthscale': 0.6
             }
         },
-        'noise_prior': 1e-2,
+        'noise_prior': None,
         'do_optimize': True,
         'num_mcmc': 0,
     },
@@ -237,7 +207,8 @@ DKLModel = {
         'learning_rate': 0.01,
         'n_iter': 1000,
         'nn_kwargs': {'layers': [100, 50, 2]},
-        'noise': 1e-2
+        'use_cg': False,
+        'noise': None
     },
 }
 
@@ -266,58 +237,33 @@ models = [
     DKLModel
 ]
 
-# Alpha = TwoKinkDEmbedding.generate_alpha(D=10)
-Alpha = [
-    [0.78695576],
-    [0.70777112],
-    [0.34515641],
-    [0.20288506],
-    [0.52388727],
-    [0.2025096 ],
-    [0.31752746],
-    [0.24497726],
-    [0.89249818],
-    [0.64264009]]
 
 functions = [
-    {'name': 'ActiveSubspaceTest'},
-    {'name': 'TwoKinkDEmbedding', 'kwargs': {'Alpha': Alpha}},
-    {'name': 'Kink2D'},
+    {'name': 'ActiveSubspaceArbitrary1D', 'kwargs': {'D': 2}},
+    {'name': 'ActiveSubspaceArbitrary1D', 'kwargs': {'D': 5}},
+    {'name': 'ActiveSubspaceArbitrary1D', 'kwargs': {'D': 10}},
+    {'name': 'ActiveSubspaceArbitrary1D', 'kwargs': {'D': 50}},
+    {'name': 'ActiveSubspaceArbitrary1D', 'kwargs': {'D': 100}},
     {'name': 'KinkDCircularEmbedding', 'kwargs': {'D': 2}},
     {'name': 'KinkDCircularEmbedding', 'kwargs': {'D': 5}},
     {'name': 'KinkDCircularEmbedding', 'kwargs': {'D': 10}},
  ]
-add_noiselevels(functions)
-
-# Test that it is indeed active subspace of dim 1:
-f = TwoKinkDEmbedding(Alpha=Alpha)
-#f = KinkDCircularEmbedding(D=10)
-X = random_hypercube_samples(1000, f.bounds)
-G = f.derivative(X)
-model = ActiveSubspace()
-model.fit(X, f(X), G)
-model.W.shape[-1]
-
-# model.plot()
-# Z = model.transform(X)
-# plt.scatter(Z, f(X))
-
+#add_noiselevels(functions)
 
 #%%
-
-assert model.W.shape[1] == 1, "Subspace Dimensionality should be 1 since it is assumed by the model."
 
 run = None
 
 for func in functions:
     for model in models:
-        run = execute(config_updates={
+        config = normalize_config({
             'tag': 'embedding',
             'obj_func': func,
             'model': model,
             'gp_use_derivatives': model.get('name') == 'TransformerModel',
             'gp_samples': 1000,
         })
+        run = execute(config_updates=config)
 
 
 #%% Genz1984!
@@ -433,13 +379,14 @@ run = None
 for sample_size in sample_sizes:
     for func in functions:
         for model in models:
-            run = execute(config_updates={
-                'tag': 'embedding',
+            config = normalize_config({
+                'tag': 'scalability',
                 'obj_func': func,
                 'model': model,
                 'gp_use_derivatives': model.get('name') == 'TransformerModel',
                 'gp_samples': sample_size,
             })
+            run = execute(config_updates=config)
 
 
 #%%
