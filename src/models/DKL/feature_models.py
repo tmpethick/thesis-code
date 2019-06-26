@@ -489,7 +489,7 @@ class DKLGPModel(GPyTorchModel):
     def initialize_parameters(self, **kwargs):
         if self.model.uses_grid_interpolation:
             kwargs.update({
-                'covar_module.base_kernel.outputscale': kwargs.get('outputscale'),
+                'covar_module.outputscale': kwargs.get('outputscale'),
                 'covar_module.base_kernel.base_kernel.lengthscale': kwargs.get('lengthscale')
             })
         else:
@@ -505,7 +505,7 @@ class DKLGPModel(GPyTorchModel):
         kernel = self.model.covar_module
         if self.model.uses_grid_interpolation:
             rbf_kernel = kernel.base_kernel.base_kernel
-            scale_kernel = kernel.base_kernel
+            scale_kernel = kernel
         else:
             rbf_kernel = kernel.base_kernel
             scale_kernel = kernel

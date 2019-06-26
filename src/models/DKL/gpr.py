@@ -28,9 +28,6 @@ class GPRegressionModel(gpytorch.models.ExactGP):
 
         kernel = kernel(ard_num_dims=gp_input_dim)
 
-        if has_scale_kernel:
-            kernel = gpytorch.kernels.ScaleKernel(kernel)
-
         if n_grid is not None:
             kernel = gpytorch.kernels.GridInterpolationKernel(
                 kernel,
@@ -38,6 +35,9 @@ class GPRegressionModel(gpytorch.models.ExactGP):
                 grid_size=n_grid,
                 grid_bounds=None, # TODO: should we set grid bounds?
             )
+
+        if has_scale_kernel:
+            kernel = gpytorch.kernels.ScaleKernel(kernel)
 
         self.covar_module = kernel
 
