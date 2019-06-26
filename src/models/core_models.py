@@ -47,6 +47,9 @@ class BaseModel(object):
 
         self.init(X, Y, Y_dir)
 
+    def set_train_data(self, X, Y):
+        raise NotImplementedError
+
     def _fit(self, X, Y, Y_dir=None):
         # TODO: get rid of this dirty hack.
         raise NotImplementedError
@@ -107,7 +110,7 @@ class GPModel(ConfigMixin, ProbModel):
     def  __init__(self, 
             kernel, 
             noise_prior=None,
-            do_optimize=False, 
+            do_optimize=False,
             num_mcmc=0, 
             n_burnin=100,
             subsample_interval=10,

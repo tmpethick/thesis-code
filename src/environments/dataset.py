@@ -33,3 +33,7 @@ class DataSet(ConfigMixin, metaclass=ABCMeta):
     @abstractmethod
     def Y_val(self):
         raise NotImplementedError
+
+    @property
+    def input_dim(self):
+        return self.X_train.shape[-1]

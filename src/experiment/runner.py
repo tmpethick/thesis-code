@@ -28,13 +28,36 @@ class Runner(object):
         if bo is not None:
             bo.run(callback=self.plot)
         elif isinstance(f, DataSet):
-            self.run_models(models, f.X_train, f.Y_train, None, f.X_val, f.Y_val)
+            if hasattr(f, 'X_post_train'):
+                X_post_train = f.X_post_train
+                Y_post_train = f.Y_post_train
+            else:
+                X_post_train = None
+                Y_post_train = None
+            self.run_models(models, f.X_train, f.Y_train, None, f.X_test, f.Y_test, X_post_train, Y_post_train)
+
+            # Plot models
+            for i, model in enumerate(self.context.models):
+                # For natural sound
+                if f.input_dim == 1:
+                    print("creating plot for dataset")
+                    Y_hat, _ = model.get_statistics(f.X_train, full_cov=False)
+                    fig = plt.figure()
+                    ax = fig.add_subplot(211)
+                    ax.plot(f.X_train, f.Y_train)
+                    ax = fig.add_subplot(212)
+                    ax.plot(f.X_train, Y_hat)
+
+                    if fig is not None:
+                        self.save_fig(fig, settings.ARTIFACT_GP_FILENAME.format(model_idx=i))
+
         elif isinstance(f, BaseEnvironment):
-            X_train, Y_train, Y_train_dir, X_val, Y_val = self.get_data_f(f)
-            self.run_models(models, X_train, Y_train, Y_train_dir, X_val, Y_val)
+            X_train, Y_train, Y_train_dir, X_test, Y_test, X_post_train, Y_post_train = self.get_data_f(f)
+            self.run_models(models, X_train, Y_train, Y_train_dir, X_test, Y_test, X_post_train, Y_post_train)
             
             if not (hasattr(f, 'is_expensive') and f.is_expensive):
                 self.plot_models(self.context)
+
 
     def get_data_f(self, f: BaseEnvironment):
         # Training
@@ -65,13 +88,13 @@ class Runner(object):
             Y_train_dir = None
 
         # Testing
-        X_val = random_hypercube_samples(self.context.gp_test_samples, bounds, rng=np.random.RandomState(1))
-        Y_val = f(X_val)
+        X_test = random_hypercube_samples(self.context.gp_test_samples, bounds, rng=np.random.RandomState(1))
+        Y_test = f(X_test)
 
-        return X_train, Y_train, Y_train_dir, X_val, Y_val
+        return X_train, Y_train, Y_train_dir, X_test, Y_test, None, None
 
 
-    def run_models(self, models, X_train, Y_train, Y_train_dir, X_val, Y_val):
+    def run_models(self, models, X_train, Y_train, Y_train_dir, X_test, Y_test, X_post_train=None, Y_post_train=None):
         f = self.context.obj_func
         for i, model in enumerate(models):
             start_time = time.clock()
@@ -79,16 +102,18 @@ class Runner(object):
                 model.fit(f)
             else:
                 model.init(X_train, Y_train, Y_dir=Y_train_dir)
+                if X_post_train is not None:
+                    model.set_train_data(X_post_train, Y_post_train)
             training_time = time.clock() - start_time
 
             # Test
-            N = len(Y_val)
+            N = len(Y_test)
             start_time = time.clock()
-            Y_hat, var = model.get_statistics(X_val, full_cov=False)
+            Y_hat, var = model.get_statistics(X_test, full_cov=False)
             pred_time = time.clock() - start_time
 
-            rmse = np.sqrt(np.sum(np.square(Y_hat - Y_val)) / N)
-            max_err = np.max(np.fabs(Y_hat - Y_val))
+            rmse = np.sqrt(np.sum(np.square(Y_hat - Y_test)) / N)
+            max_err = np.max(np.fabs(Y_hat - Y_test))
 
             self.log_info('Model{}: {} has RMSE={} max_err={}'.format(i, model, rmse, max_err))
 

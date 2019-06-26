@@ -8,6 +8,17 @@ import pandas as pd
 
 #%%
 
+mat_hyp = scipy.io.loadmat('data/scalable/precipitation/precipitation3240-hyp.mat')
+mat = scipy.io.loadmat('data/scalable/precipitation/precipitation3240.mat')
+X_hyp = mat_hyp['Xhyp']
+Y_hyp = mat_hyp['yhyp']
+X_train = mat['X']
+Y_train = mat['y']
+X_test = mat['Xtest']
+Y_test = mat['ytest']
+
+#%%
+
 DATASETS = [
     '3droad',
     'airfoil',
@@ -51,9 +62,11 @@ DATASETS = [
 #%% UCI
 
 import scipy.io
-mat = scipy.io.loadmat('data/uci/{0}/{0}.mat'.format('challenger'))
+mat = scipy.io.loadmat('data/uci/{0}/{0}.mat'.format('3droad'))
 data = mat
 data['data'].shape
+# data['cvo']
+data
 
 #%%
 

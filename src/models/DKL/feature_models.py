@@ -252,15 +252,17 @@ class GPyTorchModel(ConfigMixin, FeatureModel):
         else:
             return tensor
 
+    def to_torch(self, X):
+        X_torch = torch.Tensor(X)
+        X_torch = self.make_double(X_torch)
+        X_torch = X_torch.contiguous().to(device)
+        return X_torch
+
     def _train(self, X, Y, fix_gp_params=False):
         n, d = X.shape
 
-        self.X_torch = torch.Tensor(X)
-        self.Y_torch = torch.Tensor(Y[:, 0])
-        self.X_torch = self.make_double(self.X_torch)
-        self.Y_torch = self.make_double(self.Y_torch)
-        self.X_torch = self.X_torch.contiguous().to(device)
-        self.Y_torch = self.Y_torch.contiguous().to(device)
+        self.X_torch = self.to_torch(X)
+        self.Y_torch = self.to_torch(Y[:, 0])
 
         if self.has_feature_map:
             self.feature_extractor = self.feature_extractor_constructor(D=d).to(device)
@@ -282,7 +284,24 @@ class GPyTorchModel(ConfigMixin, FeatureModel):
         if self.initial_parameters is not None:
             print(self.initial_parameters)
             self.initialize_parameters(**self.initial_parameters)
+        
+        self.optimize(self.X_torch, self.Y_torch, fix_gp_params=fix_gp_params)
 
+    def set_train_data(self, X, Y):
+        if isinstance(X, np.ndarray):
+            X = self.to_torch(X)
+            Y = self.to_torch(Y[:, 0])
+        elif isinstance(X, torch.Tensor):
+            Y = Y[:, 0]
+        else:
+            raise ValueError("X and Y have to be numpy array or torch tensor.")
+        self.model.set_train_data(X, Y, strict=False)
+        
+        self.X_torch = X
+        self.Y_torch = Y
+
+    def optimize(self, X, Y, fix_gp_params=False): 
+        print('training on {} data points of dim {}'.format(X.shape[0], X.shape[-1])) 
         # Go into training mode
         self.model.train()
         self.likelihood.train()
@@ -313,9 +332,9 @@ class GPyTorchModel(ConfigMixin, FeatureModel):
                 # Zero backprop gradients
                 optimizer.zero_grad()
                 # Get output from model
-                output = self.model(self.X_torch)
+                output = self.model(X)
                 # Calc loss and backprop derivatives
-                loss = -mll(output, self.Y_torch)
+                loss = -mll(output, Y)
                 loss.backward()
 
                 loss_ = loss.item()
@@ -353,6 +372,7 @@ class GPyTorchModel(ConfigMixin, FeatureModel):
         return fig
 
     def _get_statistics(self, X, full_cov=True):
+        print('predicting {} points using {} training points'.format(X.shape[0], self.X_torch.shape[0])) 
         assert self.model is not None, "Call `self.fit` before predicting."
 
         # Go into prediction mode

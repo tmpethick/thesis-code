@@ -1197,6 +1197,7 @@ print(threedroad.X_train.shape)
 print(threedroad.Y_train.shape)
 
 #%%
+
 run = execute(config_updates={
     'obj_func': {
         'name': 'UCI',
@@ -1221,3 +1222,69 @@ run = execute(config_updates={
         }
     },
 })
+
+#%% Audio
+
+Ms = [500, 1000, 2000, 3000, 4000, 5000]
+
+run = execute(config_updates={
+    'obj_func': {
+        'name': 'NaturalSound',
+    },
+    'model': {
+        'name': 'DKLGPModel',
+        'kwargs': {
+            'learning_rate': 0.1,
+            'n_iter': 0,
+            'nn_kwargs': {'layers': None},
+            'gp_kwargs': {'n_grid': 1000},
+            'max_cg_iter': 1500,
+            'precond_size': 10,
+            'use_cg': True,
+            'noise': None
+        }
+    }
+})
+
+#%% Different dataset for hyperopt
+
+# # Train
+# opt.cg_maxit = 1500;
+# opt.cg_tol = 1e-4;
+# opt.pred_var = 0;
+
+# opt.ldB2_maxit = 50;
+
+# ng = [100, 100, 50]
+
+# # Test
+# opt.cg_maxit = 800; 
+# opt.cg_tol = 1e-4;
+# opt.pred_var = 0;
+
+# opt.ldB2_maxit = -25;
+# ng = [100, 100, 300]
+
+
+run = execute(config_updates={
+    'obj_func': {
+        'name': 'Precipitation',
+        'kwargs': {},
+    },
+    'model': {
+        'name': 'DKLGPModel',
+        'kwargs': {
+            'learning_rate': 0.1,
+            'n_iter': 0,
+            'nn_kwargs': {'layers': None},
+            'gp_kwargs': {'n_grid': 10},
+            'max_cg_iter': 1500,
+            'precond_size': 10,
+            'use_cg': True,
+            'noise': None
+        }
+    }
+})
+
+
+#%% cross validation
