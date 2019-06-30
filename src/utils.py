@@ -43,13 +43,16 @@ def _calc_errors(est1, est2, f, rand=False, rand_N=2500):
     Y = est2(X_line)
     Y_hat = est1(X_line)
 
-    # average over hyperparameters if there.
+    # average over hyperparameters if they are there.
     if Y_hat.ndim == 3:
         Y_hat = np.mean(Y_hat, axis=0)
 
-    # average over hyperparameters if there.
+    # average over hyperparameters if they are there.
     if Y.ndim == 3:
         Y = np.mean(Y, axis=0)
+
+    assert Y.ndim == 2, "est1 has to return two dimensional"
+    assert Y_hat.ndim == 2, "est2 has to return two dimensional"
 
     Y_diff = Y - Y_hat
     rmse = np.sqrt(np.sum(np.square(Y_diff)) / N)
@@ -61,7 +64,7 @@ def _calc_errors(est1, est2, f, rand=False, rand_N=2500):
 def errors(Y1, Y2):
     Y_diff = Y1 - Y2
     N = Y1.size
-    mae = np.average(np.fabs(Y_diff)) / N
+    mae = np.average(np.fabs(Y_diff))
     max_err = np.max(np.fabs(Y_diff))
     rmse = np.sqrt(np.sum(np.square(Y_diff)) / N)
     return mae, rmse, max_err

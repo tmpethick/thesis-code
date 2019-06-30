@@ -1,3 +1,4 @@
+import numpy as np
 import math
 
 import scipy.io
@@ -37,13 +38,18 @@ class NaturalSound(DataSet):
     X_test = None
     Y_test = None
 
-    def __init__(self):
+    def __init__(self, subset_size=None):
         mat = scipy.io.loadmat('data/scalable/sound/audio_data.mat')
         self.X_train = mat['xtrain'].astype('float')
         self.Y_train = mat['ytrain'].astype('float')
         self.X_test = mat['xtest'].astype('float')
         self.Y_test = mat['ytest'].astype('float')
 
+        if subset_size is not None:
+            print(subset_size)
+            indexes = np.sort(np.random.choice(len(self.X_train), subset_size, replace=False))
+            self.X_train = self.X_train[indexes]
+            self.Y_train = self.Y_train[indexes]
         # xtest, xtestplot, xtrain, xtrainplot, yfull, ymu, ymug, ymuplotfitc, ymuplotg, ys2, ytest, ytestplot, ytrain, ytrainplot
 
 

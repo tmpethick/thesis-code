@@ -13,7 +13,7 @@ from src.environments.core import BaseEnvironment
 from src.models.core_models import BaseModel
 from src.utils import call_function_on_grid, construct_2D_grid
 
-
+LINES = ('-', '--', ':', '-.', '-', '--')
 MARKER = ('o', 's', '^', '*', '>', '<', '8', 'p')
 CMAP = 'viridis'
 COLORS = sns.color_palette('colorblind').as_hex()
@@ -21,6 +21,9 @@ COLORS = sns.color_palette('colorblind').as_hex()
 
 def cycle_markers():
     return itertools.cycle(MARKER)
+
+def cycle_lines():
+    return itertools.cycle(LINES)
 
 
 def savefig(fig, filepath, **kwargs):
@@ -297,7 +300,7 @@ def plot2D(model: BaseModel, f: BaseEnvironment): # -> plt.Figure:
 
     ax = fig.add_subplot(224)
     ax.set_title('Estimate Error $|f-m|$')
-    conf = ax.contourf(X, Y, np.abs(mean - ground_truth), 50)
+    cont = ax.contourf(X, Y, np.abs(mean - ground_truth), 50)
     fig.colorbar(cont)
 
     plt.tight_layout()

@@ -38,4 +38,4 @@ ARTIFACT_AS_FEATURES_FILENAME = 'artifacts/AS-features-{model_idx}.png'
 ARTIFACT_UNNORMALIZED_FILENAME = 'artifacts/unnormalized-model-{model_idx}.png'
 
 SETTINGS_DIR = os.path.dirname(os.path.abspath(__file__))
-THESIS_FIGS_DIR = os.path.join(SETTINGS_DIR, '../thesis_figs/')
+THESIS_FIGS_DIR = os.path.join(SETTINGS_DIR, '../../thesis_figs/')

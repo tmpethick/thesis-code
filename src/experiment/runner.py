@@ -1,4 +1,5 @@
 import time
+import math 
 
 import numpy as np
 from matplotlib import pyplot as plt
@@ -40,13 +41,16 @@ class Runner(object):
             for i, model in enumerate(self.context.models):
                 # For natural sound
                 if f.input_dim == 1:
-                    print("creating plot for dataset")
-                    Y_hat, _ = model.get_statistics(f.X_train, full_cov=False)
+                    # Plot only a subset of the data
+                    n = 1000
+                    stride = int(math.ceil(len(f.X_train) / n))
+                    X, Y = f.X_train[::stride], f.Y_train[::stride]
+                    Y_hat, _ = model.get_statistics(X, full_cov=False)
                     fig = plt.figure()
                     ax = fig.add_subplot(211)
-                    ax.plot(f.X_train, f.Y_train)
+                    ax.plot(X, Y)
                     ax = fig.add_subplot(212)
-                    ax.plot(f.X_train, Y_hat)
+                    ax.plot(X, Y_hat)
 
                     if fig is not None:
                         self.save_fig(fig, settings.ARTIFACT_GP_FILENAME.format(model_idx=i))
@@ -69,12 +73,11 @@ class Runner(object):
             X_train = None
             Y_train = None
         else:
-            assert isinstance(self.context.gp_samples, int), "n_samples need to be an int"
+            assert isinstance(self.context.gp_samples, int), "gp_samples need to be an int"
             if self.context.use_sample_grid:
                 X_train = np.mgrid[[slice(axis[0], axis[1], self.context.gp_samples*1j) for axis in bounds]]
                 X_train = np.moveaxis(X_train, 0, -1)
                 X_train = np.reshape(X_train, (-1, X_train.shape[-1]))
-                Y_train = f(X_train)
             else:
                 if input_dim == 1:
                     X_train = np.random.uniform(bounds[0, 0], bounds[0, 1], (self.context.gp_samples, 1))
@@ -101,12 +104,14 @@ class Runner(object):
             if isinstance(model, ControlledLocationsModelMixin):
                 model.fit(f)
             else:
+                self.log_info('Model{}: {} training on {} of dim {}'.format(i, model, len(X_train), X_train.shape[-1]))
                 model.init(X_train, Y_train, Y_dir=Y_train_dir)
                 if X_post_train is not None:
                     model.set_train_data(X_post_train, Y_post_train)
             training_time = time.clock() - start_time
 
             # Test
+            self.log_info('Model{}: {} predicting on {} of dim {}'.format(i, model, len(X_test), X_test.shape[-1]))
             N = len(Y_test)
             start_time = time.clock()
             Y_hat, var = model.get_statistics(X_test, full_cov=False)

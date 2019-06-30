@@ -8,6 +8,8 @@ push:
 	ssh simba mkdir -p mthesis/artifacts
 	rsync -avu ./data pethick@simba.epfl.ch:~/mthesis
 	rsync -avu ./src pethick@simba.epfl.ch:~/mthesis
+	rsync -av ./notebook_header.py pethick@simba.epfl.ch:~/mthesis
+	rsync -av ./explorer_helper.py pethick@simba.epfl.ch:~/mthesis
 	rsync -av ./runner.py pethick@simba.epfl.ch:~/mthesis
 	rsync -av ./hpc.sh pethick@simba.epfl.ch:~/mthesis
 

@@ -40,4 +40,3 @@ class EnvironmentNormalizer(BaseEnvironment):
 
 
 __all__ = ['EnvironmentNormalizer']
-

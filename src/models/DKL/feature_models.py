@@ -185,6 +185,7 @@ class GPyTorchModel(ConfigMixin, FeatureModel):
                  n_iter=50,
                  learning_rate=0.1,
                  noise=None,
+                 noise_lower_bound=1e-4,
                  initial_parameters=None,
 
                  do_pretrain=False,
@@ -198,6 +199,7 @@ class GPyTorchModel(ConfigMixin, FeatureModel):
                  use_cg=False,
                  max_cg_iter=1000,
                  precond_size=10,
+                 eval_cg_tolerance=1e-4,
 
                  training_callback=default_training_callback,
                  **kwargs):
@@ -208,6 +210,8 @@ class GPyTorchModel(ConfigMixin, FeatureModel):
         self.use_cg = use_cg
         self.max_cg_iter = max_cg_iter
         self.precond_size = precond_size
+        self.use_toeplitz = False # Set in `_train` when input_dim is known.
+        self.eval_cg_tolerance = eval_cg_tolerance
 
         self.has_feature_map = feature_extractor_constructor is not None
         self.feature_extractor_constructor = feature_extractor_constructor
@@ -219,6 +223,7 @@ class GPyTorchModel(ConfigMixin, FeatureModel):
 
         self.learning_rate = learning_rate
         self.noise = noise
+        self.noise_lower_bound = noise_lower_bound
         self.model = None
         self.feature_extractor = None
         self.likelihood = None
@@ -234,11 +239,14 @@ class GPyTorchModel(ConfigMixin, FeatureModel):
 
     @classmethod
     def process_config(cls, *, feature_extractor_constructor=None, gp_constructor=None, **kwargs):
-        return dict(
-            feature_extractor_constructor=lazy_construct_from_module(globals(), feature_extractor_constructor),
-            gp_constructor=lazy_construct_from_module(globals(), gp_constructor),
-            **kwargs,
-        )
+        from src.models.DKL import feature_extractors
+        from src.models.DKL import gpr
+        d = dict(**kwargs)
+        if feature_extractor_constructor is not None:
+            d['feature_extractor_constructor'] = lazy_construct_from_module(feature_extractors, feature_extractor_constructor)
+        if gp_constructor is not None:
+            d['gp_constructor'] = lazy_construct_from_module(gpr, gp_constructor)
+        return d
 
     def _fit(self, X, Y, Y_dir=None):
         # catch warning, save and stop (runner should store this warning)
@@ -250,7 +258,7 @@ class GPyTorchModel(ConfigMixin, FeatureModel):
         if self.use_double_precision:
             return tensor.double()
         else:
-            return tensor
+            return tensor.float()
 
     def to_torch(self, X):
         X_torch = torch.Tensor(X)
@@ -271,15 +279,25 @@ class GPyTorchModel(ConfigMixin, FeatureModel):
         if self.noise is not None:
             noise = torch.ones(self.X_torch.shape[0]) * self.noise
             noise = self.make_double(noise)
-            self.likelihood = gpytorch.likelihoods.FixedNoiseGaussianLikelihood(noise=noise)
+            self.likelihood = gpytorch.likelihoods.FixedNoiseGaussianLikelihood(
+                noise=noise,
+                noise_constraint=gpytorch.constraints.GreaterThan(self.noise_lower_bound)
+            )
         else:
-            self.likelihood = gpytorch.likelihoods.GaussianLikelihood().to(device)
+            self.likelihood = gpytorch.likelihoods.GaussianLikelihood(
+                noise_constraint=gpytorch.constraints.GreaterThan(self.noise_lower_bound)
+            ).to(device)
 
         self.likelihood = self.make_double(self.likelihood)
 
         self.model = self.gp_constructor(self.X_torch, self.Y_torch, self.likelihood, self.feature_extractor).to(device)
 
         self.model = self.make_double(self.model)
+
+        if self.model.uses_grid_interpolation: #and d == 1:
+            self.use_toeplitz = True
+        else:
+            self.use_toeplitz = False
 
         if self.initial_parameters is not None:
             print(self.initial_parameters)
@@ -344,10 +362,11 @@ class GPyTorchModel(ConfigMixin, FeatureModel):
                 self.training_callback(self, i, loss_)
                 optimizer.step()
 
-        with gpytorch.settings.use_toeplitz(self.model.uses_grid_interpolation), \
+        with gpytorch.settings.use_toeplitz(self.use_toeplitz), \
             gpytorch.settings.fast_computations(covar_root_decomposition=self.covar_root_decomposition, log_prob=self.use_cg, solves=self.use_cg), \
             gpytorch.settings.max_cg_iterations(self.max_cg_iter), \
-            gpytorch.settings.max_preconditioner_size(self.precond_size):
+            gpytorch.settings.max_preconditioner_size(self.precond_size), \
+            gpytorch.settings.eval_cg_tolerance(self.eval_cg_tolerance):
 
             # Catch CG warning
             with warnings.catch_warnings(record=True) as w:
@@ -400,10 +419,11 @@ class GPyTorchModel(ConfigMixin, FeatureModel):
 
         with torch.no_grad(), \
             gpytorch.settings.fast_computations(covar_root_decomposition=self.covar_root_decomposition, log_prob=self.use_cg, solves=self.use_cg), \
-            gpytorch.settings.use_toeplitz(self.model.uses_grid_interpolation), \
+            gpytorch.settings.use_toeplitz(self.use_toeplitz), \
             gpytorch.settings.fast_pred_var(self.use_cg), \
             gpytorch.settings.max_cg_iterations(self.max_cg_iter),\
-            gpytorch.settings.max_preconditioner_size(self.precond_size):
+            gpytorch.settings.max_preconditioner_size(self.precond_size), \
+            gpytorch.settings.eval_cg_tolerance(self.eval_cg_tolerance):
 
             # Catch CG warning
             with warnings.catch_warnings(record=True) as w:
@@ -440,7 +460,7 @@ class GPyTorchModel(ConfigMixin, FeatureModel):
 
 class SSGP(GPyTorchModel):
     def __init__(self, *args, **kwargs):
-        kwargs.update(
+        defaults = dict(
             covar_root_decomposition=True,
             feature_extractor_constructor=LazyConstructor(RFFEmbedding, M=100),
             gp_constructor=LazyConstructor(GPRegressionModel,
@@ -449,16 +469,19 @@ class SSGP(GPyTorchModel):
                                            has_scale_kernel=False
                                            )
         )
-        super().__init__(*args, **kwargs)
+        defaults.update(kwargs)
+        super().__init__(*args, **defaults)
 
-    def initialize_parameters(self, variance=None, **kwargs):
+    def initialize_parameters(self, lengthscale=None, variance=None, **kwargs):
         kwargs.update({
-            'covar_module.variance': variance
+            'covar_module.variance': variance,
+            'feature_extractor.lengthscale': lengthscale,
         })
-        super().initial_parameters(**kwargs)
+        super().initialize_parameters(**kwargs)
 
     def get_common_hyperparameters(self):
         return {
+            'lengthscale': self.model.feature_extractor.lengthscale.detach().numpy(),
             'variance': self.model.covar_module.variance,
             'noise': self.noise if self.noise is not None else self.likelihood.noise.item(),
         }

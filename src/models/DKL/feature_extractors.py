@@ -25,7 +25,7 @@ class LargeFeatureExtractor(torch.nn.Sequential):
 
 
 class RFFEmbedding(torch.nn.Module):
-    def __init__(self, D, M):
+    def __init__(self, D, M, ARD=False, optimize_spectral_points=False):
         super().__init__()
         self.D = D
         self.M = M
@@ -34,14 +34,26 @@ class RFFEmbedding(torch.nn.Module):
         assert M % 2 == 0, "M has to be even since there is a feature for both sin and cos."
 
         # register lengthscale as parameter
-        self.lengthscale = torch.nn.Parameter(torch.Tensor(1))
-        self.lengthscale.data.fill_(0.61)
+        self.ARD = ARD
+        if self.ARD:
+            self.lengthscale = torch.nn.Parameter(torch.tensor(0.61).repeat(D).diag())
+            print(self.lengthscale)
+        else:
+            self.lengthscale = torch.nn.Parameter(torch.Tensor(1))
+            self.lengthscale.data.fill_(0.61)
 
         # sample self.unscaled_W shape: (M, D)
-        self.unscaled_W = torch.randn(self.M // 2, self.D)
-
+        if optimize_spectral_points:
+            W_init = torch.randn(self.M // 2, self.D)
+            self.unscaled_W = torch.nn.Parameter(W_init)
+        else:
+            self.register_buffer('unscaled_W', torch.randn(self.M // 2, self.D))
+  
     def forward(self, X): # NxD -> MxD
-        W = self.unscaled_W * (1.0 / self.lengthscale)
+        if self.ARD:
+            W = self.unscaled_W.mm(self.lengthscale.inverse())
+        else:
+            W = self.unscaled_W * (1.0 / self.lengthscale)
 
         # M x D @ D x N
         Z = torch.mm(W, X.t())
@@ -53,6 +65,14 @@ class RFFEmbedding(torch.nn.Module):
 
     def extra_repr(self):
         return 'D={}, M={}'.format(self.D, self.M)
+    
+    def initialize(self, lengthscale=None):
+        if self.ARD:
+            lengthscale = torch.tensor(lengthscale)
+            lengthscale.data.as_strided([self.D], [self.D + 1]).copy_(lengthscale)
+            print(lengthscale)
+        else:
+            self.lengthscale.data.fill_(lengthscale)
 
 
 # Custom alternative to BatchNorm (incomplete):

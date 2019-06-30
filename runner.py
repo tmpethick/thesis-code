@@ -59,7 +59,7 @@ def create_ex(interactive=False):
     @ex.capture
     def dklgpmodel_training_callback(model, i, loss, _log, _run):
         # TODO: save model
-        if i % 30 == 0:
+        if i % 10 == 0:
             # Log
             _log.info('Iter %d/%d - Loss: %.3f' % (i + 1, model.n_iter, loss))
 
