@@ -49,7 +49,7 @@ def latexify(fig_width=None, fig_height=None, columns=3):
     # Width and max height in inches for IEEE journals taken from
     # computer.org/cms/Computer.org/Journal%20templates/transactions_art_guide.pdf
 
-    assert(columns in [1,2,3])
+    assert(columns in [1,2,3,4])
 
     # width in inches
     if fig_width is None:
@@ -57,8 +57,10 @@ def latexify(fig_width=None, fig_height=None, columns=3):
             fig_width = 6.9
         elif columns==2:
             fig_width = 3.39 
-        else:
+        elif columns==3:
             fig_width = 2.2
+        else:
+            fig_width = 1.7
 
     if fig_height is None:
         golden_mean = (math.sqrt(5)-1.0)/2.0    # Aesthetic ratio

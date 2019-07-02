@@ -1204,21 +1204,16 @@ run = execute(config_updates={
         'kwargs': {'name': '3droad', 'subset_size': 1000},
     },
     'model': {
-        'name': 'NormalizerModel',
+        'name': 'DKLGPModel',
         'kwargs': {
-            'model': {
-                'name': 'DKLGPModel',
-                'kwargs': {
-                    'learning_rate': 0.1,
-                    'n_iter': 10,
-                    'nn_kwargs': {'layers': None},
-                    'gp_kwargs': {'n_grid': 10},
-                    'max_cg_iter': 1000,
-                    'precond_size': 10,
-                    'use_cg': True,
-                    'noise': None
-                }
-            }
+            'learning_rate': 0.1,
+            'n_iter': 10,
+            'nn_kwargs': {'layers': None},
+            'gp_kwargs': {'n_grid': 10},
+            'max_cg_iter': 1000,
+            'precond_size': 10,
+            'use_cg': True,
+            'noise': None
         }
     },
 })

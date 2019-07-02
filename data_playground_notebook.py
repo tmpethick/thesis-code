@@ -8,6 +8,20 @@ import pandas as pd
 
 #%%
 
+# economic_policies
+df = pd.read_csv('data/economic_policies/Output.plt', header=None, delim_whitespace=True)
+X = df.loc[:, 0:1].values
+policies = df.loc[:, 3::2].values
+
+#%%
+
+D = 8
+df = pd.read_csv(f'data/economic_policies/GPR_training-{D}d.txt', header=None, delim_whitespace=True)
+X = df.loc[:,3:3+D-1]
+policies = df.loc[:,3+D+1:]
+
+#%%
+
 mat_hyp = scipy.io.loadmat('data/scalable/precipitation/precipitation3240-hyp.mat')
 mat = scipy.io.loadmat('data/scalable/precipitation/precipitation3240.mat')
 X_hyp = mat_hyp['Xhyp']

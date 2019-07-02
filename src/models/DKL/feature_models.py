@@ -294,7 +294,7 @@ class GPyTorchModel(ConfigMixin, FeatureModel):
 
         self.model = self.make_double(self.model)
 
-        if self.model.uses_grid_interpolation: #and d == 1:
+        if self.model.uses_inducing_points:
             self.use_toeplitz = True
         else:
             self.use_toeplitz = False
@@ -329,8 +329,9 @@ class GPyTorchModel(ConfigMixin, FeatureModel):
         if not fix_gp_params:
             opt_parameter_list.append({'params': self.model.covar_module.parameters()})
             opt_parameter_list.append({'params': self.model.mean_module.parameters()})
-            # # Only add noise as hyperparameter if it is not fixed.
-            if self.noise is None:
+            # Only add noise as hyperparameter if noise is not fixed and inducing points 
+            # are not used (since the likelihood is added through the kernel in that case)
+            if self.noise is None and self.model.inducing_points is None:
                 opt_parameter_list.append({'params': self.model.likelihood.parameters()})
 
         if self.has_feature_map:
@@ -510,7 +511,7 @@ class DKLGPModel(GPyTorchModel):
         super().__init__(*args, **kwargs)
 
     def initialize_parameters(self, **kwargs):
-        if self.model.uses_grid_interpolation:
+        if self.model.uses_inducing_points:
             kwargs.update({
                 'covar_module.outputscale': kwargs.get('outputscale'),
                 'covar_module.base_kernel.base_kernel.lengthscale': kwargs.get('lengthscale')
@@ -526,7 +527,7 @@ class DKLGPModel(GPyTorchModel):
 
     def get_common_hyperparameters(self):
         kernel = self.model.covar_module
-        if self.model.uses_grid_interpolation:
+        if self.model.uses_inducing_points:
             rbf_kernel = kernel.base_kernel.base_kernel
             scale_kernel = kernel
         else:
@@ -538,3 +539,19 @@ class DKLGPModel(GPyTorchModel):
             'lengthscale': rbf_kernel.lengthscale.detach().numpy(),
             'noise': self.noise if self.noise is not None else self.likelihood.noise.item(),
         }
+
+
+class SGPR(DKLGPModel):
+    """
+    This class only exists to make the interface clear. 
+    The inducing point kernel recides in gpr.py.
+
+    https://gpytorch.readthedocs.io/en/latest/examples/05_Scalable_GP_Regression_Multidimensional/SGPR_Example_CUDA.html
+    """
+    def __init__(self, *args, gp_kwargs, **kwargs):
+        default_gp_kwargs = dict(
+            n_grid=None,
+            inducing_points=100,
+        )
+        default_gp_kwargs.update(gp_kwargs)
+        super().__init__(*args, gp_kwargs=default_gp_kwargs, **kwargs)

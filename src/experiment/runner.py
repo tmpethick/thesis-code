@@ -45,15 +45,27 @@ class Runner(object):
                     n = 1000
                     stride = int(math.ceil(len(f.X_train) / n))
                     X, Y = f.X_train[::stride], f.Y_train[::stride]
-                    Y_hat, _ = model.get_statistics(X, full_cov=False)
+
+                    X_line = np.linspace(f.bounds[0,0], f.bounds[0,1], n)
+                    Y_hat, _ = model.get_statistics(X_line, full_cov=False)
                     fig = plt.figure()
                     ax = fig.add_subplot(211)
                     ax.plot(X, Y)
                     ax = fig.add_subplot(212)
-                    ax.plot(X, Y_hat)
+                    ax.plot(X_line, Y_hat)
+                # elif f.input_dim == 2:
+                #     Y_hat, _ = model.get_statistics(f.X_test, full_cov=False)
+                #     fig = plt.figure()
+                #     ax = fig.add_subplot(121, projection="3d")
+                #     ax.scatter(f.X_test[..., 0], f.X_test[..., 0], f.Y_test[..., 0])
+                #     ax.scatter(f.X_test[..., 0], f.X_test[..., 0], Y_hat[..., 0])
+                #     ax = fig.add_subplot(122, projection="3d")
+                #     ax.scatter(f.X_test[..., 0], f.X_test[..., 0], np.abs(f.Y_test - Y_hat)[..., 0])
+                else:
+                    fig = None  
 
-                    if fig is not None:
-                        self.save_fig(fig, settings.ARTIFACT_GP_FILENAME.format(model_idx=i))
+                if fig is not None:
+                    self.save_fig(fig, settings.ARTIFACT_GP_FILENAME.format(model_idx=i))
 
         elif isinstance(f, BaseEnvironment):
             X_train, Y_train, Y_train_dir, X_test, Y_test, X_post_train, Y_post_train = self.get_data_f(f)

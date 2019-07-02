@@ -295,8 +295,8 @@ class AAPL(DataSet):
 
     prioritized_X_labels = ['days', 'delta']
     Y_label = 'impl_volatility'
-    test_percentage = 0.2
-    val_percentage = 0.2
+    test_percentage = 0.1
+    val_percentage = 0.0
 
     def __init__(self, D=2, subset_size=None):
         """
@@ -317,4 +317,45 @@ class AAPL(DataSet):
         self.X_train, self.Y_train = self.X_train[:subset_size], self.Y_train[:subset_size]
 
 
-__all__ = ['SPXOptions', 'HestonOptionPricer', 'AAPL', 'GrowthModel', 'GrowthModelCallback']
+class EconomicModel(DataSet):
+    X_train = None
+    Y_train = None
+    X_val = None
+    Y_val = None
+    X_test = None
+    Y_test = None
+
+    prioritized_X_labels = ['days', 'delta']
+    Y_label = 'impl_volatility'
+    test_percentage = 0.1
+    val_percentage = 0.0
+
+    def __init__(self, D=2, output_policy=0, subset_size=None):
+        """
+        Keyword Arguments:
+            D {int} -- dimensionality of the input space (default: {1})
+            subset_size {int} -- Size of the training set (default: {None})
+        """
+        self.D = D
+
+        assert D in [2, 4, 8, 12, 16, 20], "Invalid dimension for EconomicModel"
+
+        if D == 2:
+            df = pd.read_csv('data/economic_policies/Output.plt', header=None, delim_whitespace=True)
+            self.X = df.loc[:, 0:1].values
+            policies = df.loc[:, 3::2].values
+        else:
+            df = pd.read_csv(f'data/economic_policies/GPR_training-{D}d.txt', header=None, delim_whitespace=True)
+            self.X = df.loc[:,3:3+D-1].values
+            policies = df.loc[:,3+D+1:].values
+        
+        self.Y = policies[:,output_policy:output_policy+1]
+
+        self.X_train, self.X_test, self.Y_train, self.Y_test = \
+            train_test_split(self.X, self.Y, test_size=self.test_percentage, shuffle=True, random_state=42)
+        self.X_train, self.X_val, self.Y_train, self.Y_val = \
+            train_test_split(self.X_train, self.Y_train, test_size=self.val_percentage, shuffle=True, random_state=42)
+        self.X_train, self.Y_train = self.X_train[:subset_size], self.Y_train[:subset_size]
+
+
+__all__ = ['SPXOptions', 'HestonOptionPricer', 'AAPL', 'GrowthModel', 'GrowthModelCallback', 'EconomicModel']

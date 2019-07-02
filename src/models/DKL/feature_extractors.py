@@ -37,17 +37,16 @@ class RFFEmbedding(torch.nn.Module):
         self.ARD = ARD
         if self.ARD:
             self.lengthscale = torch.nn.Parameter(torch.tensor(0.61).repeat(D).diag())
-            print(self.lengthscale)
         else:
             self.lengthscale = torch.nn.Parameter(torch.Tensor(1))
             self.lengthscale.data.fill_(0.61)
 
         # sample self.unscaled_W shape: (M, D)
+        W_init = torch.randn(self.M // 2, self.D)
         if optimize_spectral_points:
-            W_init = torch.randn(self.M // 2, self.D)
             self.unscaled_W = torch.nn.Parameter(W_init)
         else:
-            self.register_buffer('unscaled_W', torch.randn(self.M // 2, self.D))
+            self.register_buffer('unscaled_W', W_init)
   
     def forward(self, X): # NxD -> MxD
         if self.ARD:
@@ -69,8 +68,7 @@ class RFFEmbedding(torch.nn.Module):
     def initialize(self, lengthscale=None):
         if self.ARD:
             lengthscale = torch.tensor(lengthscale)
-            lengthscale.data.as_strided([self.D], [self.D + 1]).copy_(lengthscale)
-            print(lengthscale)
+            self.lengthscale.data.as_strided([self.D], [self.D + 1]).copy_(lengthscale)
         else:
             self.lengthscale.data.fill_(lengthscale)
 

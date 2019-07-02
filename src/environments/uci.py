@@ -38,6 +38,10 @@ class NaturalSound(DataSet):
     X_test = None
     Y_test = None
 
+    @property
+    def bounds(self):
+        return np.array([[np.min(self.X_train), np.max(self.X_train)]])
+
     def __init__(self, subset_size=None):
         mat = scipy.io.loadmat('data/scalable/sound/audio_data.mat')
         self.X_train = mat['xtrain'].astype('float')
@@ -61,8 +65,8 @@ class UCI(DataSet):
     X_test = None
     Y_test = None
 
-    test_percentage = 0.0
-    val_percentage = 0.1
+    test_percentage = 0.1
+    val_percentage = 0.0
 
     DATASETS = [
         '3droad',

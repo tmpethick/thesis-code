@@ -1,3 +1,4 @@
+import torch
 import gpytorch
 
 from src.experiment.config_helpers import LazyConstructor
@@ -10,6 +11,7 @@ class GPRegressionModel(gpytorch.models.ExactGP):
         likelihood,
         feature_extractor=None,
         n_grid=None,
+        inducing_points=None,
         kernel=LazyConstructor(gpytorch.kernels.RBFKernel, lengthscale_prior=None),
         has_scale_kernel=True):
 
@@ -23,8 +25,9 @@ class GPRegressionModel(gpytorch.models.ExactGP):
         self.feature_extractor = feature_extractor
         self.mean_module = gpytorch.means.ZeroMean()
 
-        self.uses_grid_interpolation = n_grid is not None
+        self.uses_inducing_points = n_grid is not None or inducing_points is not None
         self.n_grid = n_grid
+        self.inducing_points = inducing_points
 
         kernel = kernel(ard_num_dims=gp_input_dim)
 
@@ -34,6 +37,12 @@ class GPRegressionModel(gpytorch.models.ExactGP):
                 num_dims=gp_input_dim,
                 grid_size=n_grid,
                 grid_bounds=None, # TODO: should we set grid bounds?
+            )
+        elif inducing_points is not None:
+            kernel = gpytorch.kernels.InducingPointKernel(
+                kernel,
+                inducing_points=torch.randn(inducing_points, gp_input_dim, dtype=train_x.dtype),
+                likelihood=likelihood
             )
 
         if has_scale_kernel:
