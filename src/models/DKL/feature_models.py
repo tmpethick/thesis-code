@@ -511,9 +511,14 @@ class DKLGPModel(GPyTorchModel):
         super().__init__(*args, **kwargs)
 
     def initialize_parameters(self, **kwargs):
-        if self.model.uses_inducing_points:
+        if self.model.n_grid is not None:
             kwargs.update({
                 'covar_module.outputscale': kwargs.get('outputscale'),
+                'covar_module.base_kernel.base_kernel.lengthscale': kwargs.get('lengthscale')
+            })
+        elif self.model.inducing_points is not None:
+            kwargs.update({
+                'covar_module.base_kernel.outputscale': kwargs.get('outputscale'),
                 'covar_module.base_kernel.base_kernel.lengthscale': kwargs.get('lengthscale')
             })
         else:
@@ -523,13 +528,18 @@ class DKLGPModel(GPyTorchModel):
             })
         kwargs.pop('outputscale', None)
         kwargs.pop('lengthscale', None)
+        print(kwargs)
+        print("!!!")
         super().initialize_parameters(**kwargs)
 
     def get_common_hyperparameters(self):
         kernel = self.model.covar_module
-        if self.model.uses_inducing_points:
+        if self.model.n_grid is not None:
             rbf_kernel = kernel.base_kernel.base_kernel
             scale_kernel = kernel
+        elif self.model.inducing_points is not None:
+            rbf_kernel = kernel.base_kernel.base_kernel
+            scale_kernel = kernel.base_kernel
         else:
             rbf_kernel = kernel.base_kernel
             scale_kernel = kernel
@@ -540,6 +550,17 @@ class DKLGPModel(GPyTorchModel):
             'noise': self.noise if self.noise is not None else self.likelihood.noise.item(),
         }
 
+    @classmethod
+    def process_config(cls, *, gp_kwargs=None, **kwargs):
+        if isinstance(gp_kwargs, dict) and 'kernel' in gp_kwargs:
+            kernel = gp_kwargs['kernel']
+            gp_kwargs_updated = gp_kwargs.copy()
+            gp_kwargs_updated['kernel'] = lazy_construct_from_module(gpytorch.kernels, kernel)
+            return dict(
+                gp_kwargs=gp_kwargs_updated,
+                **kwargs)
+        else:
+            return gp_kwargs
 
 class SGPR(DKLGPModel):
     """

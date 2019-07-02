@@ -38,15 +38,16 @@ class GPRegressionModel(gpytorch.models.ExactGP):
                 grid_size=n_grid,
                 grid_bounds=None, # TODO: should we set grid bounds?
             )
-        elif inducing_points is not None:
+
+        if has_scale_kernel:
+            kernel = gpytorch.kernels.ScaleKernel(kernel)
+
+        if inducing_points is not None:
             kernel = gpytorch.kernels.InducingPointKernel(
                 kernel,
                 inducing_points=torch.randn(inducing_points, gp_input_dim, dtype=train_x.dtype),
                 likelihood=likelihood
             )
-
-        if has_scale_kernel:
-            kernel = gpytorch.kernels.ScaleKernel(kernel)
 
         self.covar_module = kernel
 

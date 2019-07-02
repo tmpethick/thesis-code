@@ -121,31 +121,30 @@ def create_baseline(df):
         name, args, kwargs = unpack(func)
         f = getattr(environments_module, name)(**kwargs)
 
-        # Training samples 
-        n_samples = config.gp_samples
-        X_train = random_hypercube_samples(n_samples, f.bounds)
-        Y_train = f(X_train)
+        if isinstance(f, DataSet):
+            X_train = f.X_train
+            Y_train = f.Y_train
+            X_test = f.X_test
+            Y_test = f.Y_test
+        elif isinstance(f, BaseEnvironment):
+            # Training samples 
+            n_samples = config.gp_samples
+            X_train = random_hypercube_samples(n_samples, f.bounds)
+            Y_train = f(X_train)
+            X_test = random_hypercube_samples(2500, f.bounds)
+            Y_test = f(X_test)
+        else: 
+            return None
 
         Y_est = np.mean(Y_train, axis=0)
         mean_estimator = lambda X: np.repeat(Y_est[None,:], X.shape[0], axis=0)
-        zero_estimator = lambda X: np.zeros((X.shape[0], 1))
-        
-        rmse, max_err = _calc_errors(mean_estimator, f.noiseless, f, rand=True, rand_N=10000)
+            
+        mae, rmse, max_err = errors(mean_estimator(X_test), Y_test)
 
         mean_name = 'mean'
-        zero_name = 'zero'
         mean_exp_hash = hash_subdict({'model': mean_name, 'f': func}, keys=['model', 'f'])
-        zero_exp_hash = hash_subdict({'model': zero_name, 'f': func}, keys=['model', 'f'])
         
         baseline_df = baseline_df.append([{
-            'exp_hash': zero_exp_hash,
-            'model_hash': zero_name,
-            'model': zero_name,
-            'config': config,
-            'f': f_name,
-            'result.rmse': rmse,
-            'result.max_err': max_err,
-        }, {
             'exp_hash': mean_exp_hash,
             'model_hash': mean_name,
             'model': mean_name, 
