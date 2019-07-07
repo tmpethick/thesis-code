@@ -60,6 +60,8 @@ def get_exp_key_col(exp):
     config = exp.to_dict()['config']
     config = addict.Dict(config)
 
+    if isinstance(config.obj_func, str):
+        print(exp)
     
     # TODO: Remove custom hack to make f unique when taking parameter D.
     fD = str(config.obj_func.kwargs.get('D', ''))
@@ -79,7 +81,7 @@ def get_exp_key_col(exp):
     else:
         # TODO: BO
         pass
-    
+
     exp_row = {
         settings.MODEL_HASH: config[settings.MODEL_HASH],
         settings.EXP_HASH: config[settings.EXP_HASH],
@@ -87,18 +89,20 @@ def get_exp_key_col(exp):
         'model2': name2,
         'acq': config.get('acquisition_function', {}).get('name'),
         'bo': bool(config.get('bo', None)),
-        'f': config['obj_func']['name'] + fD,
+        'f': str(config['obj_func']['name']) + fD,
         'N': N,
         'config': config,
         'tag': config['tag'],
         'exp': exp,
         'id': exp.id,
+        'status': exp.status,
     }
     # Create short hand name for convinience
     exp_row['name'] = get_name(exp_row)
     
     # Unpack the results as columns
-    exp_row.update(prefix_dict(exp.result, 'result.'))
+    if hasattr(exp, 'result') and exp.result is not None:
+        exp_row.update(prefix_dict(exp.result, 'result.'))
     
     return exp_row
 
@@ -252,6 +256,11 @@ def select_experiment_with_rmse(df, rmse, atol=1e-6):
     pprint_color(exp.config)
     for name, artifact in exp.artifacts.items():
         artifact.show()
+
+    loss = exp.metrics.get('DKLGPModel.training.loss')
+    if loss is not None:
+        loss.plot()
+
     return exp
 
 import datetime as dt
@@ -262,15 +271,18 @@ loader = ExperimentLoader(
     db_name=settings.MONGO_DB_NAME
 )
 
-def get_df():
-    exps = loader.find({
-        'status': 'COMPLETED', 
+def get_df(status='COMPLETED'):
+    query = {
         'start_time': {
-            '$gte': dt.datetime.strptime('2019-05-14T15:24:39.914Z', "%Y-%m-%dT%H:%M:%S.%fZ")}})
-            #'$lt': dt.datetime.strptime('2019-05-14T15:24:39.914Z', "%Y-%m-%dT%H:%M:%S.%fZ")}})
-    exps
+            '$gte': dt.datetime.strptime('2019-05-14T15:24:39.914Z', "%Y-%m-%dT%H:%M:%S.%fZ")}}
+            #'$lt': dt.datetime.strptime('2019-05-14T15:24:39.914Z', "%Y-%m-%dT%H:%M:%S.%fZ")}}
+    if status is not None:
+        query['status'] = status
+    exps = loader.find(query)
 
     #exps = loader.find({'status': 'COMPLETED'})
     df = pd.DataFrame([get_exp_key_col(exp) for exp in exps])
     df = df.set_index('exp_hash').sort_index()
     return df
+
+

@@ -32,49 +32,14 @@ electric
 ```
 
 
-## TODO:
-
-- Financial data:
-  - Use all data points
-  - DKL
-
-- RFF
-- RFF / KISS comparison
-- Docs: Write documentation (see FEBO and gpytorch)
-- Config: store default configs
-
-- [ ] Implement vanilla GPy
-- [ ] Implement RFF
-  - [ ] Use chol for inversion
-  - [ ] Consider computing std instead of covar in `get_statistics`
-  - [ ] Consider whether inversion is right
-  - [ ] Allow for Hyperparameter optimization
-  - [ ] Verify that p(w) is a distribution
-  - [ ] Convert `embed` to pytorch?
-  - [ ] Problematic to compute $k(x,X)$ using non-approximate 
-  kernel?
-  - [ ] Test on multi-dim
-- [ ] Annotate numpy with dimensions (somehow!)
-- [ ] Allow for debugging in vscode jupyter
-- [ ] Test on benchmark
-- [ ] Implement QFF with SE
-- [ ] Implement RFF with Matern
-- [ ] Extend to multi-objective
-- [ ] Optimization of Acquisition function that is not fixed (from QFF)
-- [ ] Unbounded optimization
-- [ ] Additive model (split into independent BO problems)
-- [ ] Find additive structure with Gibbs sampling
-- [ ] Support additive models with overlapping groups through message passing
-
-- [ ] Implement KISS-GP model using gpytorch
-
-
 ## Installation
 
 On linux for pytorch:
+```
 conda install -y -c mkl
 conda install -y pytorch-cpu torchvision-cpu -c pytorch
 conda install pytorch torchvision cudatoolkit=9.0 -c pytorch
+```
 
 - General requirements:
 ```bash
@@ -182,6 +147,14 @@ from pympler import muppy, summary
 all_objects = muppy.get_objects()
 sum1 = summary.summarize(all_objects)
 summary.print_(sum1)
+```
+
+## DTU HPC
+
+```
+ssh s144448@login2.hpc.dtu.dk
+bqueues
+bstat
 ```
 
 

@@ -13,6 +13,7 @@ from src.utils import construct_2D_grid, call_function_on_grid, random_hypercube
 
 
 if torch.cuda.is_available():
+    print("Using GPU")
     device = torch.device("cuda")
 else:
     device = torch.device("cpu")
@@ -177,8 +178,7 @@ class LinearFromFeatureExtractor(ConfigMixin, FeatureModel):
         X = X.to(device)
 
         with torch.no_grad():
-            # add .cpu() before .numpy() if using GPU
-            mean = self.model(X).numpy()
+            mean = self.model(X).detach().cpu().numpy()
 
         N = mean.shape[0]
 
@@ -209,6 +209,7 @@ class GPyTorchModel(MarginalLogLikelihoodMixin, ConfigMixin, FeatureModel):
                  max_cg_iter=1000,
                  precond_size=10,
                  eval_cg_tolerance=1e-4,
+                 train_eval_cg_tolerance=1.0,
 
                  training_callback=default_training_callback,
                  **kwargs):
@@ -221,6 +222,7 @@ class GPyTorchModel(MarginalLogLikelihoodMixin, ConfigMixin, FeatureModel):
         self.precond_size = precond_size
         self.use_toeplitz = False # Set in `_train` when input_dim is known.
         self.eval_cg_tolerance = eval_cg_tolerance
+        self.train_eval_cg_tolerance = train_eval_cg_tolerance
 
         self.has_feature_map = feature_extractor_constructor is not None
         self.feature_extractor_constructor = feature_extractor_constructor
@@ -382,7 +384,7 @@ class GPyTorchModel(MarginalLogLikelihoodMixin, ConfigMixin, FeatureModel):
             gpytorch.settings.fast_computations(covar_root_decomposition=self.covar_root_decomposition, log_prob=self.use_cg, solves=self.use_cg), \
             gpytorch.settings.max_cg_iterations(self.max_cg_iter), \
             gpytorch.settings.max_preconditioner_size(self.precond_size), \
-            gpytorch.settings.eval_cg_tolerance(self.eval_cg_tolerance):
+            gpytorch.settings.eval_cg_tolerance(self.train_eval_cg_tolerance):
 
             # Catch CG warning
             with warnings.catch_warnings(record=True) as w:

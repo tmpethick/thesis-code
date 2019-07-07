@@ -14,19 +14,23 @@ class MODES(Enum):
 # ----------------- Settings
 # -----------------
 
-SERVER_DEST = 'dtu' # 'dtu' or 'epfl'
 MODE = MODES.SERVER
 SAVE = MODE is MODES.SERVER
+
+SERVER_DEST = 'dtu' # 'dtu' or 'epfl'
+WALLTIME = '00:40'
+QUEUE = 'gpuv100' #gputitanxpascal
+EXTRA = '' # e.g. #BSUB -R "select[gpu32gb]"
 
 MONGO_DB_URL = 'mongodb+srv://admin:{}@lions-rbvzc.mongodb.net/test?retryWrites=true'.format(MONGO_DB_PASSWORD)
 MONGO_DB_NAME = 'test'
 
-EXP_NAME = "lions"
+EXP_NAME = 'lions'
 
 EXP_HASH = 'exp_hash'     # Unique for (model, obj_func) pair.
 MODEL_HASH = 'model_hash' # Unique for each model.
 
-ARTIFACT_BO_PLOT_FILENAME = "artifacts/bo-plot-{i}.png"
+ARTIFACT_BO_PLOT_FILENAME = 'artifacts/bo-plot-{i}.png'
 ARTIFACT_INPUT_FILENAME = 'artifacts/X.npy'
 ARTIFACT_OUTPUT_FILENAME = 'artifacts/Y.npy'
 

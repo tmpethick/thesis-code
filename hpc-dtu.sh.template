@@ -1,16 +1,19 @@
 #!/bin/sh
-#BSUB -q gputitanxpascal
+#BSUB -q QUEUE
 #BSUB -gpu "num=1:mode=exclusive_process"
+EXTRA
 
+##BSUB -q gputitanxpascal
 ##BSUB -q gpuqueuek80
 ##BSUB -R "rusage[ngpus_excl_p=1]"
+
 #BSUB -R "rusage[mem=8GB]"
 
 #BSUB -J lions
 
 #BSUB -n 1
 
-#BSUB -W 00:10
+#BSUB -W WALLTIME
 
 #BSUB -o lions-%J.out
 #BSUB -e lions-%J.err
@@ -42,5 +45,5 @@ module load qt
 cd ~/mthesis
 source activate lions
 echo "... Job beginning"
-"$@"
+CMD
 echo "... Job Ended"

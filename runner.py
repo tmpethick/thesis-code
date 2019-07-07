@@ -15,8 +15,6 @@ import json
 
 from sacred import Experiment
 from sacred.observers import MongoObserver
-from sacred import SETTINGS
-SETTINGS.CONFIG.READ_ONLY_CONFIG = False
 
 import matplotlib
 
@@ -85,7 +83,11 @@ def create_ex(interactive=False):
         exp_hash_key = ['mode', 'obj_func', 'model', 'model2', 'acquisition_function', 'bo', 'gp_samples']
         exp_hash = hash_subdict(config, keys=exp_hash_key)
 
-        return {'model_hash': model_hash, 'exp_hash': exp_hash}
+        return {
+            'model_hash': model_hash, 
+            'exp_hash': exp_hash,
+            'gpu': settings.SERVER_DEST == 'dtu'
+        }
 
     @ex.main
     def main(_config, _run, _log):
@@ -157,9 +159,18 @@ def hpc_wrap(cmd):
         # We have to be very careful with the use of single and double quotes here...
         python_cmd_args = " ".join(map(lambda x: "'{}'".format(x), cmd))
         python_cmd_args = python_cmd_args.replace("'", "\\x27")
-        server_cmd = "sed 's/\"$@\"/{}/g' < hpc-dtu.sh | bsub".format(python_cmd_args)
+        server_cmd = " ".join([
+            "source /etc/profile;",
+            "cd mthesis;",
+            f"sed 's/CMD/{python_cmd_args}/g' < hpc-dtu.sh.template",
+            f"| sed 's/QUEUE/{settings.QUEUE}/g'", 
+            f"| sed 's/WALLTIME/{settings.WALLTIME}/g'", 
+            f"| sed 's/EXTRA/{settings.EXTRA}/g'", 
+            " | bsub",
+        ])
         print(server_cmd)
-        ssh_cmd = ["ssh", "s144448@login2.hpc.dtu.dk", server_cmd]
+        # Very helpful list of what is loaded in interactive-mode compared to non-interactive: https://schaazzz.github.io/linux-evironment-files-scripts/
+        ssh_cmd = ['ssh' ,'s144448@login2.hpc.dtu.dk', server_cmd]
     else:
         python_cmd_args = " ".join(map(lambda x: "'{}'".format(x), cmd))
         server_cmd = "cd mthesis; sbatch hpc.sh {}".format(python_cmd_args)
@@ -172,8 +183,8 @@ def notebook_run_server(*args, **kwargs):
     cmd = notebook_to_CLI(*args, **kwargs)
     ssh_cmd = hpc_wrap(cmd)
     print(ssh_cmd)
-    r = subprocess.call(ssh_cmd)
-    print(r)
+    #subprocess.call(ssh_cmd)
+    print(subprocess.check_output(ssh_cmd))
 
 
 # DEPRECRATED since they don't automatically adjust settings.SAVE
