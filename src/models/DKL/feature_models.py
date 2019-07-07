@@ -6,7 +6,7 @@ from matplotlib import pyplot as plt
 import torch
 
 from src.experiment.config_helpers import ConfigMixin, lazy_construct_from_module, LazyConstructor
-from ..core_models import BaseModel
+from ..core_models import BaseModel, MarginalLogLikelihoodMixin
 from .gpr import GPRegressionModel
 from .feature_extractors import LargeFeatureExtractor, RFFEmbedding
 from src.utils import construct_2D_grid, call_function_on_grid, random_hypercube_samples
@@ -39,7 +39,7 @@ class FeatureModel(BaseModel):
         test_x = test_x.contiguous().to(device)
 
         Z = self.feature_extractor(test_x)
-        Z = Z.detach().numpy()
+        Z = Z.detach().cpu().numpy()
         return Z
 
     def plot_features(self, f):
@@ -110,40 +110,48 @@ class FeatureModel(BaseModel):
         return fig
 
 
-class LinearFromFeatureExtractor(FeatureModel):
+class LinearFromFeatureExtractor(ConfigMixin, FeatureModel):
     """Not really DNGO as it does not use a bayesian linear regressor.
     """
     def __init__(self,
         feature_extractor=None,
-        data_dim=None,
-        layers=(50, 25, 10, 2),
+        nn_kwargs=None,
+        feature_extractor_constructor=LazyConstructor(LargeFeatureExtractor),
         n_iter=50,
         learning_rate=0.1,
         training_callback=default_training_callback,
         **kwargs):
         super().__init__(**kwargs)
 
+        self.learning_rate = learning_rate
         self.n_iter = n_iter
-
-        if feature_extractor is not None:
-            self.feature_extractor = feature_extractor
+        self.model = None
+        self.feature_extractor = feature_extractor
+        
+        # Constructor is only used if feature_extractor is not specified.
+        if nn_kwargs is not None:
+            self.feature_extractor_constructor = LazyConstructor(LargeFeatureExtractor, **nn_kwargs)
+        elif feature_extractor_constructor is not None:
+            self.feature_extractor_constructor = feature_extractor_constructor
         else:
-            assert layers is not None and data_dim is not None, "DNGO should either have feature_extractor passed or `data_dim` and `layers`."
-            self.feature_extractor = LargeFeatureExtractor(data_dim, layers)
-
-        self.model = torch.nn.Sequential(
-            self.feature_extractor,
-            torch.nn.Linear(in_features=self.feature_extractor.output_dim, out_features=1, bias=True)
-        )
+            raise ValueError("Either feature_extractor_constructor or nn_kwargs should be specified")
 
         self.loss = torch.nn.MSELoss()
-        self.optimizer = torch.optim.Adam(self.model.parameters(), lr=learning_rate)
-
         self.training_callback = training_callback
 
     def _fit(self, X, Y, Y_dir=None):
+        D = X.shape[-1]
 
-        self.model.train()
+        if self.feature_extractor is None:
+            self.feature_extractor = self.feature_extractor_constructor(D=D)
+
+        if self.model is None:
+            self.model = torch.nn.Sequential(
+                self.feature_extractor,
+                torch.nn.Linear(in_features=self.feature_extractor.output_dim, out_features=1, bias=True)
+            )
+            self.optimizer = torch.optim.Adam(self.model.parameters(), lr=self.learning_rate)
+            self.model.train()
 
         # Move tensors to the configured device
         X_torch = torch.Tensor(X).contiguous().to(device)
@@ -180,7 +188,7 @@ class LinearFromFeatureExtractor(FeatureModel):
             return mean, np.zeros((N, 1))
 
 
-class GPyTorchModel(ConfigMixin, FeatureModel):
+class GPyTorchModel(MarginalLogLikelihoodMixin, ConfigMixin, FeatureModel):
     def __init__(self,
                  n_iter=50,
                  learning_rate=0.1,
@@ -189,7 +197,8 @@ class GPyTorchModel(ConfigMixin, FeatureModel):
                  initial_parameters=None,
 
                  do_pretrain=False,
-                 pretrain_n_iter=10000,
+                 pretrain_n_iter=100,
+                 pretrainer_constructor=LazyConstructor(LinearFromFeatureExtractor),
 
                  feature_extractor_constructor=LazyConstructor(LargeFeatureExtractor),
                  gp_constructor=LazyConstructor(GPRegressionModel),
@@ -219,6 +228,8 @@ class GPyTorchModel(ConfigMixin, FeatureModel):
 
         self.do_pretrain = do_pretrain
         self.pretrain_n_iter = pretrain_n_iter
+        self.pretrainer_constructor = pretrainer_constructor
+
         self.initial_parameters = initial_parameters
 
         self.learning_rate = learning_rate
@@ -250,8 +261,6 @@ class GPyTorchModel(ConfigMixin, FeatureModel):
 
     def _fit(self, X, Y, Y_dir=None):
         # catch warning, save and stop (runner should store this warning)
-        if self.do_pretrain:
-            self._train(X, Y, fix_gp_params=True)
         self._train(X, Y, fix_gp_params=False)
 
     def make_double(self, tensor):
@@ -275,6 +284,11 @@ class GPyTorchModel(ConfigMixin, FeatureModel):
         if self.has_feature_map:
             self.feature_extractor = self.feature_extractor_constructor(D=d).to(device)
             self.feature_extractor = self.make_double(self.feature_extractor)
+
+        if self.do_pretrain:
+            pretrainer_network = self.pretrainer_constructor(feature_extractor=self.feature_extractor, n_iter=self.pretrain_n_iter)
+            # TODO: reuse X_torch instead of copying again from numpy to torch.
+            pretrainer_network.init(X, Y)
 
         if self.noise is not None:
             noise = torch.ones(self.X_torch.shape[0]) * self.noise
@@ -336,13 +350,14 @@ class GPyTorchModel(ConfigMixin, FeatureModel):
 
         if self.has_feature_map:
             self.feature_extractor.train()
+            print(self.feature_extractor)
             opt_parameter_list.append({'params': self.model.feature_extractor.parameters()})
 
         # optimize with Adam
         optimizer = torch.optim.Adam(opt_parameter_list, lr=self.learning_rate)
 
         # "Loss" for GPs - the marginal log likelihood
-        mll = gpytorch.mlls.ExactMarginalLogLikelihood(self.likelihood, self.model)
+        self.mll = gpytorch.mlls.ExactMarginalLogLikelihood(self.likelihood, self.model)
 
         def _train():
             self.training_loss = np.empty(self.n_iter)
@@ -353,7 +368,7 @@ class GPyTorchModel(ConfigMixin, FeatureModel):
                 # Get output from model
                 output = self.model(X)
                 # Calc loss and backprop derivatives
-                loss = -mll(output, Y)
+                loss = -self.mll(output, Y)
                 loss.backward()
 
                 loss_ = loss.item()
@@ -391,6 +406,13 @@ class GPyTorchModel(ConfigMixin, FeatureModel):
         ax.plot(self.training_loss)
         return fig
 
+    def get_marginal_log_likelihood(self, X, Y):
+        X = self.to_torch(X)
+        Y = self.to_torch(Y[:,0])
+
+        output = self.model(X)
+        return self.mll(output, Y).item()
+
     def _get_statistics(self, X, full_cov=True):
         print('predicting {} points using {} training points'.format(X.shape[0], self.X_torch.shape[0])) 
         assert self.model is not None, "Call `self.fit` before predicting."
@@ -412,10 +434,7 @@ class GPyTorchModel(ConfigMixin, FeatureModel):
         cut_tail = None
 
         test_x = torch.Tensor(X)
-
-        if self.use_double_precision:
-            test_x = test_x.double()
-
+        test_x = self.make_double(test_x)
         test_x = test_x.contiguous().to(device)
 
         with torch.no_grad(), \
@@ -439,14 +458,14 @@ class GPyTorchModel(ConfigMixin, FeatureModel):
                 else:
                     multivariate_normal = self.likelihood(self.model(test_x))
 
-                mean = multivariate_normal.mean.detach().numpy()[:cut_tail, None]
+                mean = multivariate_normal.mean.detach().cpu().numpy()[:cut_tail, None]
 
                 self.store_CG_warning('pred', w)
 
             if full_cov:
-                return mean, multivariate_normal.covariance_matrix.detach().numpy()[:cut_tail, :cut_tail, None]
+                return mean, multivariate_normal.covariance_matrix.detach().cpu().numpy()[:cut_tail, :cut_tail, None]
             else:
-                return mean, multivariate_normal.variance.detach().numpy()[:cut_tail, None]
+                return mean, multivariate_normal.variance.detach().cpu().numpy()[:cut_tail, None]
 
     def initialize_parameters(self, noise=None, **kwargs):
         """Overwrite this for custom easy initialization of custom kernels.
@@ -482,7 +501,7 @@ class SSGP(GPyTorchModel):
 
     def get_common_hyperparameters(self):
         return {
-            'lengthscale': self.model.feature_extractor.lengthscale.detach().numpy(),
+            'lengthscale': self.model.feature_extractor.lengthscale.detach().cpu().numpy(),
             'variance': self.model.covar_module.variance,
             'noise': self.noise if self.noise is not None else self.likelihood.noise.item(),
         }
@@ -528,8 +547,6 @@ class DKLGPModel(GPyTorchModel):
             })
         kwargs.pop('outputscale', None)
         kwargs.pop('lengthscale', None)
-        print(kwargs)
-        print("!!!")
         super().initialize_parameters(**kwargs)
 
     def get_common_hyperparameters(self):
@@ -545,8 +562,8 @@ class DKLGPModel(GPyTorchModel):
             scale_kernel = kernel
 
         return {
-            'outputscale': scale_kernel.outputscale.detach().numpy(),
-            'lengthscale': rbf_kernel.lengthscale.detach().numpy(),
+            'outputscale': scale_kernel.outputscale.detach().cpu().numpy(),
+            'lengthscale': rbf_kernel.lengthscale.detach().cpu().numpy(),
             'noise': self.noise if self.noise is not None else self.likelihood.noise.item(),
         }
 
@@ -560,7 +577,8 @@ class DKLGPModel(GPyTorchModel):
                 gp_kwargs=gp_kwargs_updated,
                 **kwargs)
         else:
-            return gp_kwargs
+            return dict(gp_kwargs=gp_kwargs, **kwargs)
+
 
 class SGPR(DKLGPModel):
     """
@@ -576,3 +594,31 @@ class SGPR(DKLGPModel):
         )
         default_gp_kwargs.update(gp_kwargs)
         super().__init__(*args, gp_kwargs=default_gp_kwargs, **kwargs)
+
+
+class DNNBLR(DKLGPModel):
+    def __init__(self, *args, gp_kwargs=None, **kwargs):
+        defaults = dict(
+            covar_root_decomposition=True
+            )
+        default_gp_kwargs = dict(
+            n_grid=None,
+            inducing_points=None,
+            has_scale_kernel=False,
+            kernel=LazyConstructor(gpytorch.kernels.LinearKernel)
+        )
+        defaults.update(kwargs)
+        default_gp_kwargs.update(gp_kwargs or {})
+        super().__init__(*args, gp_kwargs=default_gp_kwargs, **defaults)
+
+    def initialize_parameters(self, lengthscale=None, variance=None, noise=None):
+        return {
+            'covar_module.variance': variance,
+            'likelihood.noise': noise
+        }
+
+    def get_common_hyperparameters(self):
+        return {
+            'variance': self.model.covar_module.variance,
+            'noise': self.noise if self.noise is not None else self.likelihood.noise.item(),
+        }

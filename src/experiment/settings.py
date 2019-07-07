@@ -14,6 +14,7 @@ class MODES(Enum):
 # ----------------- Settings
 # -----------------
 
+SERVER_DEST = 'dtu' # 'dtu' or 'epfl'
 MODE = MODES.SERVER
 SAVE = MODE is MODES.SERVER
 

@@ -72,8 +72,9 @@ electric
 ## Installation
 
 On linux for pytorch:
-conda install -y -c anaconda mkl
+conda install -y -c mkl
 conda install -y pytorch-cpu torchvision-cpu -c pytorch
+conda install pytorch torchvision cudatoolkit=9.0 -c pytorch
 
 - General requirements:
 ```bash
@@ -88,8 +89,8 @@ pip install pydot-ng
 pip install gpyopt
 pip install emcee
 
-conda install -y scikit-learn
-pip install git+https://github.com/IDSIA/sacred.git
+conda install -y scikit-learn==0.20.3
+pip install git+https://github.com/baldassarreFe/sacred.git@gh-issue-442
 pip install dnspython
 pip install pyyaml GitPython pymongo
 pip install incense
@@ -149,9 +150,8 @@ For debugging:
 sbatch hpc.sh 'python' 'runner.py' 'print_config' 'with' 'obj_func={"name": "Sinc"}'
 ```
 
-## Adapative Sparse Grid installation
+## Adaptive Sparse Grid installation
 
-- Replace `basestring` with `str` in `SparseGridCode/TasmanianSparseGrids/InterfacePython/TasmanianSG.py`.
 - Run:
   ```
 cd SparseGridCode/TasmanianSparseGrids
@@ -161,6 +161,8 @@ cd pyipopt
 ./install.sh
 echo " IPOPT and PYIPOPT is installed "
   ```
+
+Note: We replaced `basestring` with `str` in `SparseGridCode/TasmanianSparseGrids/InterfacePython/TasmanianSG.py` to make the library python3 compatible.
 
 
 ## Profiling

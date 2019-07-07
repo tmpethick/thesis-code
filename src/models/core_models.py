@@ -6,6 +6,11 @@ from src.experiment.config_helpers import ConfigMixin, lazy_construct_from_modul
 from src.kernels import GPyRBF
 
 
+class MarginalLogLikelihoodMixin:
+    def get_marginal_log_likelihood(self, X, Y):
+        raise NotImplementedError
+
+
 class BaseModel(object):
     def __init__(self):
         self._X = None

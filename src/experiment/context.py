@@ -34,6 +34,7 @@ class ExperimentContext(ConfigMixin):
         self.gp_use_derivatives = gp_use_derivatives
 
         self.tag = tag
+        self.gpu = settings.SERVER_DEST == 'dtu'
         self.verbosity = {
             'plot': settings.MODE is not settings.MODES.SERVER, # do not plot on server by default.
             'bo_show_iter': 30,

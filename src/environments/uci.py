@@ -117,7 +117,7 @@ class UCI(DataSet):
 
     @classmethod
     def load_raw_df(cls, name):
-        assert name in cls.DATASETS, "This is not one of the support UCI datasets."
+        assert name in cls.DATASETS, f"{name} is not one of the support UCI datasets."
         mat = scipy.io.loadmat('data/uci/{0}/{0}.mat'.format(name))
         return mat['data']
 

@@ -1,25 +1,42 @@
 import torch
+from collections.abc import Iterable
 
+ACTIVATIONS = dict(
+    relu=torch.nn.ReLU,
+    tanh=torch.nn.Tanh,
+)
 
 class LargeFeatureExtractor(torch.nn.Sequential):
-    def __init__(self, D=None, layers=(50, 25, 10, 2), normalize_output=True, relu_output=False):
+    def __init__(self, D=None, layers=(50, 25, 10, 2), normalize_output=True, output_activation=False, activation='relu'):
         super().__init__()
 
         assert D is not None, "Dimensionality D has to be specified."
         assert len(layers) >= 1, "You need to specify at least an output layer size."
         layers = (D,) + tuple(layers)
+        
+        if isinstance(activation, str):
+            activation = [activation] * len(layers)
 
         i = -1
         for i in range(0, len(layers) - 2):
+            Activation = ACTIVATIONS[activation[i]]
+            # import matplotlib.pyplot as plt
+            # X_torch = torch.linspace(-1,1, 100)
+            # Y_torch = Activation()(X_torch)
+            # plt.plot(X_torch.numpy(), Y_torch.numpy())
+            # plt.show()
+
             in_ = layers[i]
             out = layers[i + 1]
             self.add_module('linear{}'.format(i), torch.nn.Linear(in_, out))
-            self.add_module('relu{}'.format(i), torch.nn.ReLU())
+            self.add_module('activation{}'.format(i), Activation())
 
         self.output_dim = layers[-1]
         self.add_module('linear{}'.format(i+1), torch.nn.Linear(layers[-2], self.output_dim))
-        if relu_output:
-            self.add_module('relu{}'.format(i+1), torch.nn.ReLU())
+        if output_activation:
+            Activation = ACTIVATIONS[activation[i+1]]
+            print(Activation)
+            self.add_module('activation{}'.format(i+1), Activation())
         if normalize_output:
             self.add_module('normalization', torch.nn.BatchNorm1d(self.output_dim, affine=False, momentum=1))
 

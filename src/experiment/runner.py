@@ -8,10 +8,11 @@ from src.algorithms import AcquisitionAlgorithm
 from src.environments import BaseEnvironment, EnvironmentNormalizer
 from src.environments.dataset import DataSet
 from src.experiment import settings
+from src.models.core_models import MarginalLogLikelihoodMixin
 from src.models import NormalizerModel, DKLGPModel, GPModel, TransformerModel, LocalLengthScaleGPModel
 from src.plot_utils import plot_model, plot_model_unknown_bounds, plot_function
 from src.utils import random_hypercube_samples, calc_errors_model_compare_mean, calc_errors_model_compare_var, \
-    calc_errors
+    calc_errors, errors
 from src.models.ASG import ControlledLocationsModelMixin
 
 
@@ -129,21 +130,29 @@ class Runner(object):
             Y_hat, var = model.get_statistics(X_test, full_cov=False)
             pred_time = time.clock() - start_time
 
-            rmse = np.sqrt(np.sum(np.square(Y_hat - Y_test)) / N)
-            max_err = np.max(np.fabs(Y_hat - Y_test))
-
-            self.log_info('Model{}: {} has RMSE={} max_err={}'.format(i, model, rmse, max_err))
+            err = errors(Y_hat, var, Y_test, np.mean(Y_train))
 
             if i == 0:
-                self.log_scalar('rmse', rmse, 0)
-                self.log_scalar('max_err', max_err, 0)
-                self.log_scalar('time.training', training_time, 0)
-                self.log_scalar('time.pred', pred_time, 0)
+                prefix = ''
             else:
-                self.log_scalar('model{}.rmse'.format(i), rmse, 0)
-                self.log_scalar('model{}.max_err'.format(i), max_err, 0)
-                self.log_scalar('model{}.time.training'.format(i), training_time, 0)
-                self.log_scalar('model{}.time.pred'.format(i), pred_time, 0)
+                prefix = f'model{i}.'
+            
+            self.log_scalar(f'{prefix}mae', err['mae'], 0)
+            self.log_scalar(f'{prefix}max_err', err['max_err'], 0)
+            self.log_scalar(f'{prefix}rmse', err['rmse'], 0)
+            self.log_scalar(f'{prefix}mnlp', err['mnlp'], 0)
+            self.log_scalar(f'{prefix}nmse', err['nmse'], 0)
+            self.log_scalar(f'{prefix}time.training', training_time, 0)
+            self.log_scalar(f'{prefix}time.pred', pred_time, 0)
+
+            if isinstance(model, MarginalLogLikelihoodMixin):
+                mll = model.get_marginal_log_likelihood(X_train, Y_train)
+                self.log_scalar(f'{prefix}mll', mll, 0)
+                pmll = model.get_marginal_log_likelihood(X_test, Y_test)
+                self.log_scalar(f'{prefix}pmll', pmll, 0)
+                self.log_info(f'Model{i}: {model} has mll={mll} pmll={pmll}')
+
+            self.log_info('Model{}: {} has {}'.format(i, model, err))
 
             # Log DKLGPModel specifics (bypassing NormalizerModel)
             if isinstance(model, NormalizerModel):

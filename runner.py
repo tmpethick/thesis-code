@@ -15,6 +15,8 @@ import json
 
 from sacred import Experiment
 from sacred.observers import MongoObserver
+from sacred import SETTINGS
+SETTINGS.CONFIG.READ_ONLY_CONFIG = False
 
 import matplotlib
 
@@ -151,18 +153,27 @@ def hpc_wrap(cmd):
     Returns:
         [string] -- Return array that can be executed with `subprocess.call`.
     """
-    python_cmd_args = " ".join(map(lambda x: "'{}'".format(x), cmd))
-    server_cmd = "cd mthesis; sbatch hpc.sh {}".format(python_cmd_args)
-    ssh_cmd = ["ssh", "simba", server_cmd]
+    if settings.SERVER_DEST == 'dtu':
+        # We have to be very careful with the use of single and double quotes here...
+        python_cmd_args = " ".join(map(lambda x: "'{}'".format(x), cmd))
+        python_cmd_args = python_cmd_args.replace("'", "\\x27")
+        server_cmd = "sed 's/\"$@\"/{}/g' < hpc-dtu.sh | bsub".format(python_cmd_args)
+        print(server_cmd)
+        ssh_cmd = ["ssh", "s144448@login2.hpc.dtu.dk", server_cmd]
+    else:
+        python_cmd_args = " ".join(map(lambda x: "'{}'".format(x), cmd))
+        server_cmd = "cd mthesis; sbatch hpc.sh {}".format(python_cmd_args)
+        ssh_cmd = ["ssh", "simba", server_cmd]
     return ssh_cmd
 
 
 def notebook_run_server(*args, **kwargs):
     # TODO: test if changes have been made to src
     cmd = notebook_to_CLI(*args, **kwargs)
-    ssh_cmd = hpc_wrap(cmd) 
+    ssh_cmd = hpc_wrap(cmd)
     print(ssh_cmd)
-    subprocess.call(ssh_cmd)
+    r = subprocess.call(ssh_cmd)
+    print(r)
 
 
 # DEPRECRATED since they don't automatically adjust settings.SAVE

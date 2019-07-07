@@ -61,13 +61,16 @@ def _calc_errors(est1, est2, f, rand=False, rand_N=2500):
     return rmse, max_err
 
 
-def errors(Y1, Y2):
-    Y_diff = Y1 - Y2
-    N = Y1.size
-    mae = np.average(np.fabs(Y_diff))
-    max_err = np.max(np.fabs(Y_diff))
-    rmse = np.sqrt(np.sum(np.square(Y_diff)) / N)
-    return mae, rmse, max_err
+def errors(Y_pred_mean, Y_pred_var, Y_true_mean, training_mean):
+    Y_diff = Y_pred_mean - Y_true_mean
+    N = Y_pred_mean.size
+    return dict(
+        mae = np.average(np.fabs(Y_diff)),
+        max_err = np.max(np.fabs(Y_diff)),
+        rmse = np.sqrt(np.sum(np.square(Y_diff)) / N),
+        mnlp = 1/2*np.sum((Y_diff) ** 2 / Y_pred_var + np.log(Y_pred_var)+np.log(2*np.pi)),
+        nmse = np.sum(np.square(Y_diff)) / np.sum(np.square(Y_pred_mean - training_mean))
+    )
 
 
 def random_hypercube_samples(n_samples, bounds, rng=None):
