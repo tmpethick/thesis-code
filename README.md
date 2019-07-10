@@ -65,6 +65,8 @@ pip install cvxopt
 git clone https://github.com/jmetzen/gp_extras.git
 cd gp_extras
 python setup.py install 
+
+pip install mpi4py
 ```
 
 - Notebook requirements:

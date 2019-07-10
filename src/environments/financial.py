@@ -1,17 +1,21 @@
 import math
 import numpy as np
-from src.environments.dataset import DataSet
+import pickle
 
-from matplotlib import pyplot as plt
+import os
 import pandas as pd
-from ..models.core_models import BaseModel
+from matplotlib import pyplot as plt
 from sklearn.model_selection import train_test_split
+from mpi4py import MPI
 
+from src.models.core_models import BaseModel
+from src.models import DKLGPModel
 from src.experiment.config_helpers import ConfigMixin
 from src.utils import average_at_locations
-
-from .option_pricer.MonteCarlo import MonteCarlo
+from src.environments.dataset import DataSet
 from src.utils import construct_2D_grid, call_function_on_grid
+from .option_pricer.MonteCarlo import MonteCarlo
+
 
 
 class SPXOptions(DataSet):
@@ -117,45 +121,157 @@ class GrowthModel(ConfigMixin):
         self.interpolation = Interpolation(self.params, self.nonlinear_solver)
         self.post = PostProcessing(self.params)
 
-    def sample(self, size):
-        return np.random.uniform(self.params.k_bar, self.params.k_up, (size, self.input_dim))
+    def sample(self, size, rnd=np.random):
+        return rnd.uniform(self.params.k_bar, self.params.k_up, (size, self.input_dim))
 
     def evaluate(self, Xtraining, model_prev=None):
-        np.random.seed(666)
-        #generate sample aPoints
-        y = np.zeros(self.params.No_samples, float) # training targets
+        Y = np.zeros((self.params.No_samples, 1), float) # training targets
 
         if model_prev is None:
             # solve bellman equations at training points
             for i in range(len(Xtraining)):
-                print("solving bellman", i)
-                y[i] = self.nonlinear_solver.initial(Xtraining[i], self.params.n_agents)[0]
+                Y[i] = self.nonlinear_solver.initial(Xtraining[i], self.params.n_agents)[0]
         else:
             for i in range(len(Xtraining)):
-                y[i] = self.nonlinear_solver.iterate(Xtraining[i], self.params.n_agents, model_prev)[0]
+                Y[i] = self.nonlinear_solver.iterate(Xtraining[i], self.params.n_agents, model_prev)[0]
 
-        # Fit to data using Maximum Likelihood Estimation of the parameters
-        y = y[:, np.newaxis]
-        return y
+        return Y
 
-    def loop(self, model: BaseModel, callback=lambda i, growth_model, model: None):
+    def loop(self, model: DKLGPModel, callback=lambda i, growth_model, model: None):
         for i in range(self.params.numstart, self.params.numits):
-        # terminal value function
-            Xtraining = self.sample(size=self.params.No_samples)
+            rnd = np.random.RandomState(666)
+            Xtraining = self.sample(size=self.params.No_samples, rnd=rnd)
 
             if (i==1):
                 print("start with Value Function Iteration")
-                y = self.evaluate(Xtraining)
+                Y = self.evaluate(Xtraining)
             else:
                 print("Now, we are in Value Function Iteration step", i)
-                y = self.evaluate(Xtraining, model)
+                Y = self.evaluate(Xtraining, model)
 
-            model.init(Xtraining, y)
+            # TODO: should be ensure that the model hyperparameters are reinstanciated?
+            model.init(Xtraining, Y)
+            model.save(self.params.model_dir + str(i))
             callback(i, self, model)
+
+        self.post.ls_error()
+
+
+class GrowthModelDistributed(GrowthModel):
+    """A MPI enabled variant of GrowthModel.
+    """
+
+    def loop(self, model: DKLGPModel, callback=lambda i, growth_model, model: None):
+        assert isinstance(model, DKLGPModel), "only DKLGPModel is supported."
+
+        comm=MPI.COMM_WORLD
+        rank=comm.Get_rank()
+
+        for i in range(self.params.numstart, self.params.numits):
+            if (i==1):
+                print("start with Value Function Iteration")
+                X, Y = self.mpi_evaluate(model_prev=None)
+            else:
+                print("Now, we are in Value Function Iteration step", i)
+                X, Y = self.mpi_evaluate(model_prev=model)
+
+            # Distribute the model across all nodes.
+            if rank == 0:
+                model.init(X, Y)
+                model.save(self.params.model_dir + str(i))
+                callback(i, self, model)
+
+            comm.Barrier()
+
+            if rank != 0:
+                model = DKLGPModel.load(self.params.model_dir + str(i))
+        
+        if rank == 0:
+            self.post.ls_error()
+
+    def mpi_evaluate(self, model_prev=None):
+        comm=MPI.COMM_WORLD
+        rank=comm.Get_rank()
+        size = comm.Get_size()
+        
+        aPoints=0
+        iNumP1_buf=np.zeros(1, int)
+        iNumP1=iNumP1_buf[0]
+        aVals_gathered=0
+        
+        if rank==0:
+            k_range=np.array([self.params.k_bar, self.params.k_up])
+
+            ranges=np.empty((self.params.n_agents, 2))
+
+
+            for i in range(self.params.n_agents):
+                ranges[i]=k_range
+
+            rnd = np.random.RandomState(666)
+            aPoints = self.sample(size=self.params.No_samples, rnd=rnd)
+            
+            iNumP1=aPoints.shape[0]
+            iNumP1_buf[0]=iNumP1
+            aVals_gathered=np.empty((iNumP1, 1))
+        
+        comm.Barrier()
+        comm.Bcast(iNumP1_buf, root=0)
+        iNumP1=iNumP1_buf[0]
+        
+        nump=iNumP1//size
+        r=iNumP1 % size
+        
+        if rank<r:
+            nump+=1
+        
+        displs_scat=np.empty(size)
+        sendcounts_scat=np.empty(size)
+        
+        displs_gath=np.empty(size)
+        sendcounts_gath=np.empty(size)
+        
+        for i in range(r):
+            displs_scat[i]=i*(1+iNumP1//size)*self.params.n_agents
+            sendcounts_scat[i]=(1+iNumP1//size)*self.params.n_agents
+            
+            displs_gath[i]=i*(1+iNumP1//size)
+            sendcounts_gath[i]=(1+iNumP1//size)
+            
+        for i in range(r, size):
+            displs_scat[i]=(r+i*(iNumP1//size))*self.params.n_agents
+            sendcounts_scat[i]=(iNumP1//size)*self.params.n_agents
+            
+            displs_gath[i]=r+i*(iNumP1//size)
+            sendcounts_gath[i]=(iNumP1//size)
+
+        local_aPoints=np.empty((nump, self.params.n_agents))
+        
+        comm.Scatterv([aPoints, sendcounts_scat, displs_scat, MPI.DOUBLE], local_aPoints)
+        
+        local_aVals = np.empty([nump, 1])
+        
+        #with open("comparison1.txt", 'w') as file:
+        if model_prev is None:
+            for iI in range(nump):
+                local_aVals[iI]=self.nonlinear_solver.initial(local_aPoints[iI], self.params.n_agents)[0]
+                # v_and_rank=np.array([[local_aVals[iI], rank]])
+                # to_print=np.hstack((local_aPoints[iI].reshape(1,self.params.n_agents), v_and_rank))
+                # np.savetxt(file, to_print, fmt='%2.16f')
+        else:
+            for iI in range(nump):
+                local_aVals[iI]=self.nonlinear_solver.iterate(local_aPoints[iI], self.params.n_agents, model_prev)[0]
+                # v_and_rank=np.array([[local_aVals[iI], rank]])
+                # to_print=np.hstack((local_aPoints[iI].reshape(1,self.params.n_agents), v_and_rank))
+                # np.savetxt(file, to_print, fmt='%2.16f')
+                
+        comm.Gatherv(local_aVals, [aVals_gathered, sendcounts_gath, displs_gath, MPI.DOUBLE])
+
+        return aPoints, aVals_gathered
 
 
 class GrowthModelCallback(object):
-    def __init__(self, growth_model):
+    def __init__(self, growth_model, verbose=False):
         np.random.seed(0)
         self.N = growth_model.params.No_samples_postprocess
         numits = growth_model.params.numits
@@ -166,9 +282,14 @@ class GrowthModelCallback(object):
         self.max_err = np.empty(numits)
         self.RMSE = np.empty(numits)
         self.MAE = np.empty(numits)
+        
+        self.verbose = verbose
 
     def __call__(self, i, growth_model, model):
         y_pred, _ = model.get_statistics(self.X_test, full_cov=False)
+
+        # TODO: not meaningful before y_pred_prev is populated using growth_model.evaluate()
+        # make sure that the model is not updated.
 
         if i != 0:
             diff = self.y_pred_prev - y_pred
@@ -176,7 +297,12 @@ class GrowthModelCallback(object):
             self.MAE[i-1] = np.average(np.fabs(diff)) / self.N
             self.RMSE[i-1] = np.sqrt(np.sum(np.square(diff)) / self.N)
 
-        self.y_pred_prev = y_pred
+            if self.verbose:
+                print('max_err:', self.max_err[i-1])
+                print('MAE:', self.MAE[i-1])
+                print('RMSE:', self.RMSE[i-1])
+        
+        self.y_pred_prev = y_pred    
 
 
 from .core import BaseEnvironment
@@ -343,4 +469,4 @@ class EconomicModel(DataSet):
         self.X_train, self.Y_train = self.X_train[:subset_size], self.Y_train[:subset_size]
 
 
-__all__ = ['SPXOptions', 'HestonOptionPricer', 'AAPL', 'GrowthModel', 'GrowthModelCallback', 'EconomicModel']
+__all__ = ['SPXOptions', 'HestonOptionPricer', 'AAPL', 'GrowthModelDistributed', 'GrowthModel', 'GrowthModelCallback', 'EconomicModel']

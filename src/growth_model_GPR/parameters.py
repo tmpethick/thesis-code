@@ -9,6 +9,7 @@
 #     Simon Scheidegger, 01/19
 #====================================================================== 
 
+import os
 import numpy as np
 
 #====================================================================== 
@@ -22,7 +23,8 @@ class Parameters(object):
         n_agents = 2,
         numstart = 1,
         numits = 7,
-        filename = "restart/restart_file_step_" ,
+        model_dir = "output/restart_file_step_",
+        error_file = "output/errors.txt",
         beta = 0.96,
         zeta = 0.5,
         psi = 0.36,
@@ -51,7 +53,9 @@ class Parameters(object):
         self.numstart = numstart
         self.numits = numits
 
-        self.filename = filename
+        directory = os.path.dirname(os.path.abspath(__file__))
+        self.model_dir = os.path.join(directory, model_dir)
+        self.error_file = os.path.join(directory, error_file)
 
         #======================================================================
 

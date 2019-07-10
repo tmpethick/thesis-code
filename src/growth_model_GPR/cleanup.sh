@@ -1,1 +1,1 @@
-rm *.pyc *.txt restart/*.pcl
+rm -rf *.pyc *.txt output/*/

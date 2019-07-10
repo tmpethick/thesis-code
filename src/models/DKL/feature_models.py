@@ -1,9 +1,12 @@
 import warnings
+import pickle
+import os
 
+import torch
 import gpytorch
 import numpy as np
 from matplotlib import pyplot as plt
-import torch
+import pathlib
 
 from src.experiment.config_helpers import ConfigMixin, lazy_construct_from_module, LazyConstructor
 from ..core_models import BaseModel, MarginalLogLikelihoodMixin
@@ -229,6 +232,7 @@ class GPyTorchModel(MarginalLogLikelihoodMixin, ConfigMixin, FeatureModel):
                  use_toeplitz=None,
 
                  training_callback=default_training_callback,
+                 verbose=True,
                  **kwargs):
 
         super().__init__(**kwargs)
@@ -264,6 +268,7 @@ class GPyTorchModel(MarginalLogLikelihoodMixin, ConfigMixin, FeatureModel):
         self.Y_torch = None
 
         self.training_callback = training_callback
+        self.verbose = verbose
 
         self.warnings = {}
 
@@ -343,7 +348,8 @@ class GPyTorchModel(MarginalLogLikelihoodMixin, ConfigMixin, FeatureModel):
         self.Y_torch = Y
 
     def optimize(self, X, Y, fix_gp_params=False): 
-        print('training on {} data points of dim {}'.format(X.shape[0], X.shape[-1])) 
+        if self.verbose:
+            print('training on {} data points of dim {}'.format(X.shape[0], X.shape[-1])) 
         # Go into training mode
         self.model.train()
         self.likelihood.train()
@@ -360,7 +366,6 @@ class GPyTorchModel(MarginalLogLikelihoodMixin, ConfigMixin, FeatureModel):
 
         if self.has_feature_map:
             self.feature_extractor.train()
-            print(self.feature_extractor)
             opt_parameter_list.append({'params': self.model.feature_extractor.parameters()})
 
         # optimize with Adam
@@ -382,8 +387,9 @@ class GPyTorchModel(MarginalLogLikelihoodMixin, ConfigMixin, FeatureModel):
                 loss.backward()
 
                 loss_ = loss.item()
-                if i % 30 == 0:
-                    print('Current hyperparameters:', self.get_common_hyperparameters())
+                if self.verbose:
+                    if i % 30 == 0:
+                        print('Current hyperparameters:', self.get_common_hyperparameters())
                 self.training_loss[i] = loss_
                 self.training_callback(self, i, loss_)
                 optimizer.step()
@@ -424,7 +430,8 @@ class GPyTorchModel(MarginalLogLikelihoodMixin, ConfigMixin, FeatureModel):
         return self.mll(output, Y).item()
 
     def _get_statistics(self, X, full_cov=True):
-        print('predicting {} points using {} training points'.format(X.shape[0], self.X_torch.shape[0]))
+        if self.verbose:
+            print('predicting {} points using {} training points'.format(X.shape[0], self.X_torch.shape[0]))
         assert self.model is not None, "Call `self.fit` before predicting."
 
         # Go into prediction mode
@@ -484,6 +491,55 @@ class GPyTorchModel(MarginalLogLikelihoodMixin, ConfigMixin, FeatureModel):
             'likelihood.noise': noise
         })
         self.model.initialize(**kwargs)
+
+    def __getstate__(self):
+        state = self.__dict__.copy()
+        state["model"] = None
+        state["feature_extractor"] = None
+        state["likelihood"] = None
+        state["mll"] = None
+        state["X_torch"] = None
+        state["Y_torch"] = None
+        return state
+
+    def __setstate__(self, state):
+        self.__dict__.update(state)
+
+    def save(self, PATH):
+        dir_name = os.path.dirname(PATH)
+        pathlib.Path(PATH).mkdir(parents=True, exist_ok=True)
+
+        np.save(os.path.join(PATH, 'X.npy'), self.X)
+        np.save(os.path.join(PATH, 'Y.npy'), self.Y)
+        torch.save(self.model.state_dict(), os.path.join(PATH, 'parameters.pt'))
+        with open(os.path.join(PATH, 'model.pickle'), 'wb') as fd:
+            pickle.dump(self, fd, pickle.HIGHEST_PROTOCOL)
+
+    @classmethod
+    def load(cls, PATH):
+        X = np.load(os.path.join(PATH, 'X.npy'))
+        Y = np.load(os.path.join(PATH, 'Y.npy'))
+        with open(os.path.join(PATH, 'model.pickle'), 'rb') as fd:
+            model = pickle.load(fd)
+
+        # Construct model.model (and avoiding training/optimization)
+        n_iter_backup = model.n_iter
+        model.n_iter = 0
+        do_pretrain_backup = model.do_pretrain
+        model.do_pretrain = False
+        model.init(X, Y)
+        model.n_iter = n_iter_backup
+        model.do_pretrain = do_pretrain_backup
+
+        # This will also load model.model.likelihood and model.model.feature_extractor
+        state_dict = torch.load(os.path.join(PATH, 'parameters.pt'))
+        model.model.load_state_dict(state_dict)
+
+        # Replace with versions that has parameters loaded.
+        model.likelihood = model.model.likelihood
+        model.feature_extractor = model.model.feature_extractor
+
+        return model
 
 
 class SSGP(GPyTorchModel):

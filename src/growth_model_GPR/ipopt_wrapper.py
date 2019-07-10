@@ -59,8 +59,8 @@ class IPOptWrapper(object):
         Xtest[0,:] = knext_cube
 
         # interpolate the function, and get the point-wise std.
+        # V_old, sigma_test = gp_old.predict(Xtest, return_std=True)
         V_old, sigma_test = gp_old.get_statistics(Xtest, full_cov=False)
-        #V_old, sigma_test = gp_old.get_stat(Xtest, return_std=True)
 
         # aggregate hyperparams
         if V_old.ndim == 3:

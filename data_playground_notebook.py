@@ -7,6 +7,109 @@ import pandas as pd
 # df = pd.DataFrame(data)
 
 #%%
+# Lets find why this model does not save well 
+
+model = DKLGPModel(
+                verbose=False,
+                n_iter=500,
+                use_cg=False,
+                use_double_precision=True,
+                noise_lower_bound=1e-10,
+            )
+X = np.array([[1.20662212, 1.42368947],
+ [2.15336735, 0.36863132],
+ [2.0669468,  2.07778603],
+ [0.78907117, 0.56099363],
+ [1.08319938, 1.21839016],
+ [1.79655096, 1.42808424],
+ [2.96744675, 0.48572547],
+ [0.78485492, 0.65166665],
+ [2.02870331, 0.90921649],
+ [1.50567016, 0.88439166],
+ [0.64511483, 0.5090504 ],
+ [2.03772285, 0.58691226],
+ [0.75043061, 1.23243048],
+ [2.49878104, 0.47188357],
+ [2.54624574, 0.46907554],
+ [2.9340865,  1.51222336],
+ [2.93493105, 1.89356746],
+ [2.26993802, 0.30972582],
+ [0.9918595,  0.53655037],
+ [1.02919255, 0.53243761]])
+Y = np.array([[-873.88452805],
+ [-874.3631474 ],
+ [-877.71616787],
+ [-844.93347347],
+ [-869.57054253],
+ [-889.64624869],
+ [-868.65538094],
+ [-847.37696186],
+ [-889.8643134 ],
+ [-880.62077453],
+ [-835.73839718],
+ [-881.95936714],
+ [-853.95022259],
+ [-877.04924812],
+ [-876.40538399],
+ [-882.7807875 ],
+ [-875.09347409],
+ [-871.81949209],
+ [-853.65530298],
+ [-855.12340945]])
+
+model.init(X, Y)
+model.save("model_save")
+loaded_model = DKLGPModel.load("model_save")
+
+#%%
+
+
+
+#%%
+from notebook_header import *
+
+model = DKLGPModel(
+    verbose=False,
+    n_iter=500,
+    use_cg=False,
+    use_double_precision=True,
+    noise_lower_bound=1e-10,
+)
+
+# kernel = GPyRBF
+# model = GPModel(kernel=kernel, do_optimize=True)
+
+# from sklearn.gaussian_process import GaussianProcessRegressor
+# from sklearn.gaussian_process.kernels import RBF, WhiteKernel, Matern
+# kernel = RBF()
+# model = GaussianProcessRegressor(kernel=kernel, n_restarts_optimizer=1)
+
+gm = GrowthModelDistributed(
+#gm = GrowthModel(
+    n_agents=2,
+    beta=0.8,
+    zeta=0.5,
+    psi=0.36,
+    gamma=2.0,
+    delta=0.025,
+    eta=1,
+    k_bar=0.2,
+    k_up=3.0,
+    c_bar=1e-2,
+    c_up=10.0,
+    l_bar=1e-2,
+    l_up=10.0,
+    inv_bar=1e-2,
+    inv_up=10.0,
+    numits=20, 
+    No_samples_postprocess=20
+)
+#callback = GrowthModelCallback(gm, verbose=True)
+gm.loop(model)
+
+
+
+#%%
 from src.environments.financial import AAPL
 
 f = AAPL(D=2)

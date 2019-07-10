@@ -27,3 +27,25 @@ def test_pickadability():
         fd.seek(0)
         gp.init(np.random.uniform(0,1, (10,1)), np.zeros((10,1)))
         gp = pickle.load(fd)
+
+def test_DKL_pickadability():
+    from notebook_header import *
+    import numpy as np
+    from src.models import DKLGPModel
+    import pickle
+    import tempfile
+
+    gp = DKLGPModel()
+
+    f = Sinc()
+    X = random_hypercube_samples(20, f.bounds)
+    Y = f(X)
+
+    gp.init(X, Y)
+    plot_model(gp, f)
+    gp.save('model_test')
+
+    gp = DKLGPModel.load('model_test')
+    plot_model(gp, f)
+
+    # => Plots should be similar
