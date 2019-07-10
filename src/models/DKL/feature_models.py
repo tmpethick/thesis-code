@@ -25,6 +25,18 @@ def default_training_callback(model, i, loss):
 
 
 class FeatureModel(BaseModel):
+    def make_double(self, tensor):
+        if self.use_double_precision:
+            return tensor.double()
+        else:
+            return tensor.float()
+
+    def to_torch(self, X):
+        X_torch = torch.Tensor(X)
+        X_torch = self.make_double(X_torch)
+        X_torch = X_torch.contiguous().to(device)
+        return X_torch
+
     def get_features(self, X):
         if self.feature_extractor is None:
             return X
@@ -120,6 +132,7 @@ class LinearFromFeatureExtractor(ConfigMixin, FeatureModel):
         feature_extractor_constructor=LazyConstructor(LargeFeatureExtractor),
         n_iter=50,
         learning_rate=0.1,
+        use_double_precision=False,
         training_callback=default_training_callback,
         **kwargs):
         super().__init__(**kwargs)
@@ -128,6 +141,7 @@ class LinearFromFeatureExtractor(ConfigMixin, FeatureModel):
         self.n_iter = n_iter
         self.model = None
         self.feature_extractor = feature_extractor
+        self.use_double_precision = use_double_precision
         
         # Constructor is only used if feature_extractor is not specified.
         if nn_kwargs is not None:
@@ -145,18 +159,21 @@ class LinearFromFeatureExtractor(ConfigMixin, FeatureModel):
 
         if self.feature_extractor is None:
             self.feature_extractor = self.feature_extractor_constructor(D=D)
+            self.feature_extractor = self.make_double(self.feature_extractor)
 
         if self.model is None:
             self.model = torch.nn.Sequential(
                 self.feature_extractor,
                 torch.nn.Linear(in_features=self.feature_extractor.output_dim, out_features=1, bias=True)
             )
+            self.model = self.make_double(self.model)
             self.optimizer = torch.optim.Adam(self.model.parameters(), lr=self.learning_rate)
             self.model.train()
 
+
         # Move tensors to the configured device
-        X_torch = torch.Tensor(X).contiguous().to(device)
-        Y_torch = torch.Tensor(Y).contiguous().to(device)
+        X_torch = self.to_torch(X)
+        Y_torch = self.to_torch(Y)
 
         # Train the model
         for i in range(self.n_iter):
@@ -174,8 +191,7 @@ class LinearFromFeatureExtractor(ConfigMixin, FeatureModel):
     def _get_statistics(self, X, full_cov=True):
         self.model.eval()
 
-        X = torch.from_numpy(X).float()
-        X = X.to(device)
+        X = self.to_torch(X)
 
         with torch.no_grad():
             mean = self.model(X).detach().cpu().numpy()
@@ -210,6 +226,7 @@ class GPyTorchModel(MarginalLogLikelihoodMixin, ConfigMixin, FeatureModel):
                  precond_size=10,
                  eval_cg_tolerance=1e-4,
                  train_eval_cg_tolerance=1.0,
+                 use_toeplitz=None,
 
                  training_callback=default_training_callback,
                  **kwargs):
@@ -220,7 +237,7 @@ class GPyTorchModel(MarginalLogLikelihoodMixin, ConfigMixin, FeatureModel):
         self.use_cg = use_cg
         self.max_cg_iter = max_cg_iter
         self.precond_size = precond_size
-        self.use_toeplitz = False # Set in `_train` when input_dim is known.
+        self.use_toeplitz = use_toeplitz # infered by inducing points if not specified.
         self.eval_cg_tolerance = eval_cg_tolerance
         self.train_eval_cg_tolerance = train_eval_cg_tolerance
 
@@ -262,20 +279,10 @@ class GPyTorchModel(MarginalLogLikelihoodMixin, ConfigMixin, FeatureModel):
         return d
 
     def _fit(self, X, Y, Y_dir=None):
+        if np.isnan(X).any() or np.isnan(X).any():
+            warnings.warn("Training data contains NaN! This might prevent GPyTorch from completing training.", UserWarning)
         # catch warning, save and stop (runner should store this warning)
         self._train(X, Y, fix_gp_params=False)
-
-    def make_double(self, tensor):
-        if self.use_double_precision:
-            return tensor.double()
-        else:
-            return tensor.float()
-
-    def to_torch(self, X):
-        X_torch = torch.Tensor(X)
-        X_torch = self.make_double(X_torch)
-        X_torch = X_torch.contiguous().to(device)
-        return X_torch
 
     def _train(self, X, Y, fix_gp_params=False):
         n, d = X.shape
@@ -310,10 +317,11 @@ class GPyTorchModel(MarginalLogLikelihoodMixin, ConfigMixin, FeatureModel):
 
         self.model = self.make_double(self.model)
 
-        if self.model.uses_inducing_points:
-            self.use_toeplitz = True
-        else:
-            self.use_toeplitz = False
+        if self.use_toeplitz is None:
+            if self.model.uses_inducing_points:
+                self.use_toeplitz = True
+            else:
+                self.use_toeplitz = False
 
         if self.initial_parameters is not None:
             print(self.initial_parameters)
@@ -416,7 +424,7 @@ class GPyTorchModel(MarginalLogLikelihoodMixin, ConfigMixin, FeatureModel):
         return self.mll(output, Y).item()
 
     def _get_statistics(self, X, full_cov=True):
-        print('predicting {} points using {} training points'.format(X.shape[0], self.X_torch.shape[0])) 
+        print('predicting {} points using {} training points'.format(X.shape[0], self.X_torch.shape[0]))
         assert self.model is not None, "Call `self.fit` before predicting."
 
         # Go into prediction mode
@@ -426,18 +434,16 @@ class GPyTorchModel(MarginalLogLikelihoodMixin, ConfigMixin, FeatureModel):
         if self.has_feature_map:
             self.feature_extractor.eval()
 
-        # Hack to fix issue with making prediction for single inputs (n=1).
-        # Only needed if approximate grid interpolation is used.
-        #if X.shape[0] == 1:
+        # # Hack to fix issue with making prediction for single inputs (n=1).
+        # # Only needed if approximate grid interpolation is used.
+        # if X.shape[0] == 1:
         #    fake_X = np.zeros((1, X.shape[1]))
         #    X = np.concatenate((X, fake_X), axis=0)
         #    cut_tail = -1
-        #else:
+        # else:
         cut_tail = None
 
-        test_x = torch.Tensor(X)
-        test_x = self.make_double(test_x)
-        test_x = test_x.contiguous().to(device)
+        test_x = self.to_torch(X)
 
         with torch.no_grad(), \
             gpytorch.settings.fast_computations(covar_root_decomposition=self.covar_root_decomposition, log_prob=self.use_cg, solves=self.use_cg), \

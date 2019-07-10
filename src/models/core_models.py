@@ -366,3 +366,17 @@ class DerivativeGPModel(GPModel):
         return super(DerivativeGPModel, self)._fit(X, Y_dir, Y_dir=None)
 
 
+from sklearn.linear_model import Lasso
+
+class LASSO(ConfigMixin, BaseModel):
+    def __init__(self, *args, alpha=1.0, **kwargs):
+        self.model = Lasso(alpha=alpha)
+        super().__init__(*args, **kwargs)
+
+    def _fit(self, X, Y, Y_dir=None):
+        self.model.fit(X, Y[:,0])
+
+    def get_statistics(self, X, full_cov=False):
+        N = X.shape[0]
+        Y = self.model.predict(X)[:, None]
+        return Y, np.zeros((N, N, 1))

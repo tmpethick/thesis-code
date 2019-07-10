@@ -1,5 +1,6 @@
 import math 
 import numpy as np
+import pandas as pd
 
 # from src.environments import BaseEnvironment
 # from src.models.models import BaseModel
@@ -123,3 +124,26 @@ def call_function_on_grid(func, XY):
     return Z
 
 
+def average_at_locations(X, Y):
+    """Takes all Ys associated with the same X location. Then:
+    1) for each group takes their mean,
+    2) and stores the mean at each of the locations.
+    
+    Arguments:
+        X {[type]} -- [description]
+        Y {[type]} -- [description]
+    """
+    if Y.shape[-1] != 1:
+        raise ValueError("Y has to be 1-dimensional")
+    Y = Y[:,0]
+    I = [tuple(i) for i in X]
+
+    df = pd.DataFrame({'X': I, 'Y': Y})
+    df = df.groupby(['X']).agg({'Y': 'mean'})
+    Y_mean = df['Y']
+
+    Y_meaned = np.empty(len(Y))
+    for i, x in enumerate(I):
+        Y_meaned[i] = Y_mean[x]
+    
+    return Y_meaned[:, None]

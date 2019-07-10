@@ -7,6 +7,27 @@ import pandas as pd
 # df = pd.DataFrame(data)
 
 #%%
+from src.environments.financial import AAPL
+
+f = AAPL(D=2)
+X = f.X_test
+Y = f.Y_test[:,0]
+
+
+#%%
+
+import numpy as np
+
+#d = np.stack((f.X_test, f.Y_test))
+X = (np.array([1.3, 0.0, 1.3])
+Y = np.array([4, 10, 20])
+d = np.stack(indexes, Y)).T
+df = pd.DataFrame(d)
+df.groupby([0]).agg({1: 'mean'})
+
+
+
+#%%
 
 # economic_policies
 df = pd.read_csv('data/economic_policies/Output.plt', header=None, delim_whitespace=True)
@@ -15,10 +36,11 @@ policies = df.loc[:, 3::2].values
 
 #%%
 
-D = 8
+D = 20
 df = pd.read_csv(f'data/economic_policies/GPR_training-{D}d.txt', header=None, delim_whitespace=True)
 X = df.loc[:,3:3+D-1]
 policies = df.loc[:,3+D+1:]
+policies.shape
 
 #%%
 

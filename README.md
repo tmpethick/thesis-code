@@ -47,7 +47,7 @@ source $HOME/miniconda/bin/activate
 conda create -n lions python=3.6
 source activate lions
 conda install -y pytorch torchvision -c pytorch
-pip install gpytorch
+pip install gpytorch=0.3.3
 conda install -y -c conda-forge numpy blas seaborn scipy matplotlib pandas gpy
 conda install -y pylint
 pip install pydot-ng

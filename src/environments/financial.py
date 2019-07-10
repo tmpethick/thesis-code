@@ -2,13 +2,16 @@ import math
 import numpy as np
 from src.environments.dataset import DataSet
 
+from matplotlib import pyplot as plt
 import pandas as pd
 from ..models.core_models import BaseModel
 from sklearn.model_selection import train_test_split
 
 from src.experiment.config_helpers import ConfigMixin
+from src.utils import average_at_locations
 
 from .option_pricer.MonteCarlo import MonteCarlo
+from src.utils import construct_2D_grid, call_function_on_grid
 
 
 class SPXOptions(DataSet):
@@ -245,44 +248,21 @@ class HestonOptionPricer(BaseEnvironment):
         Y = np.array(Y)[:,np.newaxis]
         return Y
 
+    def plot(self, N=200):
+        XY, X, Y = construct_2D_grid(self.bounds, N=N)
+        Z = call_function_on_grid(self.noiseless, XY)
 
-    # def plot_model(self, model):
-    #     assert self.X1_test is not None, "Plotting only possible for `grid_test=True`"
-
-    #     x1, x2 = np.meshgrid(self.X1_test, self.X2_test)
-
-    #     model.init(self.X_train, self.Y_train)
-    #     y_pred, sigma = model.get_statistics(self.X_test)
-    #     y_pred = y_pred.reshape(len(self.X1_test),len(self.X2_test))
-
-    #     fig = plt.figure()
-    #     ax = fig.gca(projection='3d')
-    #     surf = ax.plot_surface(x1, x2, y_pred, cmap=plt.cm.coolwarm,
-    #                            linewidth=0, antialiased=False)
-    #     plt.xlabel('volatility')
-    #     plt.ylabel('time to maturity')
-    #     # Add a color bar which maps values to colors.
-    #     fig.colorbar(surf, shrink=0.5, aspect=5)
-    #     print("MAE, RMSE, MAX =", errors(y_pred.flatten(), YT.flatten()))
-    #     return fig
-
-    # def plot(self):
-    #     assert self.X1_test is not None, "Plotting only possible for `grid_test=True`"
-
-    #     YT = self.Y_test.reshape(len(self.X1_test),len(self.X2_test))
-    #     x1, x2 = np.meshgrid(self.X1_test, self.X2_test)
-
-    #     fig = plt.figure()
-    #     ax = fig.gca()
-    #     ax = fig.gca(projection='3d')
-    #     surf = ax.plot_surface(x1, x2, YT, cmap=plt.cm.coolwarm,
-    #                         linewidth=0, antialiased=False)
-    #     #surf = ax.contourf(x1, x2, YT, 1000)
-    #     plt.xlabel('volatility')
-    #     plt.ylabel('time to maturity')
-    #     # Add a color bar which maps values to colors.
-    #     fig.colorbar(surf, shrink=0.5, aspect=5)
-    #     return fig
+        fig = plt.figure()
+        ax = fig.gca()
+        ax = fig.gca(projection='3d')
+        surf = ax.plot_surface(X, Y, Z[...,0], cmap=plt.cm.coolwarm,
+                            linewidth=0, antialiased=False)
+        #surf = ax.contourf(x1, x2, YT, 1000)
+        plt.xlabel('volatility')
+        plt.ylabel('time to maturity')
+        # Add a color bar which maps values to colors.
+        fig.colorbar(surf, shrink=0.5, aspect=5)
+        return fig
 
 
 class AAPL(DataSet):
@@ -315,6 +295,11 @@ class AAPL(DataSet):
         self.X_train, self.X_val, self.Y_train, self.Y_val = \
             train_test_split(self.X_train, self.Y_train, test_size=self.val_percentage, shuffle=True, random_state=42)
         self.X_train, self.Y_train = self.X_train[:subset_size], self.Y_train[:subset_size]
+
+        # Assumes task is to predict the mean well.
+        self.Y_test = average_at_locations(self.X_test, self.Y_test)
+        self.X_test = self.X_test[:2500]
+        self.Y_test = self.Y_test[:2500]
 
 
 class EconomicModel(DataSet):

@@ -105,7 +105,7 @@ class Runner(object):
 
         # Testing
         X_test = random_hypercube_samples(self.context.gp_test_samples, bounds, rng=np.random.RandomState(1))
-        Y_test = f(X_test)
+        Y_test = f.noiseless(X_test)
 
         return X_train, Y_train, Y_train_dir, X_test, Y_test, None, None
 

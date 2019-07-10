@@ -2,6 +2,7 @@ from .core_models import \
     BaseModel, \
     ProbModel, \
     LinearInterpolateModel, \
+    LASSO, \
     GPModel, \
     DerivativeGPModel
 from src.models.low_rank.fourier_features import RandomFourierFeaturesModel, QuadratureFourierFeaturesModel
