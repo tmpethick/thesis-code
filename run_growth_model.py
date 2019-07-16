@@ -2,6 +2,12 @@ from notebook_header import *
 import pyipopt
 import os
 
+# Ensure all nodes gets killed if one fails (otherwise the job will continue).
+import sys
+def kill_mpi(exctype, value, tb):
+    from mpi4py import MPI
+    MPI.COMM_WORLD.Abort()
+sys.excepthook = kill_mpi
 
 # Prevent logging
 pyipopt.set_loglevel(0)
@@ -13,14 +19,33 @@ from shutil import copyfile
 pathlib.Path(path).mkdir(parents=True, exist_ok=True)
 copyfile(os.path.realpath(__file__), os.path.join(path, 'script.py'))
 
-# Get GP to converge
-# A-SG
-# ASGP
+# model = TransformerModel.from_config({
+#     'transformer': {
+#         'name': 'ActiveSubspace',
+#         'kwargs': {
+#             'output_dim': 1
+#         }
+#     },
+#     'prob_model': {
+#         'name': 'DKLGPModel',
+#         'kwargs': dict(
+#             verbose=False,
+#             n_iter=2000,
+#             nn_kwargs=dict(layers=None),
+#             use_cg=True,
+#             max_cg_iter=30000,
+#             precond_size=20,
+#             use_double_precision=True,
+#             noise_lower_bound=1e-10,
+#             train_eval_cg_tolerance=1e-4,
+#         )
+#     }
+# })
 
 model = DKLGPModel(
     verbose=False,
     n_iter=2000,
-    nn_kwargs=dict(layers=None),
+    nn_kwargs=dict(layers=[1]),
     use_cg=True,
     max_cg_iter=30000,
     precond_size=20,
@@ -28,11 +53,12 @@ model = DKLGPModel(
     noise_lower_bound=1e-10,
     train_eval_cg_tolerance=1e-4,
 )
+model = NormalizerModel(model=model)
 
 gm = GrowthModelDistributed(
 #gm = GrowthModel(
     output_dir=path,
-    n_agents=10,
+    n_agents=50,
     beta=0.96,#0.8,
     zeta=0.5,
     psi=0.36,
@@ -52,7 +78,7 @@ gm = GrowthModelDistributed(
 )
 #callback = GrowthModelCallback(gm, verbose=True)
 def plot(i, growth_model, model):
-    if model.feature_extractor is not None and model.feature_extractor.output_dim == 1:
+    if hasattr(model, 'feature_extractor') and model.feature_extractor is not None and model.feature_extractor.output_dim == 1:
         X = random_hypercube_samples(1000, growth_model.bounds)
         Z = model.get_features(X)
         Y, _ = model.get_statistics(X, full_cov=False)

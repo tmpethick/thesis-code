@@ -160,10 +160,6 @@ class GrowthModel(ConfigMixin):
 class GrowthModelDistributed(GrowthModel):
     """A MPI enabled variant of the GrowthModel.
     """
-
-    def fresh_model(self, model):
-        return copy.deepcopy(model)
-
     def loop(self, mother_model: BaseModel, callback=lambda i, growth_model, model: None):
         from mpi4py import MPI
         
@@ -171,6 +167,9 @@ class GrowthModelDistributed(GrowthModel):
         self.comm = MPI.COMM_WORLD
         self.rank = self.comm.Get_rank()
         self.size = self.comm.Get_size()
+
+        mother_path = os.path.join(self.params.output_dir, 'mother_model')
+        mother_model.save(mother_path)
 
         for i in range(self.params.numstart, self.params.numits):
             if (i==1):
@@ -182,7 +181,7 @@ class GrowthModelDistributed(GrowthModel):
 
             # Distribute the model across all nodes.
             if self.rank == 0:
-                model = self.fresh_model(mother_model)
+                model = SaveMixin.load(mother_path)
                 model.init(X, Y)
 
                 model.save(self.params.model_dir + str(i))

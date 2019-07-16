@@ -46,7 +46,7 @@ class Parameters(object):
         # How many training points for GPR
         self.n_agents = n_agents # number of continuous dimensions of the model
         if No_samples is None:
-            self.No_samples = 10*n_agents
+            self.No_samples = 20*n_agents
         else:
             self.No_samples = No_samples
 
@@ -55,6 +55,7 @@ class Parameters(object):
         self.numits = numits
 
         #directory = os.path.dirname(os.path.abspath(__file__))
+        self.output_dir = output_dir
         self.model_dir = os.path.join(output_dir, model_dir)
         self.error_file = os.path.join(output_dir, error_file)
 

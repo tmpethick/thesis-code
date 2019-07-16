@@ -271,6 +271,7 @@ class GPyTorchModel(MarginalLogLikelihoodMixin, ConfigMixin, FeatureModel):
         self.verbose = verbose
 
         self.warnings = {}
+        self.is_trained = False
 
     @classmethod
     def process_config(cls, *, feature_extractor_constructor=None, gp_constructor=None, **kwargs):
@@ -291,6 +292,7 @@ class GPyTorchModel(MarginalLogLikelihoodMixin, ConfigMixin, FeatureModel):
 
     def _train(self, X, Y, fix_gp_params=False):
         n, d = X.shape
+        self.is_trained = True
 
         self.X_torch = self.to_torch(X)
         self.Y_torch = self.to_torch(Y[:, 0])
@@ -525,30 +527,34 @@ class GPyTorchModel(MarginalLogLikelihoodMixin, ConfigMixin, FeatureModel):
 
     def save(self, PATH):
         super().save(PATH)
-        np.save(os.path.join(PATH, 'X.npy'), self.X)
-        np.save(os.path.join(PATH, 'Y.npy'), self.Y)
-        torch.save(self.model.state_dict(), os.path.join(PATH, 'parameters.pt'))
+
+        if self.is_trained:
+            np.save(os.path.join(PATH, 'X.npy'), self.X)
+            np.save(os.path.join(PATH, 'Y.npy'), self.Y)
+        
+            torch.save(self.model.state_dict(), os.path.join(PATH, 'parameters.pt'))
 
     def post_load_hook(self, PATH):
-        X = np.load(os.path.join(PATH, 'X.npy'))
-        Y = np.load(os.path.join(PATH, 'Y.npy'))
+        if self.is_trained:
+            X = np.load(os.path.join(PATH, 'X.npy'))
+            Y = np.load(os.path.join(PATH, 'Y.npy'))
 
-        # Construct model.model (and avoiding training/optimization)
-        n_iter_backup = self.n_iter
-        self.n_iter = 0
-        do_pretrain_backup = self.do_pretrain
-        self.do_pretrain = False
-        self.init(X, Y)
-        self.n_iter = n_iter_backup
-        self.do_pretrain = do_pretrain_backup
+            # Construct model.model (and avoiding training/optimization)
+            n_iter_backup = self.n_iter
+            self.n_iter = 0
+            do_pretrain_backup = self.do_pretrain
+            self.do_pretrain = False
+            self.init(X, Y)
+            self.n_iter = n_iter_backup
+            self.do_pretrain = do_pretrain_backup
 
-        # This will also load model.model.likelihood and model.model.feature_extractor
-        state_dict = torch.load(os.path.join(PATH, 'parameters.pt'))
-        self.model.load_state_dict(state_dict)
+            # This will also load model.model.likelihood and model.model.feature_extractor
+            state_dict = torch.load(os.path.join(PATH, 'parameters.pt'))
+            self.model.load_state_dict(state_dict)
 
-        # Replace with versions that has parameters loaded.
-        self.likelihood = self.model.likelihood
-        self.feature_extractor = self.model.feature_extractor
+            # Replace with versions that has parameters loaded.
+            self.likelihood = self.model.likelihood
+            self.feature_extractor = self.model.feature_extractor
 
         return self
 

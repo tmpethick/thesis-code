@@ -123,6 +123,7 @@ class NormalizerModel(ConfigMixin, BaseModel):
         return state
 
     def save(self, PATH):
+        super().save(PATH)
         model_path = os.path.join(PATH, 'model')
         self.model.save(model_path)
 

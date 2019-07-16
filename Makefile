@@ -31,7 +31,7 @@ sync-dtu:
 	#rsync -av ./IPOPT s144448@login2.hpc.dtu.dk:~/mthesis # Copied from asgp! don't destroy!
 	rsync -av s144448@login2.hpc.dtu.dk:~/mthesis/output ./
 
-run-growth: push-dtu
-	ssh s144448@login2.hpc.dtu.dk 'source /etc/profile; bsub < ~/mthesis/run_growth_model.sh'
+run-growth: sync-dtu
+	ssh s144448@login2.hpc.dtu.dk 'source /etc/profile; cd ~/mthesis; bsub < run_growth_model.sh'
 
 .PHONY: test

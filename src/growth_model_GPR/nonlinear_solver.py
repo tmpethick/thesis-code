@@ -204,8 +204,8 @@ class NonlinearSolver(object):
         # First create a handle for the Ipopt problem
         nlp = pyipopt.create(N, X_L, X_U, M, G_L, G_U, NELE_JAC, NELE_HESS, eval_f, eval_grad_f, eval_g, eval_jac_g)
         nlp.num_option("obj_scaling_factor", -1.00)
-        nlp.num_option("tol", 1e-6)
-        nlp.num_option("acceptable_tol", 1e-5)
+        nlp.num_option("tol", 1e-5)
+        nlp.num_option("acceptable_tol", 1e-4)
         nlp.str_option("derivative_test", "first-order")
         nlp.str_option("hessian_approximation", "limited-memory")
         nlp.int_option("print_level", 0)
