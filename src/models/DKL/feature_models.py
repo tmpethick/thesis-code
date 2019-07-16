@@ -524,40 +524,33 @@ class GPyTorchModel(MarginalLogLikelihoodMixin, ConfigMixin, FeatureModel):
         self.__dict__.update(state)
 
     def save(self, PATH):
-        dir_name = os.path.dirname(PATH)
-        pathlib.Path(PATH).mkdir(parents=True, exist_ok=True)
-
+        super().save(PATH)
         np.save(os.path.join(PATH, 'X.npy'), self.X)
         np.save(os.path.join(PATH, 'Y.npy'), self.Y)
         torch.save(self.model.state_dict(), os.path.join(PATH, 'parameters.pt'))
-        with open(os.path.join(PATH, 'model.pickle'), 'wb') as fd:
-            pickle.dump(self, fd, pickle.HIGHEST_PROTOCOL)
 
-    @classmethod
-    def load(cls, PATH):
+    def post_load_hook(self, PATH):
         X = np.load(os.path.join(PATH, 'X.npy'))
         Y = np.load(os.path.join(PATH, 'Y.npy'))
-        with open(os.path.join(PATH, 'model.pickle'), 'rb') as fd:
-            model = pickle.load(fd)
 
         # Construct model.model (and avoiding training/optimization)
-        n_iter_backup = model.n_iter
-        model.n_iter = 0
-        do_pretrain_backup = model.do_pretrain
-        model.do_pretrain = False
-        model.init(X, Y)
-        model.n_iter = n_iter_backup
-        model.do_pretrain = do_pretrain_backup
+        n_iter_backup = self.n_iter
+        self.n_iter = 0
+        do_pretrain_backup = self.do_pretrain
+        self.do_pretrain = False
+        self.init(X, Y)
+        self.n_iter = n_iter_backup
+        self.do_pretrain = do_pretrain_backup
 
         # This will also load model.model.likelihood and model.model.feature_extractor
         state_dict = torch.load(os.path.join(PATH, 'parameters.pt'))
-        model.model.load_state_dict(state_dict)
+        self.model.load_state_dict(state_dict)
 
         # Replace with versions that has parameters loaded.
-        model.likelihood = model.model.likelihood
-        model.feature_extractor = model.model.feature_extractor
+        self.likelihood = self.model.likelihood
+        self.feature_extractor = self.model.feature_extractor
 
-        return model
+        return self
 
 
 class SSGP(GPyTorchModel):

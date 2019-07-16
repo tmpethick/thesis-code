@@ -1,4 +1,7 @@
 import numpy as np
+import os
+import pickle 
+import pathlib
 
 import GPy
 
@@ -11,7 +14,28 @@ class MarginalLogLikelihoodMixin:
         raise NotImplementedError
 
 
-class BaseModel(object):
+class SaveMixin:
+    def __getstate__(self):
+        return self.__dict__.copy()
+
+    def save(self, PATH):            
+        dir_name = os.path.dirname(PATH)
+        pathlib.Path(PATH).mkdir(parents=True, exist_ok=True)
+        with open(os.path.join(PATH, 'model.pickle'), 'wb') as fd:
+            pickle.dump(self, fd, pickle.HIGHEST_PROTOCOL)
+
+    @classmethod
+    def load(cls, PATH):
+        with open(os.path.join(PATH, 'model.pickle'), 'rb') as fd:
+            model = pickle.load(fd)
+        model = model.post_load_hook(PATH)
+        return model
+
+    def post_load_hook(self, PATH):
+        return self
+
+
+class BaseModel(SaveMixin):
     def __init__(self):
         self._X = None
         self._Y = None

@@ -9,7 +9,7 @@
 import os
 import pickle
 import numpy as np
-from src.models import DKLGPModel
+from src.models import SaveMixin
 
 class PostProcessing(object):
     def __init__(self, params):
@@ -27,8 +27,8 @@ class PostProcessing(object):
                 sum_diffs = 0
                 diff = 0
 
-                model_old = DKLGPModel.load(self.params.model_dir + str(i))
-                model_new = DKLGPModel.load(self.params.model_dir + str(i+1))
+                model_old = SaveMixin.load(self.params.model_dir + str(i))
+                model_new = SaveMixin.load(self.params.model_dir + str(i+1))
                 # with open(os.path.join(self.params.model_dir + str(i), 'sklearn.pickle'), 'rb') as fd:
                 #     model_old = pickle.load(fd)
                 # with open(os.path.join(self.params.model_dir + str(i+1), 'sklearn.pickle'), 'rb') as fd:

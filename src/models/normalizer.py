@@ -1,7 +1,9 @@
 import numpy as np
+import os
+import pickle
 
 from src.experiment.config_helpers import ConfigMixin, construct_from_module
-from src.models import BaseModel
+from src.models import BaseModel, SaveMixin
 
 
 class Normalizer(object):
@@ -47,70 +49,84 @@ def zero_mean_unit_var_unnormalization(X_normalized, mean, std):
 
 
 class NormalizerModel(ConfigMixin, BaseModel):
-        def __init__(self, model, normalize_input=True, normalize_output=True):
-            super().__init__()
-            self.model = model
-            self.X_normalizer = None
-            self.Y_normalizer = None
-            self._normalize_input = normalize_input
-            self._normalize_output = normalize_output
+    def __init__(self, model, normalize_input=True, normalize_output=True):
+        super().__init__()
+        self.model = model
+        self.X_normalizer = None
+        self.Y_normalizer = None
+        self._normalize_input = normalize_input
+        self._normalize_output = normalize_output
 
-        @classmethod
-        def process_config(cls, *, model=None, **kwargs):
-            import src.models as models_module
-            model = construct_from_module(models_module, model)
-            return dict(
-                model=model,
-                **kwargs
-            )
+    @classmethod
+    def process_config(cls, *, model=None, **kwargs):
+        import src.models as models_module
+        model = construct_from_module(models_module, model)
+        return dict(
+            model=model,
+            **kwargs
+        )
 
-        def _normalize(self, X, Y):
-            if self._normalize_input:
-                self.X_normalizer = Normalizer(X)
-                X = self.X_normalizer.get_transformed()
+    def _normalize(self, X, Y):
+        if self._normalize_input:
+            self.X_normalizer = Normalizer(X)
+            X = self.X_normalizer.get_transformed()
 
-            if self._normalize_output:
-                self.Y_normalizer = Normalizer(Y)
-                Y = self.Y_normalizer.get_transformed()
+        if self._normalize_output:
+            self.Y_normalizer = Normalizer(Y)
+            Y = self.Y_normalizer.get_transformed()
 
-            return X, Y
+        return X, Y
 
-        def init(self, X, Y, Y_dir=None):
-            # TODO: do not "copy/paste" behaviour from BaseModel.
-            self._X = X
-            self._Y = Y
-            self.Y_dir = Y_dir
+    def init(self, X, Y, Y_dir=None):
+        # TODO: do not "copy/paste" behaviour from BaseModel.
+        self._X = X
+        self._Y = Y
+        self.Y_dir = Y_dir
 
-            X, Y = self._normalize(X, Y)
-            self.model.init(X, Y, Y_dir)
+        X, Y = self._normalize(X, Y)
+        self.model.init(X, Y, Y_dir)
 
-        def add_observations(self, X_new, Y_new, Y_dir_new=None):
-            # TODO: do not "copy/paste" behaviour from BaseModel.
-            assert self._X is not None, "Call init first"
+    def add_observations(self, X_new, Y_new, Y_dir_new=None):
+        # TODO: do not "copy/paste" behaviour from BaseModel.
+        assert self._X is not None, "Call init first"
 
-            # Update data
-            X = np.concatenate([self._X, X_new])
-            Y = np.concatenate([self._Y, Y_new])
+        # Update data
+        X = np.concatenate([self._X, X_new])
+        Y = np.concatenate([self._Y, Y_new])
 
-            if self.Y_dir is not None:
-                Y_dir = np.concatenate([self.Y_dir, Y_dir_new])
+        if self.Y_dir is not None:
+            Y_dir = np.concatenate([self.Y_dir, Y_dir_new])
 
-            self.init(X, Y, Y_dir)
+        self.init(X, Y, Y_dir)
 
-        def get_statistics(self, X, full_cov=True):
-            if self._normalize_input:
-                X = self.X_normalizer.normalize(X)
+    def get_statistics(self, X, full_cov=True):
+        if self._normalize_input:
+            X = self.X_normalizer.normalize(X)
 
-            mean, covar = self.model.get_statistics(X, full_cov=full_cov)
+        mean, covar = self.model.get_statistics(X, full_cov=full_cov)
 
-            if self._normalize_output:
-                mean = self.Y_normalizer.denormalize(mean)
-                if full_cov:
-                    covar = self.Y_normalizer.denormalize_covariance(covar)
-                else:
-                    covar = self.Y_normalizer.denormalize_variance(covar)
-            return mean, covar
+        if self._normalize_output:
+            mean = self.Y_normalizer.denormalize(mean)
+            if full_cov:
+                covar = self.Y_normalizer.denormalize_covariance(covar)
+            else:
+                covar = self.Y_normalizer.denormalize_variance(covar)
+        return mean, covar
 
-        def set_train_data(self, X, Y):
-            X, Y = self._normalize(X, Y)
-            self.model.set_train_data(X,Y)
+    def set_train_data(self, X, Y):
+        X, Y = self._normalize(X, Y)
+        self.model.set_train_data(X,Y)
+
+    def __getstate__(self):
+        state = self.__dict__.copy()
+        state["model"] = None
+        return state
+
+    def save(self, PATH):
+        model_path = os.path.join(PATH, 'model')
+        self.model.save(model_path)
+
+    def post_load_hook(self, PATH):
+        model_path = os.path.join(PATH, 'model')
+        self.model = SaveMixin.load(model_path)
+        return self

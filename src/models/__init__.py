@@ -1,4 +1,6 @@
 from .core_models import \
+    SaveMixin, \
+    MarginalLogLikelihoodMixin, \
     BaseModel, \
     ProbModel, \
     LinearInterpolateModel, \

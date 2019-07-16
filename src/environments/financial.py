@@ -8,7 +8,7 @@ import pandas as pd
 from matplotlib import pyplot as plt
 from sklearn.model_selection import train_test_split
 
-from src.models.core_models import BaseModel
+from src.models.core_models import BaseModel, SaveMixin
 from src.models import DKLGPModel
 from src.experiment.config_helpers import ConfigMixin
 from src.utils import average_at_locations
@@ -151,8 +151,7 @@ class GrowthModel(ConfigMixin):
 
             # TODO: should be ensure that the model hyperparameters are reinstanciated?
             model.init(Xtraining, Y)
-            if isinstance(model, DKLGPModel):
-                model.save(self.params.model_dir + str(i))
+            model.save(self.params.model_dir + str(i))
             callback(i, self, model)
 
         self.post.ls_error()
@@ -165,9 +164,8 @@ class GrowthModelDistributed(GrowthModel):
     def fresh_model(self, model):
         return copy.deepcopy(model)
 
-    def loop(self, mother_model: DKLGPModel, callback=lambda i, growth_model, model: None):
+    def loop(self, mother_model: BaseModel, callback=lambda i, growth_model, model: None):
         from mpi4py import MPI
-        assert isinstance(mother_model, DKLGPModel), "only DKLGPModel is supported."
         
         self.MPI = MPI
         self.comm = MPI.COMM_WORLD
@@ -186,16 +184,15 @@ class GrowthModelDistributed(GrowthModel):
             if self.rank == 0:
                 model = self.fresh_model(mother_model)
                 model.init(X, Y)
-                
-                if isinstance(DKLGPModel):
-                    model.save(self.params.model_dir + str(i))
+
+                model.save(self.params.model_dir + str(i))
 
                 callback(i, self, model)
 
             self.comm.Barrier()
 
             if self.rank != 0:
-                model = DKLGPModel.load(self.params.model_dir + str(i))
+                model = SaveMixin.load(self.params.model_dir + str(i))
         
         if self.rank == 0:
             self.post.ls_error()

@@ -6,9 +6,25 @@ import pandas as pd
 # data = mat.get('returns')
 # df = pd.DataFrame(data)
 
+
 #%%
 
+path = os.path.join(settings.GROWTH_MODEL_SNAPSHOTS_DIR, 'test')
+
+model = DKLGPModel(
+    verbose=False,
+    n_iter=100,
+    nn_kwargs=dict(layers=None),
+    use_cg=True,
+    max_cg_iter=30000,
+    precond_size=20,
+    use_double_precision=True,
+    noise_lower_bound=1e-10,
+    train_eval_cg_tolerance=1e-4,
+)
+
 gm = GrowthModel(
+    output_dir=path,
     n_agents=50,
     beta=0.8,
     zeta=0.5,
@@ -24,10 +40,12 @@ gm = GrowthModel(
     l_up=10.0,
     inv_bar=1e-2,
     inv_up=10.0,
-    numits=66, 
+    numits=2, 
     No_samples_postprocess=20
 )
-gm.post.ls_error()
+
+gm.loop(model)
+# gm.post.ls_error()
 
 #%%
 # Lets find why this model does not save well 

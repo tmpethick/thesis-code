@@ -1,11 +1,12 @@
 import numpy as np
 from matplotlib import pyplot as plt
+import os
 
 from src.experiment.config_helpers import ConfigMixin, construct_from_module
-from src.models import ProbModel
+from src.models import ProbModel, SaveMixin
 
 
-class Transformer(ConfigMixin, object):
+class Transformer(SaveMixin, ConfigMixin):
     @property
     def output_dim(self):
         raise NotImplementedError
@@ -157,3 +158,25 @@ class TransformerModel(ConfigMixin, ProbModel):
         X = self.transformer.transform(X)
         mean, covar = self.prob_model.get_statistics(X, full_cov=full_cov)
         return mean, covar
+
+    def __getstate__(self):
+        state = self.__dict__.copy()
+        state["transformer"] = None
+        state["prob_model"] = None
+        return state
+
+    def save(self, PATH):
+        super().save(PATH)
+        transformer = os.path.join(PATH, 'transformer')
+        self.transformer.save(transformer)
+
+        prob_model = os.path.join(PATH, 'prob_model')
+        self.prob_model.save(prob_model)
+
+    def post_load_hook(self, PATH):
+        transformer = os.path.join(PATH, 'transformer')
+        self.transformer = SaveMixin.load(transformer)
+        
+        prob_model = os.path.join(PATH, 'prob_model')
+        self.prob_model = SaveMixin.load(prob_model)
+        return self
