@@ -1,0 +1,12 @@
+prefix=/Users/tmpethick/GoogleDrive/dtu/10-EPFL/thesis/thesis-code/IPOPT/Ipopt-3.11.7/build_rice
+exec_prefix=${prefix}
+libdir=${exec_prefix}/lib
+includedir=${prefix}/include/coin
+
+Name: IPOPT
+Description: Ampl Interface TNLP to Ipopt
+URL: https://projects.coin-or.org/Ipopt
+Version: 3.11.7
+Libs: -L${libdir} -lipoptamplinterface 
+Cflags: -I${includedir}
+Requires: ipopt coinasl 

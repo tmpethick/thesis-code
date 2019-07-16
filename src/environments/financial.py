@@ -1,12 +1,12 @@
 import math
 import numpy as np
 import pickle
+import copy
 
 import os
 import pandas as pd
 from matplotlib import pyplot as plt
 from sklearn.model_selection import train_test_split
-from mpi4py import MPI
 
 from src.models.core_models import BaseModel
 from src.models import DKLGPModel
@@ -137,7 +137,7 @@ class GrowthModel(ConfigMixin):
 
         return Y
 
-    def loop(self, model: DKLGPModel, callback=lambda i, growth_model, model: None):
+    def loop(self, model: BaseModel, callback=lambda i, growth_model, model: None):
         for i in range(self.params.numstart, self.params.numits):
             rnd = np.random.RandomState(666)
             Xtraining = self.sample(size=self.params.No_samples, rnd=rnd)
@@ -151,21 +151,28 @@ class GrowthModel(ConfigMixin):
 
             # TODO: should be ensure that the model hyperparameters are reinstanciated?
             model.init(Xtraining, Y)
-            model.save(self.params.model_dir + str(i))
+            if isinstance(model, DKLGPModel):
+                model.save(self.params.model_dir + str(i))
             callback(i, self, model)
 
         self.post.ls_error()
 
 
 class GrowthModelDistributed(GrowthModel):
-    """A MPI enabled variant of GrowthModel.
+    """A MPI enabled variant of the GrowthModel.
     """
 
-    def loop(self, model: DKLGPModel, callback=lambda i, growth_model, model: None):
-        assert isinstance(model, DKLGPModel), "only DKLGPModel is supported."
+    def fresh_model(self, model):
+        return copy.deepcopy(model)
 
-        comm=MPI.COMM_WORLD
-        rank=comm.Get_rank()
+    def loop(self, mother_model: DKLGPModel, callback=lambda i, growth_model, model: None):
+        from mpi4py import MPI
+        assert isinstance(mother_model, DKLGPModel), "only DKLGPModel is supported."
+        
+        self.MPI = MPI
+        self.comm = MPI.COMM_WORLD
+        self.rank = self.comm.Get_rank()
+        self.size = self.comm.Get_size()
 
         for i in range(self.params.numstart, self.params.numits):
             if (i==1):
@@ -176,23 +183,27 @@ class GrowthModelDistributed(GrowthModel):
                 X, Y = self.mpi_evaluate(model_prev=model)
 
             # Distribute the model across all nodes.
-            if rank == 0:
+            if self.rank == 0:
+                model = self.fresh_model(mother_model)
                 model.init(X, Y)
-                model.save(self.params.model_dir + str(i))
+                
+                if isinstance(DKLGPModel):
+                    model.save(self.params.model_dir + str(i))
+
                 callback(i, self, model)
 
-            comm.Barrier()
+            self.comm.Barrier()
 
-            if rank != 0:
+            if self.rank != 0:
                 model = DKLGPModel.load(self.params.model_dir + str(i))
         
-        if rank == 0:
+        if self.rank == 0:
             self.post.ls_error()
 
     def mpi_evaluate(self, model_prev=None):
-        comm=MPI.COMM_WORLD
-        rank=comm.Get_rank()
-        size = comm.Get_size()
+        comm = self.comm
+        rank = self.rank
+        size = self.size
         
         aPoints=0
         iNumP1_buf=np.zeros(1, int)
@@ -247,25 +258,27 @@ class GrowthModelDistributed(GrowthModel):
 
         local_aPoints=np.empty((nump, self.params.n_agents))
         
-        comm.Scatterv([aPoints, sendcounts_scat, displs_scat, MPI.DOUBLE], local_aPoints)
+        comm.Scatterv([aPoints, sendcounts_scat, displs_scat, self.MPI.DOUBLE], local_aPoints)
         
         local_aVals = np.empty([nump, 1])
         
         #with open("comparison1.txt", 'w') as file:
         if model_prev is None:
+            print(f"Node {rank} processing {nump} points")
             for iI in range(nump):
                 local_aVals[iI]=self.nonlinear_solver.initial(local_aPoints[iI], self.params.n_agents)[0]
                 # v_and_rank=np.array([[local_aVals[iI], rank]])
                 # to_print=np.hstack((local_aPoints[iI].reshape(1,self.params.n_agents), v_and_rank))
                 # np.savetxt(file, to_print, fmt='%2.16f')
         else:
+            print(f"Node {rank} processing {nump} points")
             for iI in range(nump):
                 local_aVals[iI]=self.nonlinear_solver.iterate(local_aPoints[iI], self.params.n_agents, model_prev)[0]
                 # v_and_rank=np.array([[local_aVals[iI], rank]])
                 # to_print=np.hstack((local_aPoints[iI].reshape(1,self.params.n_agents), v_and_rank))
                 # np.savetxt(file, to_print, fmt='%2.16f')
                 
-        comm.Gatherv(local_aVals, [aVals_gathered, sendcounts_gath, displs_gath, MPI.DOUBLE])
+        comm.Gatherv(local_aVals, [aVals_gathered, sendcounts_gath, displs_gath, self.MPI.DOUBLE])
 
         return aPoints, aVals_gathered
 

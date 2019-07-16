@@ -1,0 +1,9 @@
+prefix=/Users/tmpethick/GoogleDrive/dtu/10-EPFL/thesis/thesis-code/IPOPT/Ipopt-3.11.7/build_rice
+libdir=/Users/tmpethick/GoogleDrive/dtu/10-EPFL/thesis/thesis-code/IPOPT/Ipopt-3.11.7/build_rice/ThirdParty/ASL
+
+Name: ASL
+Description: AMPL Solver Library
+URL: https://projects.coin-or.org/BuildTools
+Version: 1.2.15
+Libs: ${libdir}/libcoinasl.la -lm -ldl 
+Cflags: -I/Users/tmpethick/GoogleDrive/dtu/10-EPFL/thesis/thesis-code/IPOPT/Ipopt-3.11.7/build_rice/ThirdParty/ASL -I/Users/tmpethick/GoogleDrive/dtu/10-EPFL/thesis/thesis-code/IPOPT/Ipopt-3.11.7/ThirdParty/ASL/solvers

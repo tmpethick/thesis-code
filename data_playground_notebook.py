@@ -7,6 +7,29 @@ import pandas as pd
 # df = pd.DataFrame(data)
 
 #%%
+
+gm = GrowthModel(
+    n_agents=50,
+    beta=0.8,
+    zeta=0.5,
+    psi=0.36,
+    gamma=2.0,
+    delta=0.025,
+    eta=1,
+    k_bar=0.2,
+    k_up=3.0,
+    c_bar=1e-2,
+    c_up=10.0,
+    l_bar=1e-2,
+    l_up=10.0,
+    inv_bar=1e-2,
+    inv_up=10.0,
+    numits=66, 
+    No_samples_postprocess=20
+)
+gm.post.ls_error()
+
+#%%
 # Lets find why this model does not save well 
 
 model = DKLGPModel(
@@ -106,7 +129,6 @@ gm = GrowthModelDistributed(
 )
 #callback = GrowthModelCallback(gm, verbose=True)
 gm.loop(model)
-
 
 
 #%%

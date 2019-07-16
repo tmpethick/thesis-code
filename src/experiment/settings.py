@@ -14,10 +14,10 @@ class MODES(Enum):
 # ----------------- Settings
 # -----------------
 
-MODE = MODES.LOCAL
+MODE = MODES.SERVER
 SAVE = MODE is MODES.SERVER
 
-SERVER_DEST = 'dtu' # 'dtu' or 'epfl'
+SERVER_DEST = 'epfl' # 'dtu' or 'epfl'
 WALLTIME = '00:40'
 QUEUE = 'gpuv100' #gputitanxpascal
 EXTRA = '' # e.g. #BSUB -R "select[gpu32gb]"
@@ -44,3 +44,5 @@ ARTIFACT_UNNORMALIZED_FILENAME = 'artifacts/unnormalized-model-{model_idx}.png'
 
 SETTINGS_DIR = os.path.dirname(os.path.abspath(__file__))
 THESIS_FIGS_DIR = os.path.join(SETTINGS_DIR, '../../thesis_figs/')
+MODEL_SNAPSHOTS_DIR = os.path.join(SETTINGS_DIR, '../../output/models/')
+GROWTH_MODEL_SNAPSHOTS_DIR = os.path.join(SETTINGS_DIR, '../../output/growth-model/')

@@ -6,19 +6,22 @@
   <component name="ChangeListManager">
     <list default="true" id="c818380e-e4c2-4b56-b288-ea97eb749031" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.ipynb_checkpoints/debugging-branin-checkpoint.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/.ipynb_checkpoints/debugging-branin-checkpoint.ipynb" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.ipynb_checkpoints/explorer_notebook-checkpoint.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/.ipynb_checkpoints/explorer_notebook-checkpoint.ipynb" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Makefile" beforeDir="false" afterPath="$PROJECT_DIR$/Makefile" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.ipynb_checkpoints/plots-checkpoint.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/.ipynb_checkpoints/plots-checkpoint.ipynb" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.ipynb_checkpoints/server_notebook-checkpoint.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/.ipynb_checkpoints/server_notebook-checkpoint.ipynb" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.ipynb_checkpoints/server_notebook_results-checkpoint.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/.ipynb_checkpoints/server_notebook_results-checkpoint.ipynb" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/debugging-branin.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/debugging-branin.ipynb" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/explorer_notebook.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/explorer_notebook.ipynb" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/runner.py" beforeDir="false" afterPath="$PROJECT_DIR$/runner.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/environments/helpers.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/environments/helpers.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/environments/uci.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/environments/uci.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/plots.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/plots.ipynb" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/server_notebook.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/server_notebook.ipynb" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/server_notebook_results.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/server_notebook_results.ipynb" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/experiment/runner.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/experiment/runner.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/experiment/settings.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/experiment/settings.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/models/DKL/feature_extractors.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/models/DKL/feature_extractors.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/models/DKL/feature_models.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/models/DKL/feature_models.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/models/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/models/__init__.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/plot_utils.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/plot_utils.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/utils.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/utils.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/thesis_figs_notebooks/server_run.py" beforeDir="false" afterPath="$PROJECT_DIR$/thesis_figs_notebooks/server_run.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/models/core_models.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/models/core_models.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -35,7 +38,7 @@
     <session id="1077178181">
       <usages-collector id="statistics.lifecycle.project">
         <counts>
-          <entry key="project.closed" value="8" />
+          <entry key="project.closed" value="9" />
           <entry key="project.open.time.11" value="1" />
           <entry key="project.open.time.13" value="1" />
           <entry key="project.open.time.2" value="1" />
@@ -508,7 +511,6 @@
   </component>
   <component name="ToolWindowManager">
     <frame x="0" y="23" width="1680" height="1027" extended-state="6" />
-    <editor active="true" />
     <layout>
       <window_info id="Favorites" order="0" side_tool="true" />
       <window_info content_ui="combo" id="Project" order="1" sideWeight="0.38716578" visible="true" weight="0.14041515" />

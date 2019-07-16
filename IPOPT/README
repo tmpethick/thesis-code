@@ -1,0 +1,15 @@
+
+### Building IPOPT for Linux & GCC
+
+```
+$ make PLATFORM=linux COMPILER=gnu clean
+$ make PLATFORM=linux COMPILER=gnu -j12
+```
+
+### Building IPOPT for Cray & GCC
+
+```
+$ module switch PrgEnv-cray PrgEnv-gnu
+$ module load cudatoolkit
+$ make PLATFORM=cray COMPILER=gnu clean
+$ make PLATFORM=cray COMPILER=gnu -j12

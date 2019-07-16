@@ -1,0 +1,1 @@
+addpath /Users/tmpethick/GoogleDrive/dtu/10-EPFL/thesis/thesis-code/IPOPT/Ipopt-3.11.7/build_rice/lib

@@ -332,7 +332,7 @@ class GPyTorchModel(MarginalLogLikelihoodMixin, ConfigMixin, FeatureModel):
             print(self.initial_parameters)
             self.initialize_parameters(**self.initial_parameters)
         
-        self.optimize(self.X_torch, self.Y_torch, fix_gp_params=fix_gp_params)
+        self.optimize(fix_gp_params=fix_gp_params)
 
     def set_train_data(self, X, Y):
         if isinstance(X, np.ndarray):
@@ -347,7 +347,9 @@ class GPyTorchModel(MarginalLogLikelihoodMixin, ConfigMixin, FeatureModel):
         self.X_torch = X
         self.Y_torch = Y
 
-    def optimize(self, X, Y, fix_gp_params=False): 
+    def optimize(self, fix_gp_params=False): 
+        X = self.X_torch
+        Y = self.Y_torch
         if self.verbose:
             print('training on {} data points of dim {}'.format(X.shape[0], X.shape[-1])) 
         # Go into training mode
@@ -366,7 +368,9 @@ class GPyTorchModel(MarginalLogLikelihoodMixin, ConfigMixin, FeatureModel):
 
         if self.has_feature_map:
             self.feature_extractor.train()
-            opt_parameter_list.append({'params': self.model.feature_extractor.parameters()})
+            opt_parameter_list.append({
+                'params': self.model.feature_extractor.parameters(),
+            })
 
         # optimize with Adam
         optimizer = torch.optim.Adam(opt_parameter_list, lr=self.learning_rate)
@@ -375,7 +379,9 @@ class GPyTorchModel(MarginalLogLikelihoodMixin, ConfigMixin, FeatureModel):
         self.mll = gpytorch.mlls.ExactMarginalLogLikelihood(self.likelihood, self.model)
 
         def _train():
-            self.training_loss = np.empty(self.n_iter)
+            self.training_loss = np.zeros(self.n_iter + 1)
+            min_loss = np.inf
+            min_state = None
 
             for i in range(self.n_iter):
                 # Zero backprop gradients
@@ -387,12 +393,23 @@ class GPyTorchModel(MarginalLogLikelihoodMixin, ConfigMixin, FeatureModel):
                 loss.backward()
 
                 loss_ = loss.item()
+
+                if loss_ < min_loss:
+                    min_state = self.model.state_dict()
+                    min_loss = loss_
+
                 if self.verbose:
                     if i % 30 == 0:
-                        print('Current hyperparameters:', self.get_common_hyperparameters())
-                self.training_loss[i] = loss_
+                        print(f'Loss {loss_} with hyperparameters: {self.get_common_hyperparameters()}')
+                self.training_loss[i+1] = loss_
                 self.training_callback(self, i, loss_)
+
                 optimizer.step()
+            
+            if min_state is not None:
+                self.model.load_state_dict(min_state)
+                if self.verbose:
+                    print("Using parameters with loss:", min_loss)
 
         with gpytorch.settings.use_toeplitz(self.use_toeplitz), \
             gpytorch.settings.fast_computations(covar_root_decomposition=self.covar_root_decomposition, log_prob=self.use_cg, solves=self.use_cg), \
@@ -500,6 +517,7 @@ class GPyTorchModel(MarginalLogLikelihoodMixin, ConfigMixin, FeatureModel):
         state["mll"] = None
         state["X_torch"] = None
         state["Y_torch"] = None
+        state["training_callback"] = default_training_callback
         return state
 
     def __setstate__(self, state):

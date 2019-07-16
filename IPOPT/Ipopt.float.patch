@@ -1,0 +1,33 @@
+--- a/Ipopt/Ipopt/src/Interfaces/IpStdCInterface.h	2015-03-05 01:49:07.929955362 +0100
++++ b/Ipopt/Ipopt/src/Interfaces/IpStdCInterface.h	2015-03-05 01:49:22.709955975 +0100
+@@ -30,7 +30,7 @@
+ 
+   /** Type for all number.  We need to make sure that this is
+       identical with what is defined in Common/IpTypes.hpp */
+-  typedef double Number;
++  typedef float Number;
+ 
+   /** Type for all incides.  We need to make sure that this is
+       identical with what is defined in Common/IpTypes.hpp */
+--- a/Ipopt/Ipopt/src/Common/IpTypes.hpp	2015-03-05 01:48:42.461954307 +0100
++++ b/Ipopt/Ipopt/src/Common/IpTypes.hpp	2015-03-05 01:48:53.425954761 +0100
+@@ -14,7 +14,7 @@
+ namespace Ipopt
+ {
+   /** Type of all numbers */
+-  typedef double Number;
++  typedef float Number;
+   /** Type of all indices of vectors, matrices etc */
+   typedef int Index;
+   /** Type of default integer */
+--- a/Ipopt/Ipopt/src/Interfaces/IpStdFInterface.c	2015-03-05 01:49:52.905957227 +0100
++++ b/Ipopt/Ipopt/src/Interfaces/IpStdFInterface.c	2015-03-05 01:50:07.137957817 +0100
+@@ -16,7 +16,7 @@
+ 
+ /* ToDo: The following needs to be adapted based on configuration */
+ typedef FORTRAN_INTEGER_TYPE fint;
+-typedef double fdouble;
++typedef float fdouble;
+ typedef long fptr;
+ 
+ /** Return value for indicating that evaluation could be done without

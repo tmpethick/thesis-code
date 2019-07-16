@@ -23,8 +23,9 @@ class Parameters(object):
         n_agents = 2,
         numstart = 1,
         numits = 7,
-        model_dir = "output/restart_file_step_",
-        error_file = "output/errors.txt",
+        output_dir = "output/",
+        model_dir = "restart_file_step_",
+        error_file = "errors.txt",
         beta = 0.96,
         zeta = 0.5,
         psi = 0.36,
@@ -53,9 +54,9 @@ class Parameters(object):
         self.numstart = numstart
         self.numits = numits
 
-        directory = os.path.dirname(os.path.abspath(__file__))
-        self.model_dir = os.path.join(directory, model_dir)
-        self.error_file = os.path.join(directory, error_file)
+        #directory = os.path.dirname(os.path.abspath(__file__))
+        self.model_dir = os.path.join(output_dir, model_dir)
+        self.error_file = os.path.join(output_dir, error_file)
 
         #======================================================================
 

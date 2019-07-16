@@ -1,0 +1,10 @@
+prefix=/Users/tmpethick/GoogleDrive/dtu/10-EPFL/thesis/thesis-code/IPOPT/Ipopt-3.11.7/build_rice
+libdir=/Users/tmpethick/GoogleDrive/dtu/10-EPFL/thesis/thesis-code/IPOPT/Ipopt-3.11.7/build_rice/Ipopt/src/Interfaces
+
+Name: IPOPT
+Description: Interior Point Optimizer
+URL: https://projects.coin-or.org/Ipopt
+Version: 3.11.7
+Libs: ${libdir}/libipopt.la -llapack -lblas -lm  -ldl
+Cflags: -I/Users/tmpethick/GoogleDrive/dtu/10-EPFL/thesis/thesis-code/IPOPT/Ipopt-3.11.7/Ipopt/src/Interfaces -I/Users/tmpethick/GoogleDrive/dtu/10-EPFL/thesis/thesis-code/IPOPT/Ipopt-3.11.7/Ipopt/src/Common -I/Users/tmpethick/GoogleDrive/dtu/10-EPFL/thesis/thesis-code/IPOPT/Ipopt-3.11.7/Ipopt/src/LinAlg -I/Users/tmpethick/GoogleDrive/dtu/10-EPFL/thesis/thesis-code/IPOPT/Ipopt-3.11.7/Ipopt/src/Algorithm -I/Users/tmpethick/GoogleDrive/dtu/10-EPFL/thesis/thesis-code/IPOPT/Ipopt-3.11.7/Ipopt/src/contrib/CGPenalty -I/Users/tmpethick/GoogleDrive/dtu/10-EPFL/thesis/thesis-code/IPOPT/Ipopt-3.11.7/Ipopt/src/contrib/LinearSolverLoader -I/Users/tmpethick/GoogleDrive/dtu/10-EPFL/thesis/thesis-code/IPOPT/Ipopt-3.11.7/build_rice/Ipopt/src/Common
+Requires: coinhsl >= 1.3 

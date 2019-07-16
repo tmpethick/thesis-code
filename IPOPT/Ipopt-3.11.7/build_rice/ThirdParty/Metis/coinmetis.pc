@@ -1,0 +1,11 @@
+prefix=/Users/tmpethick/GoogleDrive/dtu/10-EPFL/thesis/thesis-code/IPOPT/Ipopt-3.11.7/build_rice
+exec_prefix=${prefix}
+libdir=${exec_prefix}/lib
+includedir=${prefix}/include/coin/ThirdParty
+
+Name: Metis
+Description: Serial Graph Partitioning and Fill-reducing Matrix Ordering
+URL: https://projects.coin-or.org/BuildTools
+Version: 1.2.9
+Libs: -L${libdir} -lcoinmetis
+Cflags: -I${includedir}

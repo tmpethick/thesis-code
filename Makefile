@@ -13,7 +13,7 @@ push:
 	rsync -av ./runner.py pethick@simba.epfl.ch:~/mthesis
 	rsync -av ./hpc.sh pethick@simba.epfl.ch:~/mthesis
 
-push-dtu:
+sync-dtu:
 	ssh s144448@login2.hpc.dtu.dk mkdir -p mthesis
 	ssh s144448@login2.hpc.dtu.dk mkdir -p mthesis/artifacts
 	rsync -avu ./data s144448@login2.hpc.dtu.dk:~/mthesis
@@ -23,5 +23,15 @@ push-dtu:
 	rsync -av ./explorer_helper.py s144448@login2.hpc.dtu.dk:~/mthesis
 	rsync -av ./runner.py s144448@login2.hpc.dtu.dk:~/mthesis
 	rsync -av ./hpc-dtu.sh.template s144448@login2.hpc.dtu.dk:~/mthesis
+	rsync -av ./run_growth_model.sh s144448@login2.hpc.dtu.dk:~/mthesis
+	rsync -av ./run_growth_model.py s144448@login2.hpc.dtu.dk:~/mthesis
+
+	rsync -av ./install_growth.sh s144448@login2.hpc.dtu.dk:~/mthesis
+	rsync -av ./setup_env.sh s144448@login2.hpc.dtu.dk:~/mthesis
+	#rsync -av ./IPOPT s144448@login2.hpc.dtu.dk:~/mthesis # Copied from asgp! don't destroy!
+	rsync -av s144448@login2.hpc.dtu.dk:~/mthesis/output ./
+
+run-growth: push-dtu
+	ssh s144448@login2.hpc.dtu.dk 'source /etc/profile; bsub < ~/mthesis/run_growth_model.sh'
 
 .PHONY: test

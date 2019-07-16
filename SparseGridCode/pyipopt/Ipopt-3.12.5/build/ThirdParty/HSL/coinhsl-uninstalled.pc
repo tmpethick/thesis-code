@@ -1,0 +1,10 @@
+prefix=/Users/tmpethick/GoogleDrive/dtu/10-EPFL/thesis/thesis-code/SparseGridCode/pyipopt/Ipopt-3.12.5/build
+libdir=/Users/tmpethick/GoogleDrive/dtu/10-EPFL/thesis/thesis-code/SparseGridCode/pyipopt/Ipopt-3.12.5/build/ThirdParty/HSL
+
+Name: HSL
+Description: Harwell Subroutines Library
+URL: https://projects.coin-or.org/BuildTools
+Version: 1.4.5
+Cflags: -I/Users/tmpethick/GoogleDrive/dtu/10-EPFL/thesis/thesis-code/SparseGridCode/pyipopt/Ipopt-3.12.5/ThirdParty/HSL -I/Users/tmpethick/GoogleDrive/dtu/10-EPFL/thesis/thesis-code/SparseGridCode/pyipopt/Ipopt-3.12.5/build/ThirdParty/HSL
+Libs: ${libdir}/libcoinhsl.la -lblas   -L/usr/local/Cellar/gcc/7.2.0_1/lib/gcc/7/gcc/x86_64-apple-darwin16.7.0/7.2.0 -L/usr/local/Cellar/gcc/7.2.0_1/lib/gcc/7/gcc/x86_64-apple-darwin16.7.0/7.2.0/../../.. -lgfortran -lSystem -lquadmath -lm
+Requires: coinmetis 

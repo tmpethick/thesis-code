@@ -1,0 +1,9 @@
+prefix=/Users/tmpethick/GoogleDrive/dtu/10-EPFL/thesis/thesis-code/SparseGridCode/pyipopt/Ipopt-3.12.5/build
+libdir=/Users/tmpethick/GoogleDrive/dtu/10-EPFL/thesis/thesis-code/SparseGridCode/pyipopt/Ipopt-3.12.5/build/ThirdParty/Metis
+
+Name: Metis
+Description: Serial Graph Partitioning and Fill-reducing Matrix Ordering
+URL: https://projects.coin-or.org/BuildTools
+Version: 1.2.9
+Libs: ${libdir}/libcoinmetis.la
+Cflags: -I/Users/tmpethick/GoogleDrive/dtu/10-EPFL/thesis/thesis-code/SparseGridCode/pyipopt/Ipopt-3.12.5/ThirdParty/Metis/metis-4.0/Lib

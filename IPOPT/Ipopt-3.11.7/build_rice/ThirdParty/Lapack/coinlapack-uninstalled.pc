@@ -1,0 +1,10 @@
+prefix=/Users/tmpethick/GoogleDrive/dtu/10-EPFL/thesis/thesis-code/IPOPT/Ipopt-3.11.7/build_rice
+libdir=/Users/tmpethick/GoogleDrive/dtu/10-EPFL/thesis/thesis-code/IPOPT/Ipopt-3.11.7/build_rice/ThirdParty/Lapack
+
+Name: Lapack
+Description: Linear algebra package
+URL: https://projects.coin-or.org/BuildTools
+Version: 1.4.10
+Libs: ${libdir}/libcoinlapack.la -lblas   -L/usr/local/Cellar/gcc/7.2.0_1/lib/gcc/7/gcc/x86_64-apple-darwin16.7.0/7.2.0 -L/usr/local/Cellar/gcc/7.2.0_1/lib/gcc/7/gcc/x86_64-apple-darwin16.7.0/7.2.0/../../.. -lgfortran -lSystem -lquadmath -lm
+Cflags:
+Requires: 

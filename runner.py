@@ -1,6 +1,8 @@
 import sys
 import subprocess
 
+import os
+import  numpy as np
 from src.experiment.runner import Runner
 from src.experiment.encoder import PythonDictSyntax
 
@@ -56,16 +58,59 @@ def create_ex(interactive=False):
         }
     })
 
-    @ex.capture
-    def dklgpmodel_training_callback(model, i, loss, _log, _run):
-        # TODO: save model
-        if i % 10 == 0:
-            # Log
-            _log.info('Iter %d/%d - Loss: %.3f' % (i + 1, model.n_iter, loss))
+    class DKLGPModelTrainingCallback(object):
+        def __init__(self, _log, _run, _config):
+            self._log = _log 
+            self._run = _run
+            self._config = _config
+    
+            self.threshold_factor = 7
+            self.prev_loss = None
+            self.moving_average_loss_diff_total = 0
+            self.moving_average_loss_diff_N = 1
 
-        if i % 5 == 0:
-            # Metrics
-            _run.log_scalar('DKLGPModel.training.loss', loss, i)
+            self.save_next_flag = False
+
+        def save_model(self, model, i):
+            model.save(os.path.join(settings.MODEL_SNAPSHOTS_DIR, self._config['exp_hash'], str(i)))
+
+        def __call__(self, model, i, loss):
+
+            # if settings.MODE == settings.MODES.LOCAL:
+            #     if loss > 10.0:
+            #         self.save_model(model, i)
+
+            # if settings.MODE == settings.MODES.LOCAL:
+            #     if i % 10 == 0:
+            #         self.save_model(model, i)
+
+            # if self.prev_loss:
+            #     loss_diff = np.abs(self.prev_loss - loss)
+            # else:
+            #     loss_diff = 0
+            # self.prev_loss = loss
+
+            # if self.save_next_flag:
+            #     self.save_model(model, i)
+            #     self.save_next_flag = False
+            # elif i > 10 and loss_diff > self.threshold_factor * (self.moving_average_loss_diff_total / self.moving_average_loss_diff_N):
+            #     self.save_model(model, i)
+            #     self.save_next_flag = True
+
+            # self.moving_average_loss_diff_total = self.moving_average_loss_diff_total + loss_diff
+            # self.moving_average_loss_diff_N = self.moving_average_loss_diff_N + 1
+
+            # print(self.prev_loss, loss, loss_diff, self.moving_average_loss_diff_total / self.moving_average_loss_diff_N)
+
+            # TODO: save model
+            if i % 10 == 0:
+                # Log
+                self._log.info('Iter %d/%d - Loss: %.3f' % (i + 1, model.n_iter, loss))
+
+            if i % 5 == 0:
+                # Metrics
+                self._run.log_scalar('DKLGPModel.training.loss', loss, i)
+
 
     @ex.config_hook
     def add_unique_hashes(config, command_name, logger):
@@ -93,8 +138,8 @@ def create_ex(interactive=False):
     def main(_config, _run, _log):
         # Add logging
         def modifer(k, v):
-            if isinstance(v, dict) and v.get('name') == 'DKLGPModel':
-                v.get('kwargs')['training_callback'] = dklgpmodel_training_callback
+            if isinstance(v, dict) and v.get('name') in ['DKLGPModel', 'LinearFromFeatureExtractor', 'DNNBLR', 'SGPR', 'SSGP']:
+                v.get('kwargs')['training_callback'] = DKLGPModelTrainingCallback(_log, _run, _config)
         recursively_apply_to_dict(_config, modifer)
 
         ## Context/model setup

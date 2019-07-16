@@ -110,3 +110,7 @@ class NormalizerModel(ConfigMixin, BaseModel):
                 else:
                     covar = self.Y_normalizer.denormalize_variance(covar)
             return mean, covar
+
+        def set_train_data(self, X, Y):
+            X, Y = self._normalize(X, Y)
+            self.model.set_train_data(X,Y)

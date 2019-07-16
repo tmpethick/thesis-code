@@ -143,7 +143,9 @@ def create_baseline(df):
         Y_est = np.mean(Y_train, axis=0)
         mean_estimator = lambda X: np.repeat(Y_est[None,:], X.shape[0], axis=0)
             
-        mae, rmse, max_err = errors(mean_estimator(X_test), Y_test)
+        pred_mean = mean_estimator(X_test)
+        pred_var =  np.zeros(len(pred_mean))
+        err = errors(pred_mean, pred_var, Y_test, Y_train.mean())
 
         mean_name = 'mean'
         mean_exp_hash = hash_subdict({'model': mean_name, 'f': func}, keys=['model', 'f'])
@@ -154,8 +156,8 @@ def create_baseline(df):
             'model': mean_name, 
             'config': config,
             'f': f_name,
-            'result.rmse': rmse,
-            'result.max_err': max_err,
+            'result.rmse': err['rmse'],
+            'result.max_err': err['max_err'],
         }])
     
     baseline_df = baseline_df.set_index('exp_hash').sort_index()
@@ -239,6 +241,17 @@ def aggregate_results(df, describe=False):
     df['Ntemp'] = df['N'].fillna(-1).astype(int)
     return df.reset_index().groupby(['exp_hash', 'Ntemp']).agg(agg)
 
+def aggregate_result_std(exps_rows_df, col='result.rmse', format="{.2e}"):
+    """Show `mean ± 2* std` for a specific columns.
+    Useful for preparing a table for latex formatting.
+    """
+    temp_df2 = aggregate_results(exps_rows_df, describe=True)
+    temp_df2[f'{col}.mean'] = temp_df2[(col, 'mean')].map(format.format)
+    temp_df2[f'{col}.std'] = temp_df2[(col, 'std')].map(format.format)
+    temp_df2 = temp_df2.droplevel(1, axis=1) # Note: leaves some redundent "result.time:..." columns.
+    temp_df2[f'{col}.describe'] = temp_df2.apply(lambda r: f"{r[f'{col}.mean']} ± {r[f'{col}.std']}" , axis=1)
+    return temp_df2
+
 # ------------------ View -------------------
 
 def view_df(df, indexes=['model_hash'], cols=['result.rmse'], f_as_col=False):
@@ -249,10 +262,8 @@ def view_df(df, indexes=['model_hash'], cols=['result.rmse'], f_as_col=False):
     else:
         return df
 
-def select_experiment_with_rmse(df, rmse, atol=1e-6):
-    _ = df[np.isclose(df["result.rmse"], rmse, atol=atol)]
-    exp = _.iloc[0].exp
 
+def view_experiment(exp):
     pprint_color(exp.config)
     for name, artifact in exp.artifacts.items():
         artifact.show()
@@ -261,9 +272,17 @@ def select_experiment_with_rmse(df, rmse, atol=1e-6):
     if loss is not None:
         loss.plot()
 
+
+def select_experiment_with_rmse(df, rmse, atol=1e-6):
+    _ = df[np.isclose(df["result.rmse"], rmse, atol=atol)]
+    exp = _.iloc[0].exp
+
+    view_experiment(exp)
+
     return exp
 
 import datetime as dt
+
 
 # Load
 loader = ExperimentLoader(
@@ -271,14 +290,13 @@ loader = ExperimentLoader(
     db_name=settings.MONGO_DB_NAME
 )
 
-def get_df(status='COMPLETED'):
-    query = {
+def get_df(**query):
+    default_query = {
         'start_time': {
             '$gte': dt.datetime.strptime('2019-05-14T15:24:39.914Z', "%Y-%m-%dT%H:%M:%S.%fZ")}}
             #'$lt': dt.datetime.strptime('2019-05-14T15:24:39.914Z', "%Y-%m-%dT%H:%M:%S.%fZ")}}
-    if status is not None:
-        query['status'] = status
-    exps = loader.find(query)
+    default_query.update(query)
+    exps = loader.find(default_query)
 
     #exps = loader.find({'status': 'COMPLETED'})
     df = pd.DataFrame([get_exp_key_col(exp) for exp in exps])

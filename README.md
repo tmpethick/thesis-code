@@ -36,7 +36,7 @@ electric
 
 On linux for pytorch:
 ```
-conda install -y -c mkl
+#conda install -y -c mkl
 conda install -y pytorch-cpu torchvision-cpu -c pytorch
 conda install pytorch torchvision cudatoolkit=9.0 -c pytorch
 ```
@@ -46,9 +46,14 @@ conda install pytorch torchvision cudatoolkit=9.0 -c pytorch
 source $HOME/miniconda/bin/activate
 conda create -n lions python=3.6
 source activate lions
+
+conda install -y -c conda-forge numpy blas
+source setup_env.sh
+sh install_growth.sh
+
 conda install -y pytorch torchvision -c pytorch
 pip install gpytorch=0.3.3
-conda install -y -c conda-forge numpy blas seaborn scipy matplotlib pandas gpy
+conda install -y -c conda-forge seaborn scipy matplotlib pandas gpy
 conda install -y pylint
 pip install pydot-ng
 pip install gpyopt
@@ -123,8 +128,7 @@ sbatch hpc.sh 'python' 'runner.py' 'print_config' 'with' 'obj_func={"name": "Sin
   ```
 cd SparseGridCode/TasmanianSparseGrids
 make
-cd ../
-cd pyipopt
+cd ../pyipopt
 ./install.sh
 echo " IPOPT and PYIPOPT is installed "
   ```
@@ -134,13 +138,13 @@ Note: We replaced `basestring` with `str` in `SparseGridCode/TasmanianSparseGrid
 
 ## Profiling
 
-```
+```bash
 pip install memory_profiler
 sudo mprof run --include-children python debug_notebook.py
 mprof plot --backend TkAgg
 ```
 
-```
+```bash
 pip install pympler
 ```
 
@@ -157,6 +161,12 @@ summary.print_(sum1)
 ssh s144448@login2.hpc.dtu.dk
 bqueues
 bstat
+```
+
+To view plots on the server:
+```bash
+ssh -Y user@dtu
+eog path/file.png
 ```
 
 

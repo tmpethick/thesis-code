@@ -2,9 +2,10 @@ __pycache__/
 data/
 .cache/
 *.pyc
+output/
 
 SparseGridCode/spinterp_v5.1.1
-SparseGridCode/pyipopt
+SparseGridCode/pyipopt/pyipopt
 SparseGridCode/TasmanianSparseGrids
 
 *.pcl
