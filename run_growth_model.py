@@ -6,6 +6,7 @@ import os
 import sys
 def kill_mpi(exctype, value, tb):
     from mpi4py import MPI
+    print(exctype, value, tb)
     MPI.COMM_WORLD.Abort()
 sys.excepthook = kill_mpi
 
@@ -73,6 +74,7 @@ gm = GrowthModelDistributed(
     l_up=10.0,
     inv_bar=1e-2,
     inv_up=10.0,
+    numstart=1,
     numits=100,
     No_samples_postprocess=20
 )

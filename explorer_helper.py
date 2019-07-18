@@ -241,13 +241,13 @@ def aggregate_results(df, describe=False):
     df['Ntemp'] = df['N'].fillna(-1).astype(int)
     return df.reset_index().groupby(['exp_hash', 'Ntemp']).agg(agg)
 
-def aggregate_result_std(exps_rows_df, col='result.rmse', format="{.2e}"):
+def aggregate_result_std(exps_rows_df, col='result.rmse', format="{:.2e}"):
     """Show `mean ± 2* std` for a specific columns.
     Useful for preparing a table for latex formatting.
     """
     temp_df2 = aggregate_results(exps_rows_df, describe=True)
     temp_df2[f'{col}.mean'] = temp_df2[(col, 'mean')].map(format.format)
-    temp_df2[f'{col}.std'] = temp_df2[(col, 'std')].map(format.format)
+    temp_df2[f'{col}.std'] = temp_df2[(col, 'std')].fillna(0.0).map(format.format)
     temp_df2 = temp_df2.droplevel(1, axis=1) # Note: leaves some redundent "result.time:..." columns.
     temp_df2[f'{col}.describe'] = temp_df2.apply(lambda r: f"{r[f'{col}.mean']} ± {r[f'{col}.std']}" , axis=1)
     return temp_df2

@@ -5,10 +5,10 @@
 ### –- specify queue --
 #BSUB -q hpc
 ### -- ask for number of cores (default: 1) --
-#BSUB -n 20
+#BSUB -n 25
 #BSUB -R "span[hosts=1]"
 ### -- set walltime limit: hh:mm --
-#BSUB -W 11:29
+#BSUB -W 48:00
 ### -- specify that we need 2GB of memory per core/slot -- 
 #BSUB -R "rusage[mem=2GB]"
 ### -- Specify the output and error file. %J is the job-id -- 

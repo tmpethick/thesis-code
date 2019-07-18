@@ -176,6 +176,7 @@ class GrowthModelDistributed(GrowthModel):
                 print("start with Value Function Iteration")
                 X, Y = self.mpi_evaluate(model_prev=None)
             else:
+                model = SaveMixin.load(self.params.model_dir + str(i-1))
                 print("Now, we are in Value Function Iteration step", i)
                 X, Y = self.mpi_evaluate(model_prev=model)
 
@@ -189,9 +190,6 @@ class GrowthModelDistributed(GrowthModel):
                 callback(i, self, model)
 
             self.comm.Barrier()
-
-            if self.rank != 0:
-                model = SaveMixin.load(self.params.model_dir + str(i))
         
         if self.rank == 0:
             self.post.ls_error()
