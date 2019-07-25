@@ -44,7 +44,7 @@ available_tags=" CXX F77"
 
 # ### BEGIN LIBTOOL CONFIG
 
-# Libtool was configured on host tsf-492-wpa-2-201.epfl.ch:
+# Libtool was configured on host MacBook-Pro-49.local:
 
 # Shell to use when invoking shell scripts.
 SHELL="/bin/sh"
@@ -7212,7 +7212,7 @@ disable_libs=static
 # End:
 # ### BEGIN LIBTOOL TAG CONFIG: CXX
 
-# Libtool was configured on host tsf-492-wpa-2-201.epfl.ch:
+# Libtool was configured on host MacBook-Pro-49.local:
 
 # Shell to use when invoking shell scripts.
 SHELL="/bin/sh"
@@ -7517,7 +7517,7 @@ include_expsyms=""
 
 # ### BEGIN LIBTOOL TAG CONFIG: F77
 
-# Libtool was configured on host tsf-492-wpa-2-201.epfl.ch:
+# Libtool was configured on host MacBook-Pro-49.local:
 
 # Shell to use when invoking shell scripts.
 SHELL="/bin/sh"
@@ -7564,7 +7564,7 @@ LTCFLAGS="-O3 -pipe -DNDEBUG -Wimplicit -Wparentheses -Wsequence-point -Wreturn-
 CC="gfortran"
 
 # Is the compiler the GNU C compiler?
-with_gcc=yes
+with_gcc=
 
 # An ERE matcher.
 EGREP="grep -E"
@@ -7616,14 +7616,14 @@ shrext_cmds='`test .$module = .yes && echo .so || echo .dylib`'
 exeext=""
 
 # Additional compiler flags for building library objects.
-pic_flag=" -fno-common"
+pic_flag=""
 pic_mode=default
 
 # What is the maximum length of a command?
 max_cmd_len=196608
 
 # Does compiler simultaneously support -c and -o options?
-compiler_c_o="yes"
+compiler_c_o="no"
 
 # Must we lock files when doing compilation?
 need_locks="no"

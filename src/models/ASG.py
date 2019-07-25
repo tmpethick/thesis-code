@@ -14,7 +14,6 @@ C_LIB = os.path.join(dir_path, 'SparseGridCode/TasmanianSparseGrids/libtasmanian
 
 sys.path.append(python_path)
 
-import TasmanianSG
 import numpy as np
 
 
@@ -32,6 +31,9 @@ class ControlledLocationsModelMixin(object):
 
 class AdaptiveSparseGrid(ConfigMixin, ControlledLocationsModelMixin):
     def __init__(self, depth=1, refinement_level=5, f_tol=1e-5, point_tol=None):
+        import TasmanianSG
+        self.TasmanianSparseGrid = TasmanianSG.TasmanianSparseGrid
+
         if refinement_level == 0 and point_tol is not None:
             warnings.warn("`point_tol` will be ignored for fixed depth.")
 
@@ -55,7 +57,7 @@ class AdaptiveSparseGrid(ConfigMixin, ControlledLocationsModelMixin):
         which_basis = 1
         
         if self.grid is None:
-            self.grid = TasmanianSG.TasmanianSparseGrid(tasmanian_library=C_LIB)
+            self.grid = self.TasmanianSparseGrid(tasmanian_library=C_LIB)
             self.grid.makeLocalPolynomialGrid(in_dim, out_dim, self.depth, which_basis, "localp")
             self.grid.setDomainTransform(f.bounds)
 
