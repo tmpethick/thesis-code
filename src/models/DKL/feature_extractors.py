@@ -4,7 +4,14 @@ from collections.abc import Iterable
 ACTIVATIONS = dict(
     relu=torch.nn.ReLU,
     tanh=torch.nn.Tanh,
+    leaky_relu=torch.nn.LeakyReLU,
 )
+
+# def init_weights(m):
+#     pass
+#     if type(m) == torch.nn.Linear:
+#         #torch.nn.init.xavier_uniform(m.weight)
+#         m.bias.data.fill_(0.0)
 
 class LargeFeatureExtractor(torch.nn.Sequential):
     def __init__(self, D=None, layers=(50, 25, 10, 2), normalize_output=True, output_activation=False, activation='relu'):
@@ -30,6 +37,7 @@ class LargeFeatureExtractor(torch.nn.Sequential):
             out = layers[i + 1]
             self.add_module('linear{}'.format(i), torch.nn.Linear(in_, out))
             self.add_module('activation{}'.format(i), Activation())
+            # self.add_module('normalization{}'.format(i), torch.nn.BatchNorm1d(out, affine=False, momentum=1))
 
         self.output_dim = layers[-1]
         self.add_module('linear{}'.format(i+1), torch.nn.Linear(layers[-2], self.output_dim))
@@ -39,6 +47,8 @@ class LargeFeatureExtractor(torch.nn.Sequential):
             self.add_module('activation{}'.format(i+1), Activation())
         if normalize_output:
             self.add_module('normalization', torch.nn.BatchNorm1d(self.output_dim, affine=False, momentum=1))
+
+        #self.apply(init_weights)
 
 
 class RFFEmbedding(torch.nn.Module):

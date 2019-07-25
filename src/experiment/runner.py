@@ -9,7 +9,7 @@ from src.environments import BaseEnvironment, EnvironmentNormalizer
 from src.environments.dataset import DataSet
 from src.experiment import settings
 from src.models.core_models import MarginalLogLikelihoodMixin
-from src.models import NormalizerModel, DKLGPModel, GPModel, TransformerModel, LocalLengthScaleGPModel
+from src.models import NormalizerModel, DKLGPModel, GPModel, TransformerModel, LocalLengthScaleGPModel, FeatureModel
 from src.plot_utils import plot_model, plot_model_unknown_bounds, plot_function
 from src.utils import random_hypercube_samples, calc_errors_model_compare_mean, calc_errors_model_compare_var, \
     calc_errors, errors
@@ -115,7 +115,8 @@ class Runner(object):
         for i, model in enumerate(models):
             start_time = time.clock()
             if isinstance(model, ControlledLocationsModelMixin):
-                model.fit(f)
+                X_train, Y_train = model.fit(f)
+                print('samples:', X_train.shape)
             else:
                 self.log_info('Model{}: {} training on {} of dim {}'.format(i, model, len(X_train), X_train.shape[-1]))
                 model.init(X_train, Y_train, Y_dir=Y_train_dir)
@@ -239,10 +240,14 @@ class Runner(object):
                 self.save_fig(fig, settings.ARTIFACT_LLS_GP_LENGTHSCALE_FILENAME.format(model_idx=i))
 
             # Plot feature space for DKLGP
-            elif isinstance(true_model, DKLGPModel):
+            elif isinstance(true_model, FeatureModel):
                 fig = true_model.plot_features(normalized_f)
                 if fig is not None:
                     self.save_fig(fig, settings.ARTIFACT_DKLGP_FEATURES_FILENAME.format(model_idx=i))
+
+                if context.verbosity['plot']:
+                    plt.plot(true_model.training_loss)
+                    plt.show()
 
     def log_info(self, msg):
         self._log.info(msg)
@@ -252,6 +257,7 @@ class Runner(object):
         if self.context.verbosity['plot']:
             plt.show()
         self._run.add_artifact(filename)
+        plt.clf()
 
     def update_result(self, name, value):
         # Update the result dict with the latest value (notice `step` is ignored).

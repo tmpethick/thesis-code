@@ -69,7 +69,7 @@ def errors(Y_pred_mean, Y_pred_var, Y_true_mean, training_mean):
         mae = np.average(np.fabs(Y_diff)),
         max_err = np.max(np.fabs(Y_diff)),
         rmse = np.sqrt(np.sum(np.square(Y_diff)) / N),
-        mnlp = 1/N*np.sum((Y_diff) ** 2 / Y_pred_var + 1/2 * np.log(2*np.pi*Y_pred_var)),
+        mnlp = 1/(2*N)*np.sum((Y_diff) ** 2 / Y_pred_var + 1/2 * np.log(2*np.pi*Y_pred_var)),
         nmse = np.sum(np.square(Y_diff)) / np.sum(np.square(Y_pred_mean - training_mean))
     )
 
@@ -79,6 +79,7 @@ def random_hypercube_samples(n_samples, bounds, rng=None):
 
     Returns: (n_samples, dim)
     """
+    # TODO: ensure that bounds[i,0] < bounds[i,1]
     if rng is None:
         rng = np.random.RandomState()
 

@@ -1,6 +1,7 @@
 import numpy as np
 
 from src.environments.core import BaseEnvironment
+from src.environments.smooth import Sinc
 
 
 class Exp(BaseEnvironment):
@@ -77,6 +78,43 @@ class Embedding(BaseEnvironment):
     # TODO: implement from_config to setup base_env
 
 
+class CircularEmbedding(BaseEnvironment):
+    # Hack to make it settable in `__init__`.
+    bounds = None
+
+    def __init__(self, base_env, D=10, **kwargs):
+        super().__init__(**kwargs)
+        self.base_env = base_env
+        self.bounds = np.repeat(self.base_env.bounds, D, axis=0)
+        self._D = D
+
+    def transform(self, X):
+        # if X.ndim == 1:
+        #     return X ** 2
+        return np.sqrt(np.sum(X ** 2, axis=-1))[:,None]
+
+    def noiseless(self, X):
+        Z = self.transform(X)
+        return self.base_env.noiseless(Z)
+
+    def _call(self, X):
+        Z = self.transform(X)
+        return self.base_env(Z)
+
+    def derivative(self, X):
+        # a little chain rule..
+        Z = self.transform(X)
+        f_diff = self.base_env.derivative(Z)
+        Z_diff = 2 * X
+
+        return f_diff * Z_diff
+
+
+class ActiveManifoldArbitrary1D(CircularEmbedding):
+    def __init__(self, D=10, **kwargs):
+        super().__init__(base_env=Sinc(), D=D, **kwargs)
+    
+
 class ActiveSubspaceArbitrary1D(Embedding):
     """"
     Function in `D` input space with only a 1D active subspace
@@ -96,4 +134,7 @@ class ActiveSubspaceArbitrary1D(Embedding):
 __all__ = [
     'ActiveSubspaceTest',
     'ActiveSubspaceArbitrary1D',
+    'ActiveManifoldArbitrary1D',
+    'CircularEmbedding',
+    'Embedding',
 ]

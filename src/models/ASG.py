@@ -22,6 +22,8 @@ class ControlledLocationsModelMixin(object):
     """Deligates responsibility of picking training location to the model.
     """
     def fit(self, f, bounds):
+        """Should return X_train, Y_train.
+        """
         raise NotImplementedError
 
     def get_statistics(self, X, **kwargs):
@@ -66,9 +68,9 @@ class AdaptiveSparseGrid(ConfigMixin, ControlledLocationsModelMixin):
 
         for iK in range(self.refinement_level):
             self.grid.setSurplusRefinement(self.f_tol, -1, "classic")
-            X_train = self.grid.getNeededPoints()
-            Y_train = f(X_train)
-            self.grid.loadNeededPoints(Y_train)
+            X_train_step = self.grid.getNeededPoints()
+            Y_train_step = f(X_train_step)
+            self.grid.loadNeededPoints(Y_train_step)
 
             if self.point_tol is not None:
                 if self.grid.getNumPoints() > self.point_tol:
@@ -78,8 +80,17 @@ class AdaptiveSparseGrid(ConfigMixin, ControlledLocationsModelMixin):
             if callable(callback):
                 callback(i=iK, model=self)
 
+            X_train = np.concatenate([X_train, X_train_step])
+            Y_train = np.concatenate([Y_train, Y_train_step])
+
+        # TODO: fix this ducktyping..
+        self.X = X_train
+        self.Y = Y_train
+
+        return X_train, Y_train
+
     def get_statistics(self, X, **kwargs):
-        return self.evaluate(X), None
+        return self.evaluate(X), np.zeros((X.shape[0], 1))
 
     def evaluate(self, X):
         Y_hat = self.grid.evaluateBatch(X)

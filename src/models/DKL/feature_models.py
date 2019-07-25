@@ -93,23 +93,38 @@ class FeatureModel(BaseModel):
             Z = self.get_features(X)
             O = f.noiseless(X)
 
+            # Use the first subfigure for training data instead
+            X_train = self.X
+            Z_train = self.get_features(X_train)
+            O_train = self.Y
+            O_train_pred, _ = self.get_statistics(X_train, full_cov=False)
+
+            ax = fig.add_subplot(121)
+            ax.set_title('Training data in feature space')
+            c = np.linspace(0.0, 1.0, Z_train.shape[0])
+            ax.scatter(Z_train.flatten(), O_train.flatten(), label="ground truth", marker="x")
+            ax.scatter(Z_train.flatten(), O_train_pred.flatten(), c=c, cmap='viridis', label='prediction', marker=".")
+            ax.legend()
+
+
         if Z.shape[-1] == 1:
             ax = fig.add_subplot(122)
             ax.set_title('f in feature space')
             if self.X.shape[-1] == 1:
-
                 O = f.noiseless(X_line)
                 O_hat, O_hat_var = self.get_statistics(X_line, full_cov=False)
 
                 #ax.scatter(Z.flatten(), O_hat.flatten(), label="prediction")
-                c = np.linspace(0.0, 1.0, Z.shape[0])
                 #plt.errorbar(Z.flatten(), O_hat.flatten(), yerr=2 * np.sqrt(O_hat_var), fmt='.k', alpha=0.2, c=c, cmap='viridis', label='prediction')
-                ax.scatter(Z.flatten(), O.flatten(), label="ground truth", marker="x")
-                ax.scatter(Z.flatten(), O_hat.flatten(), c=c, cmap='viridis', label='prediction', marker=".")
-                plt.legend()
             else:
                 O = np.reshape(O, (-1, 1))
-                ax.scatter(Z.flatten(), O.flatten())
+                O_hat, O_hat_var = self.get_statistics(X, full_cov=False)
+            
+
+            c = np.linspace(0.0, 1.0, Z.shape[0])
+            ax.scatter(Z.flatten(), O.flatten(), label="ground truth", marker="x")
+            ax.scatter(Z.flatten(), O_hat.flatten(), c=c, cmap='viridis', label='prediction', marker=".")
+            ax.legend()
 
         elif Z.shape[-1] == 2:
             if self.X.shape[-1] == 2:
@@ -135,6 +150,7 @@ class LinearFromFeatureExtractor(ConfigMixin, FeatureModel):
         feature_extractor_constructor=LazyConstructor(LargeFeatureExtractor),
         n_iter=50,
         learning_rate=0.1,
+        weight_decay=0.0,
         use_double_precision=False,
         training_callback=default_training_callback,
         **kwargs):
@@ -145,6 +161,9 @@ class LinearFromFeatureExtractor(ConfigMixin, FeatureModel):
         self.model = None
         self.feature_extractor = feature_extractor
         self.use_double_precision = use_double_precision
+        self.weight_decay = weight_decay
+
+        self.training_loss = None
         
         # Constructor is only used if feature_extractor is not specified.
         if nn_kwargs is not None:
@@ -170,7 +189,7 @@ class LinearFromFeatureExtractor(ConfigMixin, FeatureModel):
                 torch.nn.Linear(in_features=self.feature_extractor.output_dim, out_features=1, bias=True)
             )
             self.model = self.make_double(self.model)
-            self.optimizer = torch.optim.Adam(self.model.parameters(), lr=self.learning_rate)
+            self.optimizer = torch.optim.Adam(self.model.parameters(), lr=self.learning_rate, weight_decay=self.weight_decay)
             self.model.train()
 
 
@@ -178,6 +197,7 @@ class LinearFromFeatureExtractor(ConfigMixin, FeatureModel):
         X_torch = self.to_torch(X)
         Y_torch = self.to_torch(Y)
 
+        self.training_loss = np.zeros(self.n_iter + 1)
         # Train the model
         for i in range(self.n_iter):
             # Forward pass
@@ -189,7 +209,9 @@ class LinearFromFeatureExtractor(ConfigMixin, FeatureModel):
             loss.backward()
             self.optimizer.step()
 
-            self.training_callback(self, i, loss.item())
+            loss_ = loss.item()
+            self.training_loss[i+1] = loss_
+            self.training_callback(self, i, loss_)
 
     def _get_statistics(self, X, full_cov=True):
         self.model.eval()
@@ -217,6 +239,7 @@ class GPyTorchModel(MarginalLogLikelihoodMixin, ConfigMixin, FeatureModel):
 
                  do_pretrain=False,
                  pretrain_n_iter=100,
+                 gp_n_iter=None,
                  pretrainer_constructor=LazyConstructor(LinearFromFeatureExtractor),
 
                  feature_extractor_constructor=LazyConstructor(LargeFeatureExtractor),
@@ -229,7 +252,9 @@ class GPyTorchModel(MarginalLogLikelihoodMixin, ConfigMixin, FeatureModel):
                  precond_size=10,
                  eval_cg_tolerance=1e-4,
                  train_eval_cg_tolerance=1.0,
+                 grad_clip=None,
                  use_toeplitz=None,
+                 weight_decay=0.0,
 
                  training_callback=default_training_callback,
                  verbose=True,
@@ -242,8 +267,11 @@ class GPyTorchModel(MarginalLogLikelihoodMixin, ConfigMixin, FeatureModel):
         self.max_cg_iter = max_cg_iter
         self.precond_size = precond_size
         self.use_toeplitz = use_toeplitz # infered by inducing points if not specified.
+        self.weight_decay = weight_decay
         self.eval_cg_tolerance = eval_cg_tolerance
         self.train_eval_cg_tolerance = train_eval_cg_tolerance
+        
+        self.grad_clip = grad_clip
 
         self.has_feature_map = feature_extractor_constructor is not None
         self.feature_extractor_constructor = feature_extractor_constructor
@@ -251,6 +279,7 @@ class GPyTorchModel(MarginalLogLikelihoodMixin, ConfigMixin, FeatureModel):
 
         self.do_pretrain = do_pretrain
         self.pretrain_n_iter = pretrain_n_iter
+        self.gp_n_iter = gp_n_iter
         self.pretrainer_constructor = pretrainer_constructor
 
         self.initial_parameters = initial_parameters
@@ -302,7 +331,7 @@ class GPyTorchModel(MarginalLogLikelihoodMixin, ConfigMixin, FeatureModel):
             self.feature_extractor = self.make_double(self.feature_extractor)
 
         if self.do_pretrain:
-            pretrainer_network = self.pretrainer_constructor(feature_extractor=self.feature_extractor, n_iter=self.pretrain_n_iter)
+            pretrainer_network = self.pretrainer_constructor(feature_extractor=self.feature_extractor, n_iter=self.pretrain_n_iter, weight_decay=self.weight_decay, learning_rate=self.learning_rate)
             # TODO: reuse X_torch instead of copying again from numpy to torch.
             pretrainer_network.init(X, Y)
 
@@ -334,6 +363,8 @@ class GPyTorchModel(MarginalLogLikelihoodMixin, ConfigMixin, FeatureModel):
             print(self.initial_parameters)
             self.initialize_parameters(**self.initial_parameters)
         
+        if self.gp_n_iter is not None:
+            self.optimize(fix_feature_params=True, n_iter=self.gp_n_iter)
         self.optimize(fix_gp_params=fix_gp_params)
 
     def set_train_data(self, X, Y):
@@ -349,7 +380,10 @@ class GPyTorchModel(MarginalLogLikelihoodMixin, ConfigMixin, FeatureModel):
         self.X_torch = X
         self.Y_torch = Y
 
-    def optimize(self, fix_gp_params=False): 
+    def optimize(self, fix_gp_params=False, fix_feature_params=False, n_iter=None): 
+        if n_iter is None:
+            n_iter = self.n_iter
+
         X = self.X_torch
         Y = self.Y_torch
         if self.verbose:
@@ -368,10 +402,11 @@ class GPyTorchModel(MarginalLogLikelihoodMixin, ConfigMixin, FeatureModel):
             if self.noise is None and self.model.inducing_points is None:
                 opt_parameter_list.append({'params': self.model.likelihood.parameters()})
 
-        if self.has_feature_map:
+        if self.has_feature_map and not fix_feature_params:
             self.feature_extractor.train()
             opt_parameter_list.append({
                 'params': self.model.feature_extractor.parameters(),
+                'weight_decay': self.weight_decay,
             })
 
         # optimize with Adam
@@ -381,17 +416,18 @@ class GPyTorchModel(MarginalLogLikelihoodMixin, ConfigMixin, FeatureModel):
         self.mll = gpytorch.mlls.ExactMarginalLogLikelihood(self.likelihood, self.model)
 
         def _train():
-            self.training_loss = np.zeros(self.n_iter + 1)
+            self.training_loss = np.zeros(n_iter + 1)
             min_loss = np.inf
             min_state = None
 
-            for i in range(self.n_iter):
+            for i in range(n_iter):
                 # Zero backprop gradients
                 optimizer.zero_grad()
                 # Get output from model
                 output = self.model(X)
                 # Calc loss and backprop derivatives
                 loss = -self.mll(output, Y)
+                print(loss)
                 loss.backward()
 
                 loss_ = loss.item()
@@ -406,6 +442,8 @@ class GPyTorchModel(MarginalLogLikelihoodMixin, ConfigMixin, FeatureModel):
                 self.training_loss[i+1] = loss_
                 self.training_callback(self, i, loss_)
 
+                if self.grad_clip is not None:
+                    torch.nn.utils.clip_grad_norm(self.model.parameters(), self.grad_clip)
                 optimizer.step()
             
             if min_state is not None:
@@ -441,14 +479,7 @@ class GPyTorchModel(MarginalLogLikelihoodMixin, ConfigMixin, FeatureModel):
         ax.plot(self.training_loss)
         return fig
 
-    def get_marginal_log_likelihood(self, X, Y):
-        X = self.to_torch(X)
-        Y = self.to_torch(Y[:,0])
-
-        output = self.model(X)
-        return self.mll(output, Y).item()
-
-    def _get_statistics(self, X, full_cov=True):
+    def _get_multivariate_normal(self, X):
         if self.verbose:
             print('predicting {} points using {} training points'.format(X.shape[0], self.X_torch.shape[0]))
         assert self.model is not None, "Call `self.fit` before predicting."
@@ -459,15 +490,6 @@ class GPyTorchModel(MarginalLogLikelihoodMixin, ConfigMixin, FeatureModel):
 
         if self.has_feature_map:
             self.feature_extractor.eval()
-
-        # # Hack to fix issue with making prediction for single inputs (n=1).
-        # # Only needed if approximate grid interpolation is used.
-        # if X.shape[0] == 1:
-        #    fake_X = np.zeros((1, X.shape[1]))
-        #    X = np.concatenate((X, fake_X), axis=0)
-        #    cut_tail = -1
-        # else:
-        cut_tail = None
 
         test_x = self.to_torch(X)
 
@@ -492,14 +514,39 @@ class GPyTorchModel(MarginalLogLikelihoodMixin, ConfigMixin, FeatureModel):
                 else:
                     multivariate_normal = self.likelihood(self.model(test_x))
 
-                mean = multivariate_normal.mean.detach().cpu().numpy()[:cut_tail, None]
-
                 self.store_CG_warning('pred', w)
+        return multivariate_normal
 
-            if full_cov:
-                return mean, multivariate_normal.covariance_matrix.detach().cpu().numpy()[:cut_tail, :cut_tail, None]
-            else:
-                return mean, multivariate_normal.variance.detach().cpu().numpy()[:cut_tail, None]
+    def _get_statistics(self, X, full_cov=True):
+        # # Hack to fix issue with making prediction for single inputs (n=1).
+        # # Only needed if approximate grid interpolation is used.
+        # if X.shape[0] == 1:
+        #    fake_X = np.zeros((1, X.shape[1]))
+        #    X = np.concatenate((X, fake_X), axis=0)
+        #    cut_tail = -1
+        # else:
+        cut_tail = None
+        
+        multivariate_normal = self._get_multivariate_normal(X)
+
+        mean = multivariate_normal.mean.detach().cpu().numpy()[:cut_tail, None]
+
+        if full_cov:
+            return mean, multivariate_normal.covariance_matrix.detach().cpu().numpy()[:cut_tail, :cut_tail, None]
+        else:
+            return mean, multivariate_normal.variance.detach().cpu().numpy()[:cut_tail, None]
+
+    def get_marginal_log_likelihood(self, X, Y):
+        X = self.to_torch(X)
+        Y = self.to_torch(Y[:,0])
+
+        output = self.model(X)
+        return self.mll(output, Y).item()
+
+    def sample(self, X, size=1, prior=True):
+        with gpytorch.settings.prior_mode(prior):
+            multivariate_normal = self._get_multivariate_normal(X)
+            return multivariate_normal.sample(size).detach().cpu().numpy()
 
     def initialize_parameters(self, noise=None, **kwargs):
         """Overwrite this for custom easy initialization of custom kernels.

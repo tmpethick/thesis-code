@@ -28,6 +28,12 @@ class Sinc(BaseEnvironment):
         return -((x ** 2 - 2) * np.sin(x) + 2 * x * np.cos(x)) / (x ** 3)
 
 
+class NormalizedSinc(Sinc):
+    bounds = np.array([[-1, 1]])
+    def _call(self, x):
+        return super()._call(20 * x)
+
+
 class BigSinc(Sinc):
     bounds = np.array([[-0.2, 0.2]])
 
@@ -72,6 +78,7 @@ class Sinc2D(BaseEnvironment):
 __all__ = [
     'Sin',
     'Sinc',
+    'NormalizedSinc',
     'BigSinc',
     'NegSinc',
     'Sin2D',

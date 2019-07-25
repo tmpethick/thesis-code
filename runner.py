@@ -76,6 +76,13 @@ def create_ex(interactive=False):
 
         def __call__(self, model, i, loss):
 
+            total_norm = 0
+            for p in model.model.parameters():
+                param_norm = p.grad.data.norm(2)
+                total_norm += param_norm.item() ** 2
+            total_norm = total_norm ** (1. / 2)
+            self._run.log_scalar('DKLGPModel.training.grad_l2', total_norm, i)
+
             # if settings.MODE == settings.MODES.LOCAL:
             #     if loss > 10.0:
             #         self.save_model(model, i)

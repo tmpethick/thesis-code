@@ -19,7 +19,7 @@ from src.kernels import \
 from .lls_gp import \
     LocalLengthScaleGPModel, \
     LocalLengthScaleGPBaselineModel
-from src.models.DKL.feature_models import LinearFromFeatureExtractor, SSGP, SGPR, DKLGPModel, DNNBLR
+from src.models.DKL.feature_models import LinearFromFeatureExtractor, SSGP, SGPR, DKLGPModel, DNNBLR, FeatureModel
 from src.models.DKL.gpr import GPRegressionModel
 from src.models.DKL.feature_extractors import LargeFeatureExtractor, RFFEmbedding
 from src.models.ASG import ControlledLocationsModelMixin, AdaptiveSparseGrid
