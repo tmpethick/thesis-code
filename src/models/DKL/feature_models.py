@@ -187,7 +187,7 @@ class LinearFromFeatureExtractor(ConfigMixin, FeatureModel):
             self.model = torch.nn.Sequential(
                 self.feature_extractor,
                 torch.nn.Linear(in_features=self.feature_extractor.output_dim, out_features=1, bias=True)
-            )
+            ).to(device)
             self.model = self.make_double(self.model)
             self.optimizer = torch.optim.Adam(self.model.parameters(), lr=self.learning_rate, weight_decay=self.weight_decay)
             self.model.train()
@@ -331,7 +331,13 @@ class GPyTorchModel(MarginalLogLikelihoodMixin, ConfigMixin, FeatureModel):
             self.feature_extractor = self.make_double(self.feature_extractor)
 
         if self.do_pretrain:
-            pretrainer_network = self.pretrainer_constructor(feature_extractor=self.feature_extractor, n_iter=self.pretrain_n_iter, weight_decay=self.weight_decay, learning_rate=self.learning_rate)
+            pretrainer_network = self.pretrainer_constructor(
+                feature_extractor=self.feature_extractor, 
+                n_iter=self.pretrain_n_iter, 
+                use_double_precision=self.use_double_precision,
+                weight_decay=self.weight_decay, 
+                learning_rate=self.learning_rate,
+            )
             # TODO: reuse X_torch instead of copying again from numpy to torch.
             pretrainer_network.init(X, Y)
 
@@ -427,7 +433,6 @@ class GPyTorchModel(MarginalLogLikelihoodMixin, ConfigMixin, FeatureModel):
                 output = self.model(X)
                 # Calc loss and backprop derivatives
                 loss = -self.mll(output, Y)
-                print(loss)
                 loss.backward()
 
                 loss_ = loss.item()

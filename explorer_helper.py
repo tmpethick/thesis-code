@@ -267,6 +267,7 @@ def view_experiment(exp):
     pprint_color(exp.config)
     for name, artifact in exp.artifacts.items():
         artifact.show()
+        plt.show()
 
     loss = exp.metrics.get('DKLGPModel.training.loss')
     if loss is not None:

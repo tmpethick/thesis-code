@@ -34,7 +34,38 @@ model = SaveMixin.load(path)
 
 #%%
 
-path = os.path.join(settings.GROWTH_MODEL_SNAPSHOTS_DIR, 'test')
+from notebook_header import *
+
+path = os.path.join(settings.GROWTH_MODEL_SNAPSHOTS_DIR, '3069989/restart_file_step_90')
+model = SaveMixin.load(path)
+
+#%%
+from src.growth_model_GPR.parameters import Parameters
+
+params = Parameters(
+    output_dir=path,
+    n_agents=10,
+    beta=0.8,
+    zeta=0.5,
+    psi=0.36,
+    gamma=2.0,
+    delta=0.025,
+    eta=1,
+    k_bar=0.2,
+    k_up=3.0,
+    c_bar=1e-2,
+    c_up=10.0,
+    l_bar=1e-2,
+    l_up=10.0,
+    inv_bar=1e-2,
+    inv_up=10.0,
+    numits=0, 
+    No_samples_postprocess=20
+)
+X = np.random.uniform(params.k_bar, params.k_up, (1000, params.n_agents))
+model.get_statistics(X)
+
+#%%
 
 model = DKLGPModel(
     verbose=False,
@@ -65,12 +96,12 @@ gm = GrowthModel(
     l_up=10.0,
     inv_bar=1e-2,
     inv_up=10.0,
-    numits=2, 
+    numits=83, 
     No_samples_postprocess=20
 )
 
-gm.loop(model)
-# gm.post.ls_error()
+# gm.loop(model)
+gm.post.ls_error()
 
 #%%
 # Lets find why this model does not save well 
