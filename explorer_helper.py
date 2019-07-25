@@ -273,6 +273,8 @@ def view_experiment(exp):
     if loss is not None:
         loss.plot()
 
+def view_experiment_with_id(df, id):
+    view_experiment(df[df['id'] == id].iloc[0].exp)
 
 def select_experiment_with_rmse(df, rmse, atol=1e-6):
     _ = df[np.isclose(df["result.rmse"], rmse, atol=atol)]

@@ -3,6 +3,7 @@ data/
 .cache/
 *.pyc
 output/
+.ipynb_checkpoints/
 
 SparseGridCode/spinterp_v5.1.1
 SparseGridCode/pyipopt/pyipopt

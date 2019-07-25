@@ -8,6 +8,8 @@ There are three ways to dig into the repository:
 * **[A Results Notebook](results.ipynb)**: to inspect and reproduce results and plots from the thesis. All experiments on which the thesis is based is stored in a publicly accessible MongoDB database from which this notebook ensembles the figures and tables.
 - **[The thesis](thesis.pdf)**: which describes the model and results.
 
+_Note: we strong recommend using the Table of Content Jupyter notebook extension to navigate the files._
+
 
 ## Workflow
 
