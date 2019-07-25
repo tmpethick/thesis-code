@@ -1,14 +1,3 @@
-#======================================================================
-# 
-#     sets the parameters for the model
-#     "Growth Model"
-#
-#     The model is described in Scheidegger & Bilionis (2017)
-#     https://papers.ssrn.com/sol3/papers.cfm?abstract_id=2927400
-#
-#     Simon Scheidegger, 01/19
-#====================================================================== 
-
 import os
 import numpy as np
 

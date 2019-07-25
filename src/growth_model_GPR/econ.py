@@ -1,12 +1,3 @@
-#======================================================================
-# 
-#     sets the economic functions for the "Growth Model", i.e., 
-#     the production function, the utility function
-#     
-#
-#     Simon Scheidegger, 11/16 ; 07/17
-#====================================================================== 
-
 import numpy as np
 
 

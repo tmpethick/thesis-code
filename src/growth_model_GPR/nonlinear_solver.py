@@ -1,12 +1,3 @@
-#======================================================================
-#
-#     This routine interfaces with IPOPT
-#     It sets the optimization problem for every training point
-#     at the beginning of the VFI.
-#
-#     Simon Scheidegger, 11/16 ; 07/17; 01/19
-#======================================================================
-
 from .ipopt_wrapper import IPOptWrapper
 import numpy as np
 import pyipopt

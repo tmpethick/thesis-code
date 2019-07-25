@@ -20,6 +20,7 @@ class ExperimentContext(ConfigMixin):
                  gp_use_derivatives=None,
                  tag=None,
                  verbosity=None,
+                 save_model=False,
                  **kwargs
                  ):
         self.model = model
@@ -27,6 +28,8 @@ class ExperimentContext(ConfigMixin):
         self.obj_func = obj_func
         self.acquisition_function = acquisition_function
         self.bo = bo
+        
+        self.save_model = save_model
 
         self.gp_samples = gp_samples
         self.gp_test_samples = gp_test_samples

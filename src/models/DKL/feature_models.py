@@ -27,6 +27,19 @@ def default_training_callback(model, i, loss):
         print('Iter %d/%d - Loss: %.3f' % (i + 1, model.n_iter, loss))
 
 
+class AdamStepLR(torch.optim.Adam):
+    """Adam with decreasing learning_rate after every `step_size` epoch.
+    """
+    def __init__(self, params, lr=1e-3, betas=(0.9, 0.999), eps=1e-8,
+                 weight_decay=0, amsgrad=False, step_size=99999999, gamma=0.1, last_epoch=-1):
+        super().__init__(params, lr, betas, eps, weight_decay, amsgrad=amsgrad)
+        self.scheduler = torch.optim.lr_scheduler.StepLR(self, step_size, gamma=gamma, last_epoch=last_epoch)
+
+    def step(self):
+        self.scheduler.step()
+        return super().step()
+
+
 class FeatureModel(BaseModel):
     def make_double(self, tensor):
         if self.use_double_precision:
@@ -152,7 +165,10 @@ class LinearFromFeatureExtractor(ConfigMixin, FeatureModel):
         learning_rate=0.1,
         weight_decay=0.0,
         use_double_precision=False,
+        grad_clip=None,
         training_callback=default_training_callback,
+        steplr_step_size=999999,
+        steplr_gamma=0.1,
         **kwargs):
         super().__init__(**kwargs)
 
@@ -164,7 +180,11 @@ class LinearFromFeatureExtractor(ConfigMixin, FeatureModel):
         self.weight_decay = weight_decay
 
         self.training_loss = None
-        
+
+        self.steplr_step_size = steplr_step_size
+        self.steplr_gamma = steplr_gamma
+        self.grad_clip = grad_clip
+
         # Constructor is only used if feature_extractor is not specified.
         if nn_kwargs is not None:
             self.feature_extractor_constructor = LazyConstructor(LargeFeatureExtractor, **nn_kwargs)
@@ -189,9 +209,9 @@ class LinearFromFeatureExtractor(ConfigMixin, FeatureModel):
                 torch.nn.Linear(in_features=self.feature_extractor.output_dim, out_features=1, bias=True)
             ).to(device)
             self.model = self.make_double(self.model)
-            self.optimizer = torch.optim.Adam(self.model.parameters(), lr=self.learning_rate, weight_decay=self.weight_decay)
-            self.model.train()
 
+            self.optimizer = AdamStepLR(self.model.parameters(), lr=self.learning_rate, step_size=self.steplr_step_size,
+            weight_decay=self.weight_decay,  gamma=self.steplr_gamma)
 
         # Move tensors to the configured device
         X_torch = self.to_torch(X)
@@ -207,6 +227,10 @@ class LinearFromFeatureExtractor(ConfigMixin, FeatureModel):
             # Backward and optimize
             self.optimizer.zero_grad()
             loss.backward()
+            
+            if self.grad_clip is not None:
+                torch.nn.utils.clip_grad_norm(self.model.parameters(), self.grad_clip)
+
             self.optimizer.step()
 
             loss_ = loss.item()
@@ -255,6 +279,8 @@ class GPyTorchModel(MarginalLogLikelihoodMixin, ConfigMixin, FeatureModel):
                  grad_clip=None,
                  use_toeplitz=None,
                  weight_decay=0.0,
+                 steplr_step_size=999999,
+                 steplr_gamma=0.1,
 
                  training_callback=default_training_callback,
                  verbose=True,
@@ -270,7 +296,8 @@ class GPyTorchModel(MarginalLogLikelihoodMixin, ConfigMixin, FeatureModel):
         self.weight_decay = weight_decay
         self.eval_cg_tolerance = eval_cg_tolerance
         self.train_eval_cg_tolerance = train_eval_cg_tolerance
-        
+        self.steplr_step_size = steplr_step_size
+        self.steplr_gamma = steplr_gamma
         self.grad_clip = grad_clip
 
         self.has_feature_map = feature_extractor_constructor is not None
@@ -416,7 +443,11 @@ class GPyTorchModel(MarginalLogLikelihoodMixin, ConfigMixin, FeatureModel):
             })
 
         # optimize with Adam
-        optimizer = torch.optim.Adam(opt_parameter_list, lr=self.learning_rate)
+        optimizer = AdamStepLR(
+            opt_parameter_list, 
+            lr=self.learning_rate, 
+            step_size=self.steplr_step_size, 
+            gamma=self.steplr_gamma)
 
         # "Loss" for GPs - the marginal log likelihood
         self.mll = gpytorch.mlls.ExactMarginalLogLikelihood(self.likelihood, self.model)
@@ -458,6 +489,7 @@ class GPyTorchModel(MarginalLogLikelihoodMixin, ConfigMixin, FeatureModel):
 
         with gpytorch.settings.use_toeplitz(self.use_toeplitz), \
             gpytorch.settings.fast_computations(covar_root_decomposition=self.covar_root_decomposition, log_prob=self.use_cg, solves=self.use_cg), \
+            gpytorch.settings.fast_pred_var(self.use_cg), \
             gpytorch.settings.max_cg_iterations(self.max_cg_iter), \
             gpytorch.settings.max_preconditioner_size(self.precond_size), \
             gpytorch.settings.eval_cg_tolerance(self.train_eval_cg_tolerance):
@@ -601,7 +633,8 @@ class GPyTorchModel(MarginalLogLikelihoodMixin, ConfigMixin, FeatureModel):
             self.do_pretrain = do_pretrain_backup
 
             # This will also load model.model.likelihood and model.model.feature_extractor
-            state_dict = torch.load(os.path.join(PATH, 'parameters.pt'))
+            state_dict = torch.load(os.path.join(PATH, 'parameters.pt'), map_location=device)
+
             self.model.load_state_dict(state_dict)
 
             # Replace with versions that has parameters loaded.

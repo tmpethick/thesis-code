@@ -1,13 +1,3 @@
-#======================================================================
-#
-#     This routine interfaces with Gaussian Process Regression
-#     The crucial part is 
-#
-#     y[iI] = solver.initial(Xtraining[iI], n_agents)[0]  
-#     => at every training point, we solve an optimization problem
-#
-#     Simon Scheidegger, 01/19
-#======================================================================
 import os 
 import numpy as np
 from .nonlinear_solver import NonlinearSolver

@@ -114,20 +114,37 @@ class NormalizerModel(ConfigMixin, BaseModel):
         return mean, covar
 
     def set_train_data(self, X, Y):
+        self._X = X
+        self._Y = Y
         X, Y = self._normalize(X, Y)
         self.model.set_train_data(X,Y)
 
     def __getstate__(self):
         state = self.__dict__.copy()
         state["model"] = None
+        state["_X"] = None
+        state["_Y"] = None
+        state["X_normalizer"] = None
+        state["Y_normalizer"] = None
         return state
 
     def save(self, PATH):
         super().save(PATH)
+
+        np.save(os.path.join(PATH, 'X.npy'), self._X)
+        np.save(os.path.join(PATH, 'Y.npy'), self._Y)
+
         model_path = os.path.join(PATH, 'model')
         self.model.save(model_path)
 
     def post_load_hook(self, PATH):
         model_path = os.path.join(PATH, 'model')
-        self.model = SaveMixin.load(model_path)
+        model = SaveMixin.load(model_path)
+        
+        # Make sure normalizers are recreated
+        self._X = np.load(os.path.join(PATH, 'X.npy'))
+        self._Y = np.load(os.path.join(PATH, 'Y.npy'))
+        self.model = model
+        self._normalize(self._X, self._Y)
+        
         return self

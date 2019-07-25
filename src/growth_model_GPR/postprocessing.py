@@ -1,11 +1,3 @@
-#======================================================================
-#
-#     This module contains routines to postprocess the VFI 
-#     solutions.
-#
-#     Simon Scheidegger, 01/19
-#======================================================================
-
 import os
 import pickle
 import numpy as np

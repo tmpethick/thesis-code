@@ -1,11 +1,3 @@
-#=======================================================================
-#
-#     ipopt_wrapper.py : an interface to IPOPT and PYIPOPT 
-#
-#     Simon Scheidegger, 06/17
-#
-#=======================================================================
-
 from .econ import Econ
 import numpy as np
 

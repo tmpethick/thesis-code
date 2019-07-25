@@ -1,0 +1,37 @@
+name: sgp
+channels:
+  - pytorch
+  - conda-forge
+  - anaconda-fusion
+  - defaults
+dependencies:
+  - python=3.6.9
+  - pip=19.1.1
+  - wheel=0.33.4
+
+  - blas
+  - numpy=1.16.2
+  - seaborn=0.9.0
+  - scipy=1.2.1
+  - matplotlib=3.0.3
+  - pandas=0.24.2
+  - pylint=2.3.1
+  - scikit-learn=0.20.3
+
+  - torchvision=0.3.0
+  - pytorch=1.1.0
+
+  - gpy=1.9.6
+  - pip:
+    - gpytorch==0.3.3
+    - pydot-ng==2.0.0
+    - GPyOpt==1.2.5
+    - emcee==2.2.1
+    - dnspython==1.16.0
+    - PyYAML==5.1
+    - GitPython==2.1.11
+    - pymongo==3.7.2
+    - incense==0.0.4
+    - cvxopt==1.2.3
+    - mpi4py==3.0.2
+    - git+https://github.com/baldassarreFe/sacred.git@gh-issue-442

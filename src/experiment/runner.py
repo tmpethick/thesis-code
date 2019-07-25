@@ -1,5 +1,6 @@
 import time
 import math 
+import os
 
 import numpy as np
 from matplotlib import pyplot as plt
@@ -9,7 +10,7 @@ from src.environments import BaseEnvironment, EnvironmentNormalizer
 from src.environments.dataset import DataSet
 from src.experiment import settings
 from src.models.core_models import MarginalLogLikelihoodMixin
-from src.models import NormalizerModel, DKLGPModel, GPModel, TransformerModel, LocalLengthScaleGPModel, FeatureModel
+from src.models import NormalizerModel, DKLGPModel, GPModel, TransformerModel, LocalLengthScaleGPModel, FeatureModel, SaveMixin
 from src.plot_utils import plot_model, plot_model_unknown_bounds, plot_function
 from src.utils import random_hypercube_samples, calc_errors_model_compare_mean, calc_errors_model_compare_var, \
     calc_errors, errors
@@ -74,6 +75,13 @@ class Runner(object):
             
             if not (hasattr(f, 'is_expensive') and f.is_expensive):
                 self.plot_models(self.context)
+
+        for i, model in enumerate(self.context.models):
+            self.save_model(model, i)
+    
+    def save_model(self, model, i):
+        if self.context.save_model and isinstance(model, SaveMixin):
+            model.save(os.path.join(settings.MODEL_SNAPSHOTS_DIR, self.context.exp_hash, str(i)))
 
 
     def get_data_f(self, f: BaseEnvironment):
