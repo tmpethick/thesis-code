@@ -4,6 +4,7 @@ data/
 *.pyc
 output/
 .ipynb_checkpoints/
+src/env.py
 
 SparseGridCode/spinterp_v5.1.1
 SparseGridCode/pyipopt/pyipopt

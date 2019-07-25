@@ -64,7 +64,13 @@ conda env update -f environment.yml
 
 (Note: We create the environment before populating it because of a conda bug where Python 3.6 is otherwise not accessible during installation.)
 
-For Sparse Grid requirements see further down.
+There are two additional requirements:
+- For Sparse Grid requirements see further down.
+- To record an experiment in the MongoDB you need to populate `src/env.py` with:
+  ```
+  MONGO_DB_PASSWORD = "the-secret-password"
+  ```
+  Read-permissions is, however, granted without.
 
 
 ### Optional installations
@@ -83,12 +89,6 @@ For Sparse Grid requirements see further down.
   ```
 
   We recommend enabling the `table of content` plugin from `jupyter_contrib_nbextensions` to navigate the included notebooks.
-- Growth model
-  ```
-  source activate sgp
-  source setup_env.sh
-  sh install_growth.sh
-  ```
 - Adaptive Sparse Grid installation
   ```
   cd SparseGridCode/TasmanianSparseGrids
@@ -111,6 +111,30 @@ For Sparse Grid requirements see further down.
   conda install -y pytorch-cpu torchvision-cpu -c pytorch
   conda install pytorch torchvision cudatoolkit=9.0 -c pytorch
   ```
+
+### Server setup
+
+To setup on the cluster:
+- Run either 1) `make push` for EPFL, or 2) `make sync-dtu` for DTU.
+- `ssh` and install the Anaconda environment as described in [Installation](#installation).
+- Remember to specify the MongoDB password also described in [Installation](#installation).
+
+
+## Growth Model
+
+The growth model has its own workflow since its requirements and output is so different. It is a value iteration scheme that usually runs for several days and can for that reason be restarted at a previous iteration.
+
+To install the additional requirements:
+```
+source activate sgp
+source setup_env.sh
+sh install_growth.sh
+```
+
+To run the model modify `run_growth_model.py` and `run_growth_model.sh` as needed. Then execute the script on the server with:
+```
+make run-growth
+```
 
 
 ## Omniboard
