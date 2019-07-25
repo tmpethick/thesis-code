@@ -56,10 +56,13 @@ The following provides a high-level overview of the available environments:
 
 ## Installation
 
+_Note: Because `data.zip` is a big file (~2 GB) you will need to install [Git LFS](https://help.github.com/en/articles/installing-git-large-file-storage) to clone the repository._
+
 ```
 conda create -n sgp python=3.6
 source activate sgp
 conda env update -f environment.yml
+unzip data.zip
 ```
 
 (Note: We create the environment before populating it because of a conda bug where Python 3.6 is otherwise not accessible during installation.)
