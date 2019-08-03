@@ -62,6 +62,7 @@ _Note: Because `data.zip` is a big file (~2 GB) you will need to install [Git LF
 conda create -n sgp python=3.6
 source activate sgp
 conda env update -f environment.yml
+echo "MONGO_DB_PASSWORD = None" > src/env.py
 unzip data.zip
 ```
 

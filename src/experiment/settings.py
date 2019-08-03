@@ -22,7 +22,10 @@ WALLTIME = '00:40'
 QUEUE = 'gpuv100' #gputitanxpascal
 EXTRA = '' # e.g. #BSUB -R "select[gpu32gb]"
 
-MONGO_DB_URL = 'mongodb+srv://admin:{}@lions-rbvzc.mongodb.net/test?retryWrites=true'.format(MONGO_DB_PASSWORD)
+if MONGO_DB_PASSWORD is not None:
+    MONGO_DB_URL = 'mongodb+srv://admin:{}@lions-rbvzc.mongodb.net/test?retryWrites=true'.format(MONGO_DB_PASSWORD)
+else:
+    MONGO_DB_URL = 'mongodb+srv://lions-public:zkKHsvxud683gEQv@lions-rbvzc.mongodb.net/test?retryWrites=true'
 MONGO_DB_NAME = 'test'
 
 EXP_NAME = 'lions'
