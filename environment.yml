@@ -20,6 +20,7 @@ dependencies:
 
   - torchvision=0.3.0
   - pytorch=1.1.0
+  - addict=2.2.1
 
   - gpy=1.9.6
   - pip:
