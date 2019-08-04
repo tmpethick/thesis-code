@@ -71,13 +71,13 @@ unzip data.zip
 
 (Note: We create the environment before populating it because of a conda bug where Python 3.6 is otherwise not accessible during installation.)
 
-There are two additional requirements:
-- For Sparse Grid requirements see further down.
+There are two additional requirements for the thesis-related experiments:
 - To record an experiment in the MongoDB you need to populate `src/env.py` with:
   ```
-  MONGO_DB_PASSWORD = "the-secret-password"
+  MONGO_DB_PASSWORD = None
   ```
-  Read-permissions is, however, granted without.
+  (replace `None` with the admin password to enable write permission as well.)
+- For Sparse Grid requirements see further down.
 
 
 ### Optional installations
