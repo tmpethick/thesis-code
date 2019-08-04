@@ -5,6 +5,9 @@ This repository includes the code for my master thesis entitled "Scalable Gaussi
 There are three ways to dig into the repository:
 
 * **[A Demo Notebook](demo.ipynb)**: which illustrates how to run an experiment locally or on a High Performance Computing (HPC) environment and how to aggregate and inspect those results afterwards.
+
+  There is also a [Google Colab](https://colab.research.google.com/drive/10XS3FWFHtBBHTBLiS5j41YnUoGVL5IQM) variant of the notebook. This provides free access to a GPU enabled environment and automates the setup of the code base.
+  
 * **[A Results Notebook](results.ipynb)**: to inspect and reproduce results and plots from the thesis. All experiments on which the thesis is based is stored in a publicly accessible MongoDB database from which this notebook ensembles the figures and tables.
 - **[The thesis](thesis.pdf)**: which describes the model and results.
 
