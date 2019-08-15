@@ -15,9 +15,9 @@ push:
 	rsync -av ./hpc.sh pethick@simba.epfl.ch:~/mthesis
 
 sync-dtu:
-	ssh $(USERNAME)@login2.hpc.dtu.dk mkdir -p ~/mthesis
-	ssh $(USERNAME)@login2.hpc.dtu.dk mkdir -p ~/mthesis/artifacts
-	rsync -avu ./data $(USERNAME)@login2.hpc.dtu.dk:~/mthesis
+	#ssh $(USERNAME)@login2.hpc.dtu.dk mkdir ~/mthesis
+	#ssh $(USERNAME)@login2.hpc.dtu.dk mkdir ~/mthesis/artifacts
+	#rsync -avu ./data $(USERNAME)@login2.hpc.dtu.dk:~/mthesis
 	rsync -avu ./src $(USERNAME)@login2.hpc.dtu.dk:~/mthesis
 	#rsync -av ./SparseGridCode $(USERNAME)@login2.hpc.dtu.dk:~/mthesis
 	rsync -av ./notebook_header.py $(USERNAME)@login2.hpc.dtu.dk:~/mthesis

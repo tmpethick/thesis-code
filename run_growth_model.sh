@@ -5,7 +5,7 @@
 ### –- specify queue --
 #BSUB -q hpc
 ### -- ask for number of cores (default: 1) --
-#BSUB -n 25
+#BSUB -n 20
 #BSUB -R "span[hosts=1]"
 ### -- set walltime limit: hh:mm --
 #BSUB -W 48:00

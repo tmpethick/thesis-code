@@ -244,3 +244,7 @@ all_objects = muppy.get_objects()
 sum1 = summary.summarize(all_objects)
 summary.print_(sum1)
 ```
+
+## Acknowledgement
+
+Thanks to Simon Scheidegger for providing most of the code for the heston based option pricing and the growth model.

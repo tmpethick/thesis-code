@@ -43,4 +43,5 @@ class PostProcessing(object):
                 to_print[0,1]= max_abs_diff
                 to_print[0,2]= average
 
+                print(to_print)
                 np.savetxt(file, to_print, fmt='%2.16f')

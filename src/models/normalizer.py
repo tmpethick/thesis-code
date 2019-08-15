@@ -131,8 +131,9 @@ class NormalizerModel(ConfigMixin, BaseModel):
     def save(self, PATH):
         super().save(PATH)
 
-        np.save(os.path.join(PATH, 'X.npy'), self._X)
-        np.save(os.path.join(PATH, 'Y.npy'), self._Y)
+        if self._X is not None:
+            np.save(os.path.join(PATH, 'X.npy'), self._X)
+            np.save(os.path.join(PATH, 'Y.npy'), self._Y)
 
         model_path = os.path.join(PATH, 'model')
         self.model.save(model_path)
@@ -140,11 +141,18 @@ class NormalizerModel(ConfigMixin, BaseModel):
     def post_load_hook(self, PATH):
         model_path = os.path.join(PATH, 'model')
         model = SaveMixin.load(model_path)
-        
-        # Make sure normalizers are recreated
-        self._X = np.load(os.path.join(PATH, 'X.npy'))
-        self._Y = np.load(os.path.join(PATH, 'Y.npy'))
+
         self.model = model
-        self._normalize(self._X, self._Y)
+
+        # Make sure normalizers are recreated
+        X_path = os.path.join(PATH, 'X.npy')
+        Y_path = os.path.join(PATH, 'Y.npy')
+        if os.path.isfile(X_path):
+            self._X = np.load(X_path)
+            self._Y = np.load(Y_path)
+            self._normalize(self._X, self._Y)
+        else:
+            self._X = None
+            self._Y = None
         
         return self

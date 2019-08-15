@@ -137,7 +137,10 @@ class GrowthModel(ConfigMixin):
 
         return Y
 
-    def loop(self, model: BaseModel, callback=lambda i, growth_model, model: None):
+    def loop(self, mother_model: BaseModel, callback=lambda i, growth_model, model: None):
+        mother_path = os.path.join(self.params.output_dir, 'mother_model')
+        mother_model.save(mother_path)
+
         for i in range(self.params.numstart, self.params.numits):
             rnd = np.random.RandomState(666)
             Xtraining = self.sample(size=self.params.No_samples, rnd=rnd)
@@ -147,9 +150,10 @@ class GrowthModel(ConfigMixin):
                 Y = self.evaluate(Xtraining)
             else:
                 print("Now, we are in Value Function Iteration step", i)
+                model = SaveMixin.load(self.params.model_dir + str(i-1))
                 Y = self.evaluate(Xtraining, model)
 
-            # TODO: should be ensure that the model hyperparameters are reinstanciated?
+            model = SaveMixin.load(mother_path)
             model.init(Xtraining, Y)
             model.save(self.params.model_dir + str(i))
             callback(i, self, model)

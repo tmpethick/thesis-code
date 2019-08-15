@@ -35,7 +35,7 @@ model = SaveMixin.load(path)
 #%%
 
 from notebook_header import *
-path = os.path.join(settings.GROWTH_MODEL_SNAPSHOTS_DIR, '3089086 copy')
+path = os.path.join(settings.GROWTH_MODEL_SNAPSHOTS_DIR, '3373806 copy')
 
 model = DKLGPModel(
     verbose=False,
@@ -51,7 +51,7 @@ model = DKLGPModel(
 
 gm = GrowthModel(
     output_dir=path,
-    n_agents=50,
+    n_agents=10,
     beta=0.8,
     zeta=0.5,
     psi=0.36,
@@ -66,7 +66,8 @@ gm = GrowthModel(
     l_up=10.0,
     inv_bar=1e-2,
     inv_up=10.0,
-    numits=83, 
+    numstart=29,
+    numits=31, 
     No_samples_postprocess=20
 )
 
